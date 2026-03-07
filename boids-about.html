@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About Boids — Steve's Site</title>
+  <link rel="stylesheet" href="/theme.css" />
+  <style>
+    html, body { height: auto; overflow: auto; }
+
+    .page-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+    }
+
+    .page-hero {
+      margin-bottom: 40px;
+    }
+    .page-hero h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      color: var(--color-primary);
+      margin-bottom: 10px;
+    }
+    .page-hero p {
+      color: var(--color-text-dim);
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+
+    section {
+      margin-bottom: 44px;
+    }
+    section h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    section p {
+      color: var(--color-text);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    section p:last-child { margin-bottom: 0; }
+
+    /* Three Rules cards */
+    .rules-grid {
+      display: grid;
+      gap: 14px;
+    }
+    .rule-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+    }
+    .rule-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--color-primary-hi);
+      margin-bottom: 6px;
+    }
+    .rule-card p {
+      font-size: 0.9rem;
+      color: var(--color-text);
+      line-height: 1.6;
+      margin-bottom: 0;
+    }
+
+    /* Slider reference table */
+    .slider-group-label {
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-text-dim);
+      margin: 20px 0 8px;
+    }
+    .slider-group-label:first-of-type { margin-top: 0; }
+
+    .slider-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .slider-table th {
+      color: var(--color-text-dim);
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 12px;
+      border-bottom: 1px solid var(--color-border-hi);
+    }
+    .slider-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 0.88rem;
+      vertical-align: top;
+    }
+    .slider-table tr:last-child td { border-bottom: none; }
+    .slider-table td:first-child {
+      color: var(--color-primary);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      white-space: nowrap;
+      width: 130px;
+    }
+    .slider-table td:last-child {
+      color: var(--color-text);
+      line-height: 1.55;
+    }
+
+    .playground-link {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 9px 20px;
+      background: rgba(125, 212, 232, 0.08);
+      border: 1px solid rgba(125, 212, 232, 0.28);
+      border-radius: var(--radius-sm);
+      color: var(--color-primary);
+      font-size: 0.9rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .playground-link:hover {
+      background: rgba(125, 212, 232, 0.16);
+      color: var(--color-primary-hi);
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="page-hero">
+    <h1>About Boids</h1>
+    <p>How a handful of simple rules create the illusion of a living school of fish.</p>
+  </div>
+
+  <!-- ── What is Boids ─────────────────────────────────────────────────────── -->
+  <section>
+    <h2>What is Boids?</h2>
+    <p>
+      In 1986, computer scientist Craig Reynolds published a paper describing a program he called
+      <em>Boids</em> — short for "bird-oids." The idea was deceptively simple: instead of
+      choreographing a flock by hand, give each individual agent a few local rules and let
+      collective behavior emerge on its own.
+    </p>
+    <p>
+      No agent knows the shape of the flock. No agent has a global plan. Each one only looks at
+      its immediate neighbors and adjusts its velocity accordingly. The result looks organic
+      because it <em>is</em> organic — the same process drives real schools of fish, flocks of
+      starlings, and swarms of insects.
+    </p>
+  </section>
+
+  <!-- ── Three Rules ──────────────────────────────────────────────────────── -->
+  <section>
+    <h2>The Three Rules</h2>
+    <div class="rules-grid">
+      <div class="rule-card">
+        <h3>Separation — don't crowd your neighbors</h3>
+        <p>
+          If another boid gets too close, steer away from it. This prevents fish from
+          colliding and keeps the school from collapsing into a single point.
+        </p>
+      </div>
+      <div class="rule-card">
+        <h3>Alignment — swim the way your neighbors swim</h3>
+        <p>
+          Average the velocities of nearby boids and nudge your own velocity toward that
+          average. This is what makes a school move together in a coherent direction.
+        </p>
+      </div>
+      <div class="rule-card">
+        <h3>Cohesion — steer toward the group center</h3>
+        <p>
+          Find the average position of your neighbors and gently turn toward it. This pulls
+          the school back together whenever individuals start to drift apart.
+        </p>
+      </div>
+    </div>
+    <p style="margin-top:16px; color: var(--color-text-dim); font-size:0.88rem;">
+      The playground simulates Blue Tang boids using all three rules, plus a solo Orangestripe
+      Triggerfish that roams on a Bezier path — showing how a non-schooling fish moves
+      differently even in the same environment.
+    </p>
+  </section>
+
+  <!-- ── The Sliders ──────────────────────────────────────────────────────── -->
+  <section>
+    <h2>The Sliders</h2>
+    <p>
+      The playground exposes ten parameters. Drag a slider and the simulation responds
+      immediately — no reload needed.
+    </p>
+
+    <p class="slider-group-label">School Behavior</p>
+    <table class="slider-table">
+      <thead>
+        <tr>
+          <th>Parameter</th>
+          <th>What it does</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>SEP_R</td>
+          <td>Separation radius — fish closer than this distance push each other away. Raise it and fish give each other a wider berth.</td>
+        </tr>
+        <tr>
+          <td>ALI_R</td>
+          <td>Alignment radius — fish within this distance try to match each other's heading. Larger values mean each fish listens to a bigger slice of the school.</td>
+        </tr>
+        <tr>
+          <td>COH_R</td>
+          <td>Cohesion radius — fish within this distance steer toward the group center. A large value pulls distant stragglers back into the school.</td>
+        </tr>
+        <tr>
+          <td>W_SEP</td>
+          <td>Separation strength — how hard fish push away from close neighbors. Turn this up and the school spreads out; turn it down and fish tolerate being packed together.</td>
+        </tr>
+        <tr>
+          <td>W_ALI</td>
+          <td>Alignment strength — how strongly fish match their neighbors' direction. High values produce a tight, disciplined school moving in lockstep.</td>
+        </tr>
+        <tr>
+          <td>W_COH</td>
+          <td>Cohesion strength — how hard fish pull toward the group center. Raise this and the school clusters tightly; lower it and fish are free to wander.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="slider-group-label">Turn &amp; Damping</p>
+    <table class="slider-table">
+      <thead>
+        <tr>
+          <th>Parameter</th>
+          <th>What it does</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>TURN_TANG</td>
+          <td>Tang turn rate — how quickly a Blue Tang rotates toward its target heading (radians per second). Higher = snappier turns; lower = fish drift lazily around corners.</td>
+        </tr>
+        <tr>
+          <td>TURN_TF</td>
+          <td>Triggerfish turn rate — same idea for the solo Triggerfish on its Bezier path. Higher values keep it hugging the curve more tightly.</td>
+        </tr>
+        <tr>
+          <td>DAMP_Y</td>
+          <td>Vertical damping — reduces the vertical component of boid acceleration. Lower values let fish bob up and down freely; higher values flatten the school into a more horizontal plane.</td>
+        </tr>
+        <tr>
+          <td>DAMP_Z</td>
+          <td>Depth damping — reduces acceleration along the depth axis (toward/away from the camera). Lower values scatter fish through the full depth of the scene; higher values keep them in a shallower layer.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <a href="/playground.html" class="playground-link">Open the Playground →</a>
+  </section>
+
+  <!-- ── Credits ──────────────────────────────────────────────────────────── -->
+  <section>
+    <h2>Credits</h2>
+    <p>
+      The 3D fish models are paid assets by
+      <a href="https://www.fab.com/sellers/Nyi%20Nyi%20Tun" target="_blank">Nyi Nyi Tun</a>
+      on Fab.com:
+    </p>
+    <ul style="list-style: none; padding: 0; margin-bottom: 0;">
+      <li style="padding: 5px 0; border-bottom: 1px solid var(--color-border);">
+        <a href="https://www.fab.com/listings/2203de0a-a1f4-4a7a-8a98-34dc4d68a39e" target="_blank">Blue Tang Surgeon Fish ↗</a>
+      </li>
+      <li style="padding: 5px 0;">
+        <a href="https://www.fab.com/listings/b5bff737-7450-4362-8be9-93079bdf6588" target="_blank">Orangestripe Triggerfish ↗</a>
+      </li>
+    </ul>
+  </section>
+
+</div>
+<script src="/boids-nav.js"></script>
+</body>
+</html>

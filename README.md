@@ -1,33 +1,34 @@
 # Boids Playground
 
-An interactive underwater boids simulation built with [Three.js](https://threejs.org/). Watch a school of fish exhibit emergent flocking behavior driven by three simple rules — separation, alignment, and cohesion — while a triggerfish sweeps through and scatters the school.
+An interactive fish schooling simulation built with [Three.js](https://threejs.org/). Watch a school of Blue Tang fish exhibit emergent flocking behavior driven by three simple rules — separation, alignment, and cohesion — while an Orangestripe Triggerfish sweeps through on a Bézier path.
 
-A real-time parameter panel lets you tune all boid behavior values while the simulation runs.
+A real-time slider panel lets you tune all boid behavior values while the simulation runs.
 
 **Live demo:** [stevessite.com/playground.html](https://stevessite.com/playground.html)
 
 ---
 
-## What it looks like
+## Pages
 
-- 10 blue tangs schooling with boids logic
-- Triggerfish passes through every ~10 seconds on a randomized bezier curve, causing the school to scatter
-- Light shafts, caustic lighting, marine snow particles
-- Slider panel (upper right) with 10 tunable parameters in real time
+| Page | Description |
+|---|---|
+| [Playground](https://stevessite.com/playground.html) | Interactive simulation with slider panel |
+| [About Boids](https://stevessite.com/boids-about.html) | Plain-English explainer: the three rules + slider reference |
+| [Under the Hood](https://stevessite.com/boids-impl.html) | Implementation details: orientation math and the vertical singularity fix |
 
 ---
 
 ## Running locally
 
-Requires a local web server (browser ES modules block file:// requests):
+Requires a local web server (browser ES modules block `file://` requests):
 
 ```bash
 cd boids-playground
-python3 -m http.server 8080
-# open http://localhost:8080
+python3 -m http.server 8000
+# open http://localhost:8000/playground.html
 ```
 
-Without the GLB model files (see below), you'll see the **procedural fallback fish** — blue disc-shaped geometry for the tangs, and no triggerfish. All boids behavior and the slider panel work identically.
+Without the GLB model files (see below), you'll see placeholder geometry for the fish. All boids behavior and the slider panel work identically.
 
 ---
 
@@ -43,45 +44,50 @@ Without the GLB model files (see below), you'll see the **procedural fallback fi
 | Cohesion strength | `W_COH` | 1.2 | 0–8 | Weight of cohesion force |
 | Tang turn rate | `TURN_TANG` | 4.0 | 0.5–12 | How quickly blue tangs rotate toward target heading (rad/s) |
 | Triggerfish turn rate | `TURN_TF` | 5.0 | 0.5–15 | How quickly the triggerfish rotates along its path (rad/s) |
-| Vertical damping | `DAMP_Y` | 0.30 | 0–1 | Reduces vertical acceleration (lower = more vertical scatter) |
+| Vertical damping | `DAMP_Y` | 0.20 | 0–1 | Reduces vertical acceleration (lower = more vertical scatter) |
 | Depth damping | `DAMP_Z` | 0.50 | 0–1 | Reduces depth (z-axis) acceleration |
 
 ---
 
-## Installing the GLB models (optional, for full visuals)
+## 3D model assets (not included)
 
-The 3D fish models are **paid assets** and are not included in this repo. Without them, a procedural fallback renders in place of the blue tang, and the triggerfish simply does not appear.
+The fish models are **paid assets** and are not included in this repo. Without them, placeholder geometry renders in their place.
 
-To install the full models:
+To use the full models, purchase from the artist and place files in the repo root:
 
-1. **Blue Tang** — purchase from Fab.com:
-   - Search for *"Blue Tang Fish"* by the creator **Istvan Szabo** (or similar — the model used here includes AO + metallic/roughness PBR maps)
-   - Download as `.glb`
-   - Place `blue_tang.glb` in the repo root
-   - Also place the accompanying PBR textures: `Blue_Tang_Fish_AO.png` and `Blue_Tang_Fish_Metallic_Roughness.png`
+- `blue_tang.glb` + `Blue_Tang_Fish_AO.png` + `Blue_Tang_Fish_Metallic_Roughness.png`
+- `orangestripe_triggerfish.glb`
 
-2. **Orangestripe Triggerfish** — purchase from Fab.com:
-   - Search for *"Orangestripe Triggerfish"* — the model requires an `Idle_swim` animation clip
-   - Download as `.glb`
-   - Place `orangestripe_triggerfish.glb` in the repo root
+**Artist:** [Nyi Nyi Tun](https://www.fab.com/sellers/Nyi%20Nyi%20Tun) on Fab.com
 
-Then run the local server again — the GLB models will load automatically.
+- [Blue Tang Surgeon Fish](https://www.fab.com/listings/2203de0a-a1f4-4a7a-8a98-34dc4d68a39e)
+- [Orangestripe Triggerfish](https://www.fab.com/listings/b5bff737-7450-4362-8be9-93079bdf6588)
 
 ---
 
-## Architecture
+## Files
 
 | File | Purpose |
 |---|---|
-| `scene.js` | Shared Three.js animation module. Exports `DEFAULTS` and `initScene(container, params)`. The `params` object is read every frame, so slider changes take effect instantly. |
-| `index.html` | Playground page — imports `scene.js`, wires up the slider panel |
-| `nav.js` | Self-contained navigation bar (no dependencies) |
-| `theme.css` | Site color palette |
+| `playground.html` | Main entry point — slider panel UI, wires up `scene.js` |
+| `scene.js` | Three.js animation module. Exports `initScene(container, params)` and `DEFAULTS`. The `params` object is read every frame, so slider changes take effect instantly. |
+| `boids-nav.js` | Self-contained nav bar with hamburger menu + Playground / About Boids / Under the Hood tabs |
+| `boids-about.html` | About page — the three rules and slider reference |
+| `boids-impl.html` | Implementation page — orientation math, singularity fix |
+| `theme.css` | Ocean color palette (shared across stevessite.com) |
 
-The `scene.js` module is also used by the homepage (`stevessite.com`) with default params and no slider panel.
+`scene.js` is also used by the stevessite.com homepage with default params and no slider panel.
+
+---
+
+## Related
+
+- [stevessite.com](https://stevessite.com) — live site
+- [steves-site](https://github.com/ssickels/steves-site) — main site repo (private — contains paid .glb assets)
+- [Investment Strategy Simulator](https://github.com/ssickels/investment-dashboard) — another project on the same site
 
 ---
 
 ## License
 
-MIT — feel free to use the boids code and scene setup. The GLB models are not included and have their own commercial licenses.
+MIT — the boids code and scene setup are free to use. The 3D fish models are not included and have their own commercial licenses.

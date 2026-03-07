@@ -16,14 +16,14 @@ export const DEFAULTS = {
   W_COH:     1.2,   // cohesion weight
   TURN_TANG: 4.0,   // blue tang max turn rate (rad/s)
   TURN_TF:   5.0,   // triggerfish max turn rate (rad/s)
-  DAMP_Y:    0.30,  // vertical acceleration damping
+  DAMP_Y:    0.20,  // vertical acceleration damping
   DAMP_Z:    0.50,  // depth acceleration damping
 };
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 // container: DOM element to append the canvas to (usually document.body)
 // params:    object with tunable values — mutated in place by sliders each frame
-export function initScene(container, params) {
+export function initScene(container, params, { title = "Steve's Site" } = {}) {
 
 // ── LOADING OVERLAY ───────────────────────────────────────────────────────────
 let _loadedCount = 0;
@@ -272,6 +272,7 @@ const _aliSum  = new THREE.Vector3();
 const _cohSum  = new THREE.Vector3();
 const _flee    = new THREE.Vector3();
 const _sideUp  = new THREE.Vector3(1, 0, 0);
+const _blendUp = new THREE.Vector3();
 
 class Boid {
   constructor() {
@@ -285,7 +286,8 @@ class Boid {
     this.vel  = new THREE.Vector3(Math.cos(ang) * spd, (Math.random() - 0.5) * 0.3, Math.sin(ang) * spd * 0.4);
     this.vel.clampLength(MIN_SPEED, MAX_SPEED);
     this.acc  = new THREE.Vector3();
-    this.ownQ = new THREE.Quaternion();
+    this.ownQ    = new THREE.Quaternion();
+    this.targetQ = new THREE.Quaternion();
     this.mesh  = createProceduralBlueTang();
     this.mesh.userData.phase = Math.random() * Math.PI * 2;
     this.mesh.visible = false;
@@ -358,10 +360,13 @@ class Boid {
 
     if (this.vel.lengthSq() > 0.2) {
       _fwd.copy(this.vel).normalize();
-      const _up = Math.abs(_fwd.y) > 0.9 ? _sideUp : _worldUp;
-      _m4.lookAt(_origin, _fwd, _up);
+      const t = THREE.MathUtils.smoothstep(Math.abs(_fwd.y), 0.5, 0.95);
+      _blendUp.lerpVectors(_worldUp, _sideUp, t).normalize();
+      _m4.lookAt(_origin, _fwd, _blendUp);
       _qTarget.setFromRotationMatrix(_m4).multiply(MODEL_ROLL);
-      this.ownQ.rotateTowards(_qTarget, dt * params.TURN_TANG);
+      const targetAlpha = THREE.MathUtils.lerp(0.95, 0.04, t);
+      this.targetQ.slerp(_qTarget, targetAlpha);
+      this.ownQ.rotateTowards(this.targetQ, dt * params.TURN_TANG * (1 - t * 0.90));
       this.mesh.quaternion.copy(this.ownQ);
     }
 
@@ -382,6 +387,7 @@ const tf = {
   pos:      new THREE.Vector3(0, -100, 0),
   vel:      new THREE.Vector3(1, 0, 0),
   ownQ:     new THREE.Quaternion(),
+  targetQ:  new THREE.Quaternion(),
   active:   false,
   timer:    8 + Math.random() * 4,
   startPos: new THREE.Vector3(),
@@ -570,7 +576,7 @@ const textMat = new THREE.ShaderMaterial({
 new FontLoader().load(
   'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json',
   (font) => {
-    const geo = new TextGeometry("Steve's Site", {
+    const geo = new TextGeometry(title, {
       font, size: 2.6, height: 0.42, curveSegments: 10,
       bevelEnabled: true, bevelThickness: 0.09, bevelSize: 0.045, bevelSegments: 4,
     });
@@ -652,10 +658,13 @@ function animate(ts) {
       tf.mesh.position.copy(tf.pos);
       if (tf.vel.lengthSq() > 0.01) {
         _fwd.copy(tf.vel).normalize();
-        const _up = Math.abs(_fwd.y) > 0.9 ? _sideUp : _worldUp;
-        _m4.lookAt(_origin, _fwd, _up);
+        const t = THREE.MathUtils.smoothstep(Math.abs(_fwd.y), 0.5, 0.95);
+        _blendUp.lerpVectors(_worldUp, _sideUp, t).normalize();
+        _m4.lookAt(_origin, _fwd, _blendUp);
         _qTarget.setFromRotationMatrix(_m4).multiply(TF_ROLL);
-        tf.ownQ.rotateTowards(_qTarget, dt * params.TURN_TF);
+        const targetAlpha = THREE.MathUtils.lerp(0.95, 0.04, t);
+        tf.targetQ.slerp(_qTarget, targetAlpha);
+        tf.ownQ.rotateTowards(tf.targetQ, dt * params.TURN_TF * (1 - t * 0.90));
         tf.mesh.quaternion.copy(tf.ownQ);
       }
       if (tf.t >= 1.0) {

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Under the Hood — Boids — Steve's Site</title>
+  <link rel="stylesheet" href="/theme.css" />
+  <style>
+    html, body { height: auto; overflow: auto; }
+
+    .page-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+    }
+
+    .page-hero {
+      margin-bottom: 40px;
+    }
+    .page-hero h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      color: var(--color-primary);
+      margin-bottom: 10px;
+    }
+    .page-hero p {
+      color: var(--color-text-dim);
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+
+    section {
+      margin-bottom: 44px;
+    }
+    section h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    section p {
+      color: var(--color-text);
+      line-height: 1.7;
+      margin-bottom: 14px;
+    }
+    section p:last-child { margin-bottom: 0; }
+
+    /* Fix cards */
+    .fix-list {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .fix-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-left: 3px solid var(--color-primary);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+    }
+    .fix-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--color-primary-hi);
+      margin-bottom: 8px;
+    }
+    .fix-card p {
+      font-size: 0.9rem;
+      color: var(--color-text);
+      line-height: 1.65;
+      margin-bottom: 0;
+    }
+
+    /* Callout box */
+    .callout {
+      background: rgba(125, 212, 232, 0.06);
+      border: 1px solid rgba(125, 212, 232, 0.2);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      font-size: 0.88rem;
+      color: var(--color-text-dim);
+      line-height: 1.65;
+      margin-bottom: 14px;
+    }
+    .callout strong { color: var(--color-primary); }
+
+    .playground-link {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 9px 20px;
+      background: rgba(125, 212, 232, 0.08);
+      border: 1px solid rgba(125, 212, 232, 0.28);
+      border-radius: var(--radius-sm);
+      color: var(--color-primary);
+      font-size: 0.9rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .playground-link:hover {
+      background: rgba(125, 212, 232, 0.16);
+      color: var(--color-primary-hi);
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="page-hero">
+    <h1>Under the Hood</h1>
+    <p>Where this boids simulation diverges from the textbook algorithm — and why.</p>
+  </div>
+
+  <!-- ── The Gap ───────────────────────────────────────────────────────────── -->
+  <section>
+    <h2>The Gap Between Particles and 3D Models</h2>
+    <p>
+      Craig Reynolds' original rules produce a <em>velocity vector</em> for each agent — a direction
+      and a speed. For a point particle or an arrow, that's everything you need to draw it. But a 3D
+      fish model has a nose, a tail, a dorsal fin. Positioning it correctly in space requires
+      knowing not just <em>where it's pointing</em> but <em>which way is up</em> for that particular
+      fish. The boids algorithm doesn't tell you that.
+    </p>
+    <p>
+      Think of each fish as living in two coordinate systems at once. There's the
+      <strong>velocity frame</strong> — the direction the fish is swimming, which is exactly what
+      the boids rules produce. And there's the <strong>body frame</strong> — the fish's own local
+      axes: nose forward, spine upward, fins out to the sides. This is what the renderer needs to
+      orient the 3D mesh. Bridging the two is the core engineering challenge, and it's mostly
+      straightforward — until a fish tries to swim straight up.
+    </p>
+  </section>
+
+  <!-- ── The Singularity ───────────────────────────────────────────────────── -->
+  <section>
+    <h2>The Vertical Singularity</h2>
+    <p>
+      The standard way to align a 3D mesh with a direction is a <code>lookAt</code> operation:
+      given the fish's velocity vector and a "world up" reference — straight up in world space —
+      compute the three axes of the body frame using cross products. This works perfectly for
+      horizontal swimming. But when a fish swims nearly straight up, its velocity vector and the
+      world-up reference become nearly parallel. A cross product of two nearly-parallel vectors
+      produces a result that's close to zero and can point in any direction depending on
+      floating-point rounding. The body frame becomes undefined, and the fish's orientation
+      starts flickering or spinning wildly.
+    </p>
+    <p>
+      This is the "boids spiraling" bug. A fish drifts into a steep upward angle, the
+      orientation math breaks down, the fish starts spinning, and the chaotic rotation feeds
+      back into velocity — which sends the fish spiraling out of control. Fixing it cleanly
+      turns out to require three mechanisms working together.
+    </p>
+  </section>
+
+  <!-- ── Three-Part Fix ────────────────────────────────────────────────────── -->
+  <section>
+    <h2>The Three-Part Fix</h2>
+    <div class="fix-list">
+
+      <div class="fix-card">
+        <h3>1. Blended up-vector</h3>
+        <p>
+          Instead of always using straight-up as the <code>lookAt</code> reference, detect how
+          vertical the fish is swimming and smoothly blend the reference toward a horizontal
+          vector as the fish approaches vertical. The transition is gradual — there's no hard
+          cutoff — so the fish's orientation never jumps. When it matters most (near-vertical),
+          the two input vectors are never nearly parallel, and the cross product stays
+          numerically stable.
+        </p>
+      </div>
+
+      <div class="fix-card">
+        <h3>2. Turn-rate damping near vertical</h3>
+        <p>
+          Even with a stable reference vector, the computed target orientation can still
+          flicker near vertical, because small changes in velocity direction map to large
+          changes in the body frame in that zone. The fix: scale the turn rate down — to as
+          little as 10% of normal — as a fish approaches vertical. The fish can still
+          reorient; it just does so slowly, giving its velocity time to curve back toward
+          horizontal before the orientation can accumulate visible error.
+        </p>
+      </div>
+
+      <div class="fix-card">
+        <h3>3. Orientation smoothing</h3>
+        <p>
+          Each fish maintains a target orientation and blends toward it over time rather than
+          snapping to it instantly. The blend rate is itself adaptive: faster when the fish
+          swims horizontally (stable zone, snappy response is fine), slower when near-vertical
+          (resist sudden changes). Any momentary flicker in the computed target gets absorbed
+          by the smoothing before it ever reaches the rendered mesh.
+        </p>
+      </div>
+
+    </div>
+
+    <div class="callout">
+      These three fixes work at different timescales. The <strong>blended up-vector</strong>
+      prevents bad geometry from being computed in the first place. <strong>Turn-rate damping</strong>
+      slows down how fast bad geometry can propagate into orientation. <strong>Orientation
+      smoothing</strong> absorbs whatever brief instability slips through. Together they make
+      the singularity practically invisible — but any one of them alone isn't enough.
+    </div>
+  </section>
+
+  <!-- ── Preventive Measure ────────────────────────────────────────────────── -->
+  <section>
+    <h2>The Preventive Measure: DAMP_Y</h2>
+    <p>
+      The cleanest fix for a singularity is to not go there in the first place. The
+      <strong>Vertical damping</strong> slider (DAMP_Y) reduces the vertical component of each
+      boid's acceleration every frame. It doesn't prevent vertical motion entirely, but it biases
+      the school toward horizontal swimming — where the orientation math is straightforward and
+      the three-part fix above rarely needs to engage.
+    </p>
+    <p>
+      Think of DAMP_Y as the first line of defense and the three-part fix as the safety net.
+      In practice, a little vertical damping goes a long way: with the default setting, fish
+      still bank and dive naturally, but steep sustained climbs are rare enough that the
+      singularity zone becomes an edge case rather than a regular occurrence.
+    </p>
+    <p>
+      Try dragging DAMP_Y all the way to zero in the playground — the school becomes much more
+      three-dimensional, fish occasionally spiral, and you can see the fix working (imperfectly)
+      in real time.
+    </p>
+
+    <a href="/playground.html" class="playground-link">Open the Playground →</a>
+  </section>
+
+</div>
+<script src="/boids-nav.js"></script>
+</body>
+</html>
