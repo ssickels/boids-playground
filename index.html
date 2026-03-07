@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boids Playground — Steve's Site</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #000d1a; overflow: hidden; }
+    canvas { display: block; }
+
+    #loader {
+      position: fixed; inset: 0;
+      background: #001e2a;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 100;
+      transition: opacity 0.9s ease;
+    }
+    #loader.fade-out { opacity: 0; pointer-events: none; }
+    .loader-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 2rem; font-weight: 300;
+      color: #7dd4e8; letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .loader-spinner {
+      width: 36px; height: 36px;
+      border: 2px solid rgba(125, 212, 232, 0.18);
+      border-top-color: #7dd4e8;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── SLIDER PANEL ─────────────────────────────────────────────────────── */
+    #param-panel {
+      position: fixed;
+      top: 42px;     /* below nav bar */
+      right: 12px;
+      width: 240px;
+      background: rgba(0, 30, 42, 0.82);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(100, 210, 230, 0.18);
+      border-radius: 6px;
+      z-index: 200;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 12px;
+      color: #a8dce8;
+      overflow: hidden;
+    }
+    #param-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(100, 210, 230, 0.14);
+      user-select: none;
+    }
+    #param-panel-header:hover { background: rgba(100, 210, 230, 0.05); }
+    #param-panel-title {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(125, 212, 232, 0.75);
+    }
+    #param-collapse-btn {
+      background: none; border: none; cursor: pointer;
+      color: rgba(125, 212, 232, 0.55);
+      font-size: 14px; line-height: 1;
+      padding: 0 2px;
+      transition: color 0.15s;
+    }
+    #param-collapse-btn:hover { color: #7dd4e8; }
+    #param-panel-body { padding: 6px 0 4px; }
+    #param-panel.collapsed #param-panel-body { display: none; }
+    #param-panel.collapsed { border-radius: 6px; }
+
+    /* section toggle */
+    .param-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 10px 4px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .param-section-header:hover { background: rgba(100, 210, 230, 0.05); }
+    .param-section-label {
+      font-size: 10px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: rgba(100, 210, 230, 0.55);
+    }
+    .param-section-arrow {
+      font-size: 10px;
+      color: rgba(100, 210, 230, 0.40);
+      transition: transform 0.15s;
+    }
+    .param-section.collapsed .param-section-arrow { transform: rotate(-90deg); }
+    .param-section-body { padding: 0 10px 6px; }
+    .param-section.collapsed .param-section-body { display: none; }
+
+    /* individual row */
+    .param-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 7px;
+    }
+    .param-row:last-child { margin-bottom: 0; }
+    .param-label {
+      font-size: 11px;
+      color: #7dd4e8;
+      cursor: help;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .param-value {
+      font-size: 11px;
+      color: rgba(125, 212, 232, 0.65);
+      text-align: right;
+      min-width: 32px;
+    }
+    .param-slider {
+      grid-column: 1 / -1;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(100, 210, 230, 0.18);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    .param-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #7dd4e8;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .param-slider::-webkit-slider-thumb:hover { background: #c8f0f8; }
+    .param-slider::-moz-range-thumb {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #7dd4e8;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* divider between sections */
+    .param-divider {
+      height: 1px;
+      background: rgba(100, 210, 230, 0.10);
+      margin: 2px 0;
+    }
+
+    /* reset button */
+    #param-reset {
+      display: block;
+      width: calc(100% - 20px);
+      margin: 6px 10px 8px;
+      padding: 5px;
+      background: rgba(100, 210, 230, 0.08);
+      border: 1px solid rgba(100, 210, 230, 0.22);
+      border-radius: 4px;
+      color: rgba(125, 212, 232, 0.75);
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+    #param-reset:hover {
+      background: rgba(100, 210, 230, 0.15);
+      color: #c8f0f8;
+    }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three":         "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+<div id="loader">
+  <div class="loader-title">Boids Playground</div>
+  <div class="loader-spinner"></div>
+</div>
+
+<!-- ── SLIDER PANEL ────────────────────────────────────────────────────────── -->
+<div id="param-panel">
+  <div id="param-panel-header">
+    <span id="param-panel-title">Boids Parameters</span>
+    <button id="param-collapse-btn" title="Collapse panel">&#8722;</button>
+  </div>
+  <div id="param-panel-body">
+
+    <!-- School Behavior section -->
+    <div class="param-section" id="section-school">
+      <div class="param-section-header">
+        <span class="param-section-label">School Behavior</span>
+        <span class="param-section-arrow">&#9660;</span>
+      </div>
+      <div class="param-section-body">
+
+        <div class="param-row">
+          <span class="param-label" title="Separation radius (SEP_R): fish closer than this distance push each other away">Separation radius</span>
+          <span class="param-value" id="val-SEP_R">7.5</span>
+          <input class="param-slider" type="range" id="sl-SEP_R" min="1" max="20" step="0.1" value="7.5">
+        </div>
+
+        <div class="param-row">
+          <span class="param-label" title="Alignment radius (ALI_R): fish within this distance try to match each other's velocity">Alignment radius</span>
+          <span class="param-value" id="val-ALI_R">6.5</span>
+          <input class="param-slider" type="range" id="sl-ALI_R" min="1" max="20" step="0.1" value="6.5">
+        </div>
+
+        <div class="param-row">
+          <span class="param-label" title="Cohesion radius (COH_R): fish within this distance steer toward the group center">Cohesion radius</span>
+          <span class="param-value" id="val-COH_R">10.0</span>
+          <input class="param-slider" type="range" id="sl-COH_R" min="1" max="25" step="0.1" value="10.0">
+        </div>
+
+        <div class="param-row">
+          <span class="param-label" title="Separation strength (W_SEP): weight of the separation force — higher = fish spread out more">Separation strength</span>
+          <span class="param-value" id="val-W_SEP">5.0</span>
+          <input class="param-slider" type="range" id="sl-W_SEP" min="0" max="15" step="0.1" value="5.0">
+        </div>
+
+        <div class="param-row">
+          <span class="param-label" title="Alignment strength (W_ALI): weight of the alignment force — higher = fish swim more in parallel">Alignment strength</span>
+          <span class="param-value" id="val-W_ALI">1.5</span>
+          <input class="param-slider" type="range" id="sl-W_ALI" min="0" max="8" step="0.1" value="1.5">
+        </div>
+
+        <div class="param-row">
+          <span class="param-label" title="Cohesion strength (W_COH): weight of the cohesion force — higher = fish cluster tighter">Cohesion strength</span>
+          <span class="param-value" id="val-W_COH">1.2</span>
+          <input class="param-slider" type="range" id="sl-W_COH" min="0" max="8" step="0.1" value="1.2">
+        </div>
+
+      </div>
+    </div>
+
+    <div class="param-divider"></div>
+
+    <!-- Turn & Damping section -->
+    <div class="param-section" id="section-turn">
+      <div class="param-section-header">
+        <span class="param-section-label">Turn &amp; Damping</span>
+        <span class="param-section-arrow">&#9660;</span>
+      </div>
+      <div class="param-section-body">
+
+        <div class="param-row">
+          <span class="param-label" title="Tang turn rate (TURN_TANG): how quickly blue tangs rotate toward their target heading (rad/s)">Tang turn rate</span>
+          <span class="param-value" id="val-TURN_TANG">4.0</span>
+          <input class="param-slider" type="range" id="sl-TURN_TANG" min="0.5" max="12" step="0.1" value="4.0">
+        </div>
+
+        <div class="param-row">
+          <span class="param-label" title="Triggerfish turn rate (TURN_TF): how quickly the triggerfish rotates along its bezier path (rad/s)">Triggerfish turn rate</span>
+          <span class="param-value" id="val-TURN_TF">5.0</span>
+          <input class="param-slider" type="range" id="sl-TURN_TF" min="0.5" max="15" step="0.1" value="5.0">
+        </div>
+
+        <div class="param-row">
+          <span class="param-label" title="Vertical damping (DAMP_Y): reduces vertical acceleration — lower = fish bob up and down more">Vertical damping</span>
+          <span class="param-value" id="val-DAMP_Y">0.30</span>
+          <input class="param-slider" type="range" id="sl-DAMP_Y" min="0" max="1" step="0.01" value="0.30">
+        </div>
+
+        <div class="param-row">
+          <span class="param-label" title="Depth damping (DAMP_Z): reduces depth (z-axis) acceleration — lower = fish scatter toward/away from camera more">Depth damping</span>
+          <span class="param-value" id="val-DAMP_Z">0.50</span>
+          <input class="param-slider" type="range" id="sl-DAMP_Z" min="0" max="1" step="0.01" value="0.50">
+        </div>
+
+      </div>
+    </div>
+
+    <button id="param-reset">Reset to defaults</button>
+  </div>
+</div>
+
+<script type="module">
+import { initScene, DEFAULTS } from './scene.js';
+
+// live params object — mutated by sliders, read every frame by scene.js
+const params = { ...DEFAULTS };
+initScene(document.body, params);
+
+// ── SLIDER WIRING ─────────────────────────────────────────────────────────────
+const keys = ['SEP_R','ALI_R','COH_R','W_SEP','W_ALI','W_COH','TURN_TANG','TURN_TF','DAMP_Y','DAMP_Z'];
+
+for (const key of keys) {
+  const slider = document.getElementById(`sl-${key}`);
+  const display = document.getElementById(`val-${key}`);
+  slider.addEventListener('input', () => {
+    params[key] = parseFloat(slider.value);
+    display.textContent = slider.value;
+  });
+}
+
+// ── RESET ─────────────────────────────────────────────────────────────────────
+document.getElementById('param-reset').addEventListener('click', () => {
+  for (const key of keys) {
+    params[key] = DEFAULTS[key];
+    const slider = document.getElementById(`sl-${key}`);
+    const display = document.getElementById(`val-${key}`);
+    slider.value = DEFAULTS[key];
+    display.textContent = DEFAULTS[key].toString();
+  }
+});
+
+// ── PANEL COLLAPSE ────────────────────────────────────────────────────────────
+const panel = document.getElementById('param-panel');
+const collapseBtn = document.getElementById('param-collapse-btn');
+
+document.getElementById('param-panel-header').addEventListener('click', () => {
+  const isCollapsed = panel.classList.toggle('collapsed');
+  collapseBtn.innerHTML = isCollapsed ? '&#43;' : '&#8722;';
+  collapseBtn.title = isCollapsed ? 'Expand panel' : 'Collapse panel';
+});
+
+// ── SECTION COLLAPSING ────────────────────────────────────────────────────────
+document.querySelectorAll('.param-section-header').forEach(header => {
+  header.addEventListener('click', e => {
+    e.stopPropagation();
+    header.closest('.param-section').classList.toggle('collapsed');
+  });
+});
+</script>
+<script src="/nav.js"></script>
+</body>
+</html>
