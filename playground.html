@@ -26,9 +26,11 @@
     #loader.fade-out { opacity: 0; pointer-events: none; }
     .loader-title {
       font-family: system-ui, -apple-system, sans-serif;
-      font-size: 2rem; font-weight: 300;
+      font-size: 1.5rem; font-weight: 300;
       color: #7dd4e8; letter-spacing: 0.18em;
       text-transform: uppercase;
+      text-align: center;
+      line-height: 1.5;
       margin-bottom: 28px;
     }
     .loader-spinner {
@@ -39,6 +41,13 @@
       animation: spin 0.9s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-note {
+      margin-top: 20px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.85rem;
+      color: rgba(125, 212, 232, 0.55);
+      letter-spacing: 0.04em;
+    }
 
     /* ── SLIDER PANEL ─────────────────────────────────────────────────────── */
     #param-panel {
@@ -198,8 +207,9 @@
 </head>
 <body>
 <div id="loader">
-  <div class="loader-title">Boids Playground</div>
+  <div class="loader-title"><span style="display:block">Boids</span><span style="display:block">Playground</span></div>
   <div class="loader-spinner"></div>
+  <div class="loader-note">Good things take a moment&nbsp;—&nbsp;worth the wait!</div>
 </div>
 
 <!-- ── SLIDER PANEL ────────────────────────────────────────────────────────── -->
@@ -303,7 +313,13 @@ import { initScene, DEFAULTS } from './scene.js';
 
 // live params object — mutated by sliders, read every frame by scene.js
 const params = { ...DEFAULTS };
-initScene(document.body, params, { title: 'Boids Playground' });
+initScene(document.body, params, { title: 'Boids\nPlayground' });
+
+// Safety net: dismiss loader after 20 s if models are still fetching
+setTimeout(() => {
+  const el = document.getElementById('loader');
+  if (el) { el.classList.add('fade-out'); setTimeout(() => el.remove(), 950); }
+}, 20000);
 
 // ── SLIDER WIRING ─────────────────────────────────────────────────────────────
 const keys = ['SEP_R','ALI_R','COH_R','W_SEP','W_ALI','W_COH','TURN_TANG','TURN_TF','DAMP_Y','DAMP_Z'];

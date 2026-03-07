@@ -576,15 +576,20 @@ const textMat = new THREE.ShaderMaterial({
 new FontLoader().load(
   'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json',
   (font) => {
-    const geo = new TextGeometry(title, {
-      font, size: 2.6, height: 0.42, curveSegments: 10,
-      bevelEnabled: true, bevelThickness: 0.09, bevelSize: 0.045, bevelSegments: 4,
+    const lines = title.split('\n');
+    const lineSpacing = 3.2;
+    const topY = 5.8 + ((lines.length - 1) * lineSpacing) / 2;
+    lines.forEach((line, i) => {
+      const geo = new TextGeometry(line, {
+        font, size: 2.6, height: 0.42, curveSegments: 10,
+        bevelEnabled: true, bevelThickness: 0.09, bevelSize: 0.045, bevelSegments: 4,
+      });
+      geo.computeBoundingBox();
+      geo.translate(-(geo.boundingBox.max.x - geo.boundingBox.min.x) / 2, 0, 0);
+      const mesh = new THREE.Mesh(geo, textMat);
+      mesh.position.set(0, topY - i * lineSpacing, -1.5);
+      scene.add(mesh);
     });
-    geo.computeBoundingBox();
-    geo.translate(-(geo.boundingBox.max.x - geo.boundingBox.min.x) / 2, 0, 0);
-    const mesh = new THREE.Mesh(geo, textMat);
-    mesh.position.set(0, 5.8, -1.5);
-    scene.add(mesh);
   }
 );
 
