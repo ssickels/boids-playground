@@ -281,6 +281,11 @@
     }
     #param-desc-btn:hover { color: #7dd4e8; }
     #param-desc-btn.active { color: #7dd4e8; }
+
+    /* viz-linked label colors */
+    #param-panel.viz-on .param-label[data-viz-color="sep"] { color: #ff4444; transition: color 0.2s; }
+    #param-panel.viz-on .param-label[data-viz-color="ali"] { color: #ffe600; transition: color 0.2s; }
+    #param-panel.viz-on .param-label[data-viz-color="coh"] { color: #00d930; transition: color 0.2s; }
   </style>
   <script type="importmap">
   {
@@ -329,42 +334,42 @@
       <div class="param-section-body">
 
         <div class="param-row">
-          <span class="param-label" title="Separation radius (SEP_R): fish closer than this distance push each other away">Separation radius</span>
+          <span class="param-label" data-viz-color="sep" title="Separation radius (SEP_R): fish closer than this distance push each other away">Separation radius</span>
           <span class="param-value" id="val-SEP_R">7.5</span>
           <input class="param-slider" type="range" id="sl-SEP_R" min="1" max="20" step="0.1" value="7.5">
           <span class="param-desc">Fish closer than this push each other away. Raise it and fish give each other a wider berth.</span>
         </div>
 
         <div class="param-row">
-          <span class="param-label" title="Alignment radius (ALI_R): fish within this distance try to match each other's velocity">Alignment radius</span>
+          <span class="param-label" data-viz-color="ali" title="Alignment radius (ALI_R): fish within this distance try to match each other's velocity">Alignment radius</span>
           <span class="param-value" id="val-ALI_R">6.5</span>
           <input class="param-slider" type="range" id="sl-ALI_R" min="1" max="20" step="0.1" value="6.5">
           <span class="param-desc">Fish within this distance try to match each other's heading. Larger = each fish listens to more of the school.</span>
         </div>
 
         <div class="param-row">
-          <span class="param-label" title="Cohesion radius (COH_R): fish within this distance steer toward the group center">Cohesion radius</span>
+          <span class="param-label" data-viz-color="coh" title="Cohesion radius (COH_R): fish within this distance steer toward the group center">Cohesion radius</span>
           <span class="param-value" id="val-COH_R">10.0</span>
           <input class="param-slider" type="range" id="sl-COH_R" min="1" max="25" step="0.1" value="10.0">
           <span class="param-desc">Fish within this distance steer toward the group center. A large value pulls distant stragglers back.</span>
         </div>
 
         <div class="param-row">
-          <span class="param-label" title="Separation strength (W_SEP): weight of the separation force — higher = fish spread out more">Separation strength</span>
+          <span class="param-label" data-viz-color="sep" title="Separation strength (W_SEP): weight of the separation force — higher = fish spread out more">Separation strength</span>
           <span class="param-value" id="val-W_SEP">5.0</span>
           <input class="param-slider" type="range" id="sl-W_SEP" min="0" max="15" step="0.1" value="5.0">
           <span class="param-desc">How hard fish push away from close neighbors. Higher = more spread out.</span>
         </div>
 
         <div class="param-row">
-          <span class="param-label" title="Alignment strength (W_ALI): weight of the alignment force — higher = fish swim more in parallel">Alignment strength</span>
+          <span class="param-label" data-viz-color="ali" title="Alignment strength (W_ALI): weight of the alignment force — higher = fish swim more in parallel">Alignment strength</span>
           <span class="param-value" id="val-W_ALI">1.5</span>
           <input class="param-slider" type="range" id="sl-W_ALI" min="0" max="8" step="0.1" value="1.5">
           <span class="param-desc">How strongly fish match their neighbors' direction. High = tight, synchronized school.</span>
         </div>
 
         <div class="param-row">
-          <span class="param-label" title="Cohesion strength (W_COH): weight of the cohesion force — higher = fish cluster tighter">Cohesion strength</span>
+          <span class="param-label" data-viz-color="coh" title="Cohesion strength (W_COH): weight of the cohesion force — higher = fish cluster tighter">Cohesion strength</span>
           <span class="param-value" id="val-W_COH">1.2</span>
           <input class="param-slider" type="range" id="sl-W_COH" min="0" max="8" step="0.1" value="1.2">
           <span class="param-desc">How hard fish pull toward the group center. Raise to cluster more tightly.</span>
@@ -481,6 +486,7 @@ vizCb  .addEventListener('change', () => {
   params.SHOW_SPHERES = vizCb.checked;
   params.SHOW_LINES   = vizCb.checked;
   vizLegend.classList.toggle('visible', vizCb.checked);
+  panel.classList.toggle('viz-on', vizCb.checked);
 });
 
 // ── RESET ─────────────────────────────────────────────────────────────────────
@@ -496,6 +502,7 @@ document.getElementById('param-reset').addEventListener('click', () => {
   vizCb.checked   = DEFAULTS.SHOW_SPHERES; params.SHOW_SPHERES = DEFAULTS.SHOW_SPHERES;
   params.SHOW_LINES = DEFAULTS.SHOW_LINES;
   vizLegend.classList.toggle('visible', vizCb.checked);
+  panel.classList.toggle('viz-on', vizCb.checked);
 });
 
 // ── PANEL COLLAPSE ────────────────────────────────────────────────────────────
@@ -525,3 +532,4 @@ document.querySelectorAll('.param-section-header').forEach(header => {
 </script>
 <script src="/boids-nav.js"></script>
 </body>
+</html>
