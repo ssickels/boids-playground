@@ -195,9 +195,24 @@
   <section>
     <h2>The Sliders</h2>
     <p>
-      The playground exposes ten parameters. Drag a slider and the simulation responds
-      immediately — no reload needed.
+      The playground exposes eleven sliders and a set of visualization toggles. Drag a
+      slider and the simulation responds immediately — no reload needed. Click the
+      <strong>?</strong> button in the panel header to show inline descriptions for every
+      parameter.
     </p>
+
+    <p class="slider-group-label">Global</p>
+    <table class="slider-table">
+      <thead>
+        <tr><th>Parameter</th><th>What it does</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>SIM_SPEED</td>
+          <td>Simulation speed — a time-scale multiplier. All forces, velocities, and movements scale together, so the behavioral dynamics stay the same — they just happen faster. Useful for quickly seeing the effect of parameter changes.</td>
+        </tr>
+      </tbody>
+    </table>
 
     <p class="slider-group-label">School Behavior</p>
     <table class="slider-table">
@@ -258,12 +273,58 @@
         </tr>
         <tr>
           <td>DAMP_Z</td>
-          <td>Depth damping — reduces acceleration along the depth axis (toward/away from the camera). Lower values scatter fish through the full depth of the scene; higher values keep them in a shallower layer.</td>
+          <td>Distance damping — reduces acceleration along the depth axis (toward/away from the camera). Lower values scatter fish through the full depth of the scene; higher values keep them in a shallower layer.</td>
         </tr>
       </tbody>
     </table>
 
     <a href="/playground.html" class="playground-link">Open the Playground →</a>
+  </section>
+
+  <!-- ── Visualization Tools ──────────────────────────────────────────────── -->
+  <section>
+    <h2>Visualization Tools</h2>
+    <p>
+      Below the sliders, three checkboxes let you peel back the presentation layer and
+      see what the algorithm is actually doing.
+    </p>
+
+    <div class="rules-grid">
+      <div class="rule-card">
+        <h3>Show fish</h3>
+        <p>
+          Enabled by default. Uncheck it and the 3D fish models are replaced by small
+          shaded spheres — one at each boid's center. This strips away visual clutter and
+          makes it easier to track individual agents, especially when combined with the
+          distance lines below.
+        </p>
+      </div>
+      <div class="rule-card">
+        <h3>Radius spheres &amp; distances</h3>
+        <p>
+          Draws a wireframe sphere around each blue tang showing its separation radius, and
+          color-coded lines between every pair of fish that are close enough to interact:
+        </p>
+        <ul style="margin: 8px 0 0 18px; font-size: 0.88rem; line-height: 1.7; color: var(--color-text);">
+          <li><span style="color:#ff4444">Red</span> — inside the separation radius (pushing apart)</li>
+          <li><span style="color:#ffe600">Yellow</span> — inside the alignment radius (matching headings)</li>
+          <li><span style="color:#00d930">Green</span> — inside the cohesion radius (pulling together)</li>
+          <li><span style="color:#ff6633">Orange</span> — tang fleeing the triggerfish</li>
+        </ul>
+        <p style="margin-top: 10px;">
+          Try adjusting the separation, alignment, and cohesion radii while this is
+          enabled — you'll see the spheres and line colors update in real time, making it
+          easy to see exactly how each radius shapes the school's behavior.
+        </p>
+      </div>
+      <div class="rule-card">
+        <h3>Show floating title</h3>
+        <p>
+          Toggles the 3D "Boids Playground" title text on or off, giving a cleaner view of
+          the school.
+        </p>
+      </div>
+    </div>
   </section>
 
   <!-- ── Credits ──────────────────────────────────────────────────────────── -->

@@ -3,21 +3,29 @@ import { FontLoader   } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { GLTFLoader   } from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+import { LineSegments2       } from 'three/addons/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
+import { LineMaterial        } from 'three/addons/lines/LineMaterial.js';
 
 // ── TUNABLE DEFAULTS ──────────────────────────────────────────────────────────
 // Used for playground reset and as initial values for index.html.
 // NUM_FISH and BND are not here — they require a scene restart to change.
 export const DEFAULTS = {
-  SEP_R:     7.5,   // separation radius
-  ALI_R:     6.5,   // alignment radius
-  COH_R:    10.0,   // cohesion radius
-  W_SEP:     5.0,   // separation weight
-  W_ALI:     1.5,   // alignment weight
-  W_COH:     1.2,   // cohesion weight
-  TURN_TANG: 4.0,   // blue tang max turn rate (rad/s)
-  TURN_TF:   5.0,   // triggerfish max turn rate (rad/s)
-  DAMP_Y:    0.20,  // vertical acceleration damping
-  DAMP_Z:    0.50,  // depth acceleration damping
+  SEP_R:      7.5,   // separation radius
+  ALI_R:      6.5,   // alignment radius
+  COH_R:     10.0,   // cohesion radius
+  W_SEP:      5.0,   // separation weight
+  W_ALI:      1.5,   // alignment weight
+  W_COH:      1.2,   // cohesion weight
+  TURN_TANG:  4.0,   // blue tang max turn rate (rad/s)
+  TURN_TF:    5.0,   // triggerfish max turn rate (rad/s)
+  DAMP_Y:     0.20,  // vertical acceleration damping
+  DAMP_Z:     0.50,  // depth acceleration damping
+  SIM_SPEED:    1.0,   // simulation time-scale multiplier
+  SHOW_FISH:    true,  // show fish models
+  SHOW_SPHERES: false, // show separation radius wireframe spheres
+  SHOW_LINES:   false, // show inter-boid distance lines (red/yellow/green)
+  SHOW_TITLE:   true,  // show floating 3D title
 };
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
@@ -274,6 +282,9 @@ const _flee    = new THREE.Vector3();
 const _sideUp  = new THREE.Vector3(1, 0, 0);
 const _blendUp = new THREE.Vector3();
 
+const _markerGeo = new THREE.SphereGeometry(0.45, 12, 8);
+const _markerMat = new THREE.MeshStandardMaterial({ color: 0x7dd4e8, roughness: 0.35, metalness: 0.15 });
+
 class Boid {
   constructor() {
     this.pos = new THREE.Vector3(
@@ -292,6 +303,10 @@ class Boid {
     this.mesh.userData.phase = Math.random() * Math.PI * 2;
     this.mesh.visible = false;
     scene.add(this.mesh);
+
+    this.marker = new THREE.Mesh(_markerGeo, _markerMat);
+    this.marker.visible = false;
+    scene.add(this.marker);
   }
 
   steer(desired) {
@@ -380,6 +395,43 @@ class Boid {
 
 const boids = Array.from({ length: NUM_FISH }, () => new Boid());
 
+// ── SEPARATION SPHERES ────────────────────────────────────────────────────────
+const _sphereWireGeo = new THREE.WireframeGeometry(new THREE.SphereGeometry(1, 12, 8));
+const _sphereMat = new THREE.LineBasicMaterial({ color: 0x7dd4e8, transparent: true, opacity: 0.25 });
+const sepSpheres = boids.map(() => {
+  const s = new THREE.LineSegments(_sphereWireGeo, _sphereMat);
+  s.visible = false;
+  scene.add(s);
+  return s;
+});
+
+// ── INTER-BOID DISTANCE LINES ─────────────────────────────────────────────────
+// tang-tang pairs + tang-triggerfish pairs
+const MAX_PAIRS   = NUM_FISH * (NUM_FISH - 1) / 2 + NUM_FISH;
+const _linePosArr = new Float32Array(MAX_PAIRS * 6); // x1y1z1 x2y2z2 per segment
+const _lineColArr = new Float32Array(MAX_PAIRS * 6); // r1g1b1 r2g2b2 per segment
+const _linesGeo   = new LineSegmentsGeometry();
+_linesGeo.setPositions(_linePosArr);
+_linesGeo.setColors(_lineColArr);
+const _linesMat = new LineMaterial({
+  vertexColors: true,
+  linewidth: 3,          // pixels — actual thick lines
+  transparent: true,
+  opacity: 0.85,
+  resolution: new THREE.Vector2(innerWidth, innerHeight),
+});
+// Strip fog and tone mapping from the shader — property flags aren't reliable
+// for LineMaterial; this is the only bulletproof approach.
+_linesMat.onBeforeCompile = (shader) => {
+  shader.fragmentShader = shader.fragmentShader
+    .replace('#include <tonemapping_fragment>', '')
+    .replace('#include <fog_fragment>',         '');
+};
+const linesObj = new LineSegments2(_linesGeo, _linesMat);
+linesObj.frustumCulled = false;
+linesObj.visible = false;
+scene.add(linesObj);
+
 // ── TRIGGERFISH — SOLO TRAVERSAL ─────────────────────────────────────────────
 const tf = {
   mesh:     null,
@@ -395,7 +447,12 @@ const tf = {
   ctrlPos:  new THREE.Vector3(),
   t:        0,
   duration: 1,
+  marker:   null,
 };
+const _tfMarkerMat = new THREE.MeshStandardMaterial({ color: 0xe8a020, roughness: 0.35, metalness: 0.15 });
+tf.marker = new THREE.Mesh(_markerGeo, _tfMarkerMat);
+tf.marker.visible = false;
+scene.add(tf.marker);
 
 function startTriggerPass() {
   const fromLeft = Math.random() < 0.5;
@@ -494,6 +551,7 @@ void main() {`)
     });
 
     boid.mesh = clone;
+    boid.mesh.userData.ready = true;
     scene.add(clone);
   }
 
@@ -573,6 +631,7 @@ const textMat = new THREE.ShaderMaterial({
     }`,
 });
 
+const titleMeshes = [];
 new FontLoader().load(
   'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json',
   (font) => {
@@ -589,6 +648,7 @@ new FontLoader().load(
       const mesh = new THREE.Mesh(geo, textMat);
       mesh.position.set(0, topY - i * lineSpacing, -1.5);
       scene.add(mesh);
+      titleMeshes.push(mesh);
     });
   }
 );
@@ -598,6 +658,7 @@ window.addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
+  _linesMat.resolution.set(innerWidth, innerHeight);
 });
 
 // ── ANIMATE ───────────────────────────────────────────────────────────────────
@@ -606,7 +667,8 @@ let lastTs = 0;
 function animate(ts) {
   requestAnimationFrame(animate);
   const elapsed = ts * 0.001;
-  const dt      = lastTs > 0 ? Math.min((ts - lastTs) * 0.001, 0.05) : 0.016;
+  const rawDt   = lastTs > 0 ? Math.min((ts - lastTs) * 0.001, 0.05) : 0.016;
+  const dt      = rawDt * params.SIM_SPEED;
   lastTs = ts;
 
   causticUniforms.uTime.value = elapsed;
@@ -681,6 +743,77 @@ function animate(ts) {
   }
 
   for (const b of boids) b.update(boids, dt, elapsed);
+
+  const showTitle = params.SHOW_TITLE !== false;
+  for (const m of titleMeshes) m.visible = showTitle;
+
+  const showFish = params.SHOW_FISH !== false;
+  for (const b of boids) {
+    if (b.mesh.userData.ready) b.mesh.visible = showFish;
+    b.marker.visible = !showFish;
+    b.marker.position.copy(b.pos);
+  }
+  if (tf.mesh) tf.mesh.visible = showFish;
+  tf.marker.visible = !showFish && tf.active;
+  if (tf.marker.visible) tf.marker.position.copy(tf.pos);
+
+  const showSpheres = params.SHOW_SPHERES === true;
+  for (let i = 0; i < boids.length; i++) {
+    sepSpheres[i].visible = showSpheres;
+    if (showSpheres) {
+      sepSpheres[i].position.copy(boids[i].pos);
+      sepSpheres[i].scale.setScalar(params.SEP_R);
+    }
+  }
+
+  // ── INTER-BOID LINES ──────────────────────────────────────────────────────
+  const showLines = params.SHOW_LINES === true;
+  linesObj.visible = showLines;
+  if (showLines) {
+    const maxR = Math.max(params.SEP_R, params.ALI_R, params.COH_R);
+    let pi = 0; // position index (floats), pairs rendered
+    let pairs = 0;
+    // tang ↔ tang lines
+    for (let i = 0; i < boids.length; i++) {
+      for (let j = i + 1; j < boids.length; j++) {
+        const d = boids[i].pos.distanceTo(boids[j].pos);
+        if (d >= maxR) continue;
+        _linePosArr[pi]   = boids[i].pos.x; _linePosArr[pi+1] = boids[i].pos.y; _linePosArr[pi+2] = boids[i].pos.z;
+        _linePosArr[pi+3] = boids[j].pos.x; _linePosArr[pi+4] = boids[j].pos.y; _linePosArr[pi+5] = boids[j].pos.z;
+        // color: red inside SEP_R, yellow inside ALI_R, green inside COH_R
+        let r, g, b;
+        if (d < params.SEP_R)      { r = 1.0; g = 0.0;  b = 0.0;  } // red — separation
+        else if (d < params.ALI_R) { r = 1.0; g = 0.9;  b = 0.0;  } // yellow — alignment
+        else                       { r = 0.0; g = 0.85; b = 0.15; } // green — cohesion
+        const ci = pairs * 6;
+        _lineColArr[ci]   = r; _lineColArr[ci+1] = g; _lineColArr[ci+2] = b;
+        _lineColArr[ci+3] = r; _lineColArr[ci+4] = g; _lineColArr[ci+5] = b;
+        pi += 6;
+        pairs++;
+      }
+    }
+    // tang → triggerfish flee lines (orange)
+    if (tf.active && tf.mesh) {
+      for (let i = 0; i < boids.length; i++) {
+        const d = boids[i].pos.distanceTo(tf.pos);
+        if (d >= TF_FLEE_R) continue;
+        _linePosArr[pi]   = boids[i].pos.x; _linePosArr[pi+1] = boids[i].pos.y; _linePosArr[pi+2] = boids[i].pos.z;
+        _linePosArr[pi+3] = tf.pos.x;        _linePosArr[pi+4] = tf.pos.y;        _linePosArr[pi+5] = tf.pos.z;
+        const ci = pairs * 6;
+        _lineColArr[ci]   = 1.0; _lineColArr[ci+1] = 0.15; _lineColArr[ci+2] = 0.0; // orange
+        _lineColArr[ci+3] = 1.0; _lineColArr[ci+4] = 0.15; _lineColArr[ci+5] = 0.0;
+        pi += 6;
+        pairs++;
+      }
+    }
+    _linesGeo.instanceCount = pairs;
+    _linesGeo.attributes.instanceStart.data.needsUpdate = true;
+    _linesGeo.attributes.instanceEnd.data.needsUpdate   = true;
+    if (_linesGeo.attributes.instanceColorStart) {
+      _linesGeo.attributes.instanceColorStart.data.needsUpdate = true;
+      _linesGeo.attributes.instanceColorEnd.data.needsUpdate   = true;
+    }
+  }
 
   renderer.render(scene, camera);
 }

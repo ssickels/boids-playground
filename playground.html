@@ -89,7 +89,17 @@
       transition: color 0.15s;
     }
     #param-collapse-btn:hover { color: #7dd4e8; }
-    #param-panel-body { padding: 6px 0 4px; }
+    #param-panel-body {
+      padding: 6px 0 4px;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+    }
+    #param-panel-body::-webkit-scrollbar { width: 3px; }
+    #param-panel-body::-webkit-scrollbar-track { background: transparent; }
+    #param-panel-body::-webkit-scrollbar-thumb {
+      background: rgba(100, 210, 230, 0.30);
+      border-radius: 2px;
+    }
     #param-panel.collapsed #param-panel-body { display: none; }
     #param-panel.collapsed { border-radius: 6px; }
 
@@ -180,7 +190,7 @@
     #param-reset {
       display: block;
       width: calc(100% - 20px);
-      margin: 6px 10px 8px;
+      margin: 6px 10px 4px;
       padding: 5px;
       background: rgba(100, 210, 230, 0.08);
       border: 1px solid rgba(100, 210, 230, 0.22);
@@ -195,6 +205,82 @@
       background: rgba(100, 210, 230, 0.15);
       color: #c8f0f8;
     }
+
+    /* visualization checkboxes */
+    #viz-checks {
+      padding: 4px 10px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    #viz-checks label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: rgba(125, 212, 232, 0.65);
+      cursor: pointer;
+      user-select: none;
+    }
+    #viz-checks input[type="checkbox"] {
+      accent-color: #7dd4e8;
+      cursor: pointer;
+    }
+    #viz-legend {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      padding: 4px 0 2px 20px;
+    }
+    #viz-legend.visible { display: flex; }
+    .leg-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .leg-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      color: rgba(125, 212, 232, 0.55);
+    }
+    .leg-line {
+      width: 16px;
+      height: 2px;
+      border-radius: 1px;
+      flex-shrink: 0;
+    }
+    .leg-desc {
+      display: none;
+      font-size: 10px;
+      color: rgba(125, 212, 232, 0.38);
+      line-height: 1.4;
+      padding-left: 22px;
+    }
+    #param-panel.show-desc .leg-desc { display: block; }
+
+    /* inline descriptions */
+    .param-desc {
+      grid-column: 1 / -1;
+      font-size: 10px;
+      color: rgba(125, 212, 232, 0.48);
+      line-height: 1.45;
+      margin-top: 1px;
+      display: none;
+    }
+    #param-panel.show-desc .param-desc { display: block; }
+
+    /* description toggle button */
+    #param-desc-btn {
+      background: none; border: none; cursor: pointer;
+      color: rgba(125, 212, 232, 0.40);
+      font-size: 13px; line-height: 1;
+      padding: 0 2px;
+      transition: color 0.15s;
+    }
+    #param-desc-btn:hover { color: #7dd4e8; }
+    #param-desc-btn.active { color: #7dd4e8; }
   </style>
   <script type="importmap">
   {
@@ -216,9 +302,23 @@
 <div id="param-panel">
   <div id="param-panel-header">
     <span id="param-panel-title">Boids Parameters</span>
-    <button id="param-collapse-btn" title="Collapse panel">&#8722;</button>
+    <div style="display:flex;gap:4px;align-items:center">
+      <button id="param-desc-btn" title="Toggle descriptions">?</button>
+      <button id="param-collapse-btn" title="Collapse panel">&#8722;</button>
+    </div>
   </div>
   <div id="param-panel-body">
+
+    <!-- Simulation speed — global -->
+    <div style="padding: 6px 10px 2px">
+      <div class="param-row">
+        <span class="param-label" title="Simulation speed (SIM_SPEED): time-scale multiplier — all forces and movements scale together">Sim speed</span>
+        <span class="param-value" id="val-SIM_SPEED">1.0</span>
+        <input class="param-slider" type="range" id="sl-SIM_SPEED" min="1" max="4" step="0.1" value="1.0">
+        <span class="param-desc">Speeds up the whole simulation uniformly. Parameter effects (schooling, separation, etc.) stay proportional — they just happen faster.</span>
+      </div>
+    </div>
+    <div class="param-divider"></div>
 
     <!-- School Behavior section -->
     <div class="param-section" id="section-school">
@@ -232,36 +332,42 @@
           <span class="param-label" title="Separation radius (SEP_R): fish closer than this distance push each other away">Separation radius</span>
           <span class="param-value" id="val-SEP_R">7.5</span>
           <input class="param-slider" type="range" id="sl-SEP_R" min="1" max="20" step="0.1" value="7.5">
+          <span class="param-desc">Fish closer than this push each other away. Raise it and fish give each other a wider berth.</span>
         </div>
 
         <div class="param-row">
           <span class="param-label" title="Alignment radius (ALI_R): fish within this distance try to match each other's velocity">Alignment radius</span>
           <span class="param-value" id="val-ALI_R">6.5</span>
           <input class="param-slider" type="range" id="sl-ALI_R" min="1" max="20" step="0.1" value="6.5">
+          <span class="param-desc">Fish within this distance try to match each other's heading. Larger = each fish listens to more of the school.</span>
         </div>
 
         <div class="param-row">
           <span class="param-label" title="Cohesion radius (COH_R): fish within this distance steer toward the group center">Cohesion radius</span>
           <span class="param-value" id="val-COH_R">10.0</span>
           <input class="param-slider" type="range" id="sl-COH_R" min="1" max="25" step="0.1" value="10.0">
+          <span class="param-desc">Fish within this distance steer toward the group center. A large value pulls distant stragglers back.</span>
         </div>
 
         <div class="param-row">
           <span class="param-label" title="Separation strength (W_SEP): weight of the separation force — higher = fish spread out more">Separation strength</span>
           <span class="param-value" id="val-W_SEP">5.0</span>
           <input class="param-slider" type="range" id="sl-W_SEP" min="0" max="15" step="0.1" value="5.0">
+          <span class="param-desc">How hard fish push away from close neighbors. Higher = more spread out.</span>
         </div>
 
         <div class="param-row">
           <span class="param-label" title="Alignment strength (W_ALI): weight of the alignment force — higher = fish swim more in parallel">Alignment strength</span>
           <span class="param-value" id="val-W_ALI">1.5</span>
           <input class="param-slider" type="range" id="sl-W_ALI" min="0" max="8" step="0.1" value="1.5">
+          <span class="param-desc">How strongly fish match their neighbors' direction. High = tight, synchronized school.</span>
         </div>
 
         <div class="param-row">
           <span class="param-label" title="Cohesion strength (W_COH): weight of the cohesion force — higher = fish cluster tighter">Cohesion strength</span>
           <span class="param-value" id="val-W_COH">1.2</span>
           <input class="param-slider" type="range" id="sl-W_COH" min="0" max="8" step="0.1" value="1.2">
+          <span class="param-desc">How hard fish pull toward the group center. Raise to cluster more tightly.</span>
         </div>
 
       </div>
@@ -281,30 +387,61 @@
           <span class="param-label" title="Tang turn rate (TURN_TANG): how quickly blue tangs rotate toward their target heading (rad/s)">Tang turn rate</span>
           <span class="param-value" id="val-TURN_TANG">4.0</span>
           <input class="param-slider" type="range" id="sl-TURN_TANG" min="0.5" max="12" step="0.1" value="4.0">
+          <span class="param-desc">How quickly blue tangs rotate toward their target heading. Higher = snappier turns.</span>
         </div>
 
         <div class="param-row">
           <span class="param-label" title="Triggerfish turn rate (TURN_TF): how quickly the triggerfish rotates along its bezier path (rad/s)">Triggerfish turn rate</span>
           <span class="param-value" id="val-TURN_TF">5.0</span>
           <input class="param-slider" type="range" id="sl-TURN_TF" min="0.5" max="15" step="0.1" value="5.0">
+          <span class="param-desc">How quickly the triggerfish rotates along its path. Higher = hugs the curve more tightly.</span>
         </div>
 
         <div class="param-row">
           <span class="param-label" title="Vertical damping (DAMP_Y): reduces vertical acceleration — lower = fish bob up and down more">Vertical damping</span>
           <span class="param-value" id="val-DAMP_Y">0.20</span>
           <input class="param-slider" type="range" id="sl-DAMP_Y" min="0" max="1" step="0.01" value="0.20">
+          <span class="param-desc">Reduces vertical acceleration. Lower = fish bob up and down more freely.</span>
         </div>
 
         <div class="param-row">
-          <span class="param-label" title="Depth damping (DAMP_Z): reduces depth (z-axis) acceleration — lower = fish scatter toward/away from camera more">Depth damping</span>
+          <span class="param-label" title="Distance damping (DAMP_Z): reduces depth (z-axis) acceleration — lower = fish scatter toward/away from camera more">Distance damping</span>
           <span class="param-value" id="val-DAMP_Z">0.50</span>
           <input class="param-slider" type="range" id="sl-DAMP_Z" min="0" max="1" step="0.01" value="0.50">
+          <span class="param-desc">Reduces depth acceleration. Lower = fish scatter more toward/away from the camera.</span>
         </div>
 
       </div>
     </div>
 
     <button id="param-reset">Reset to defaults</button>
+    <div id="viz-checks">
+      <label><input type="checkbox" id="cb-SHOW_FISH" checked> <span>Show fish</span></label>
+      <label><input type="checkbox" id="cb-SHOW_VIZ"> <span>Radius spheres &amp; distances</span></label>
+      <div id="viz-legend">
+        <span class="leg-item">
+          <span class="leg-header"><span class="leg-line" style="background:#ff0000"></span>Separation</span>
+          <span class="leg-desc">Too close — pushing each other apart</span>
+        </span>
+        <span class="leg-item">
+          <span class="leg-header"><span class="leg-line" style="background:#ffe600"></span>Alignment</span>
+          <span class="leg-desc">Close enough to match each other's direction</span>
+        </span>
+        <span class="leg-item">
+          <span class="leg-header"><span class="leg-line" style="background:#00d930"></span>Cohesion</span>
+          <span class="leg-desc">Drifting apart — being pulled back in</span>
+        </span>
+        <span class="leg-item">
+          <span class="leg-header"><span class="leg-line" style="background:#ff4400"></span>Triggerfish</span>
+          <span class="leg-desc">Tang is scared away by the triggerfish</span>
+        </span>
+        <span class="leg-item">
+          <span class="leg-header"><span class="leg-line" style="background:transparent; border: 1px solid rgba(125,212,232,0.3); border-radius:50%; width:12px; height:12px;"></span>Spheres</span>
+          <span class="leg-desc">Each sphere shows a tang's personal space — how close is too close</span>
+        </span>
+      </div>
+      <label><input type="checkbox" id="cb-SHOW_TITLE" checked> <span>Show floating title</span></label>
+    </div>
   </div>
 </div>
 
@@ -322,7 +459,7 @@ setTimeout(() => {
 }, 20000);
 
 // ── SLIDER WIRING ─────────────────────────────────────────────────────────────
-const keys = ['SEP_R','ALI_R','COH_R','W_SEP','W_ALI','W_COH','TURN_TANG','TURN_TF','DAMP_Y','DAMP_Z'];
+const keys = ['SIM_SPEED','SEP_R','ALI_R','COH_R','W_SEP','W_ALI','W_COH','TURN_TANG','TURN_TF','DAMP_Y','DAMP_Z'];
 
 for (const key of keys) {
   const slider = document.getElementById(`sl-${key}`);
@@ -333,6 +470,19 @@ for (const key of keys) {
   });
 }
 
+// ── VISUALIZATION CHECKBOXES ───────────────────────────────────────────────────
+const titleCb  = document.getElementById('cb-SHOW_TITLE');
+const fishCb   = document.getElementById('cb-SHOW_FISH');
+const vizCb    = document.getElementById('cb-SHOW_VIZ');
+const vizLegend = document.getElementById('viz-legend');
+titleCb.addEventListener('change', () => { params.SHOW_TITLE = titleCb.checked; });
+fishCb .addEventListener('change', () => { params.SHOW_FISH  = fishCb.checked; });
+vizCb  .addEventListener('change', () => {
+  params.SHOW_SPHERES = vizCb.checked;
+  params.SHOW_LINES   = vizCb.checked;
+  vizLegend.classList.toggle('visible', vizCb.checked);
+});
+
 // ── RESET ─────────────────────────────────────────────────────────────────────
 document.getElementById('param-reset').addEventListener('click', () => {
   for (const key of keys) {
@@ -342,6 +492,10 @@ document.getElementById('param-reset').addEventListener('click', () => {
     slider.value = DEFAULTS[key];
     display.textContent = DEFAULTS[key].toString();
   }
+  fishCb.checked  = DEFAULTS.SHOW_FISH;    params.SHOW_FISH    = DEFAULTS.SHOW_FISH;
+  vizCb.checked   = DEFAULTS.SHOW_SPHERES; params.SHOW_SPHERES = DEFAULTS.SHOW_SPHERES;
+  params.SHOW_LINES = DEFAULTS.SHOW_LINES;
+  vizLegend.classList.toggle('visible', vizCb.checked);
 });
 
 // ── PANEL COLLAPSE ────────────────────────────────────────────────────────────
@@ -354,6 +508,13 @@ document.getElementById('param-panel-header').addEventListener('click', () => {
   collapseBtn.title = isCollapsed ? 'Expand panel' : 'Collapse panel';
 });
 
+// ── DESCRIPTION TOGGLE ────────────────────────────────────────────────────────
+document.getElementById('param-desc-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  const showing = panel.classList.toggle('show-desc');
+  e.currentTarget.classList.toggle('active', showing);
+});
+
 // ── SECTION COLLAPSING ────────────────────────────────────────────────────────
 document.querySelectorAll('.param-section-header').forEach(header => {
   header.addEventListener('click', e => {
@@ -364,4 +525,3 @@ document.querySelectorAll('.param-section-header').forEach(header => {
 </script>
 <script src="/boids-nav.js"></script>
 </body>
-</html>
