@@ -17,8 +17,8 @@
       <a href="/dashboard-two/">Dashboard</a>
     </div>
     <div class="nav-panel-section">
-      <div class="nav-panel-heading">This Site</div>
-      <a href="/playground.html">Boids Playground</a>
+      <div class="nav-panel-heading">Boids / Fish</div>
+      <a href="/playground.html">Playground</a>
       <a href="/about.html" class="nav-panel-top-link" style="padding-left:28px">About This Site</a>
     </div>
   </div>
