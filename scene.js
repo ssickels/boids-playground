@@ -26,6 +26,7 @@ export const DEFAULTS = {
   SHOW_SPHERES: false, // show separation radius wireframe spheres
   SHOW_LINES:   false, // show inter-boid distance lines (red/yellow/green)
   SHOW_TITLE:   true,  // show floating 3D title
+  SPHERE_MODE: 'sep',  // which radius spheres to show: 'sep', 'ali', 'coh'
 };
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
@@ -285,6 +286,9 @@ const _blendUp = new THREE.Vector3();
 const _markerGeo = new THREE.SphereGeometry(0.45, 12, 8);
 const _markerMat = new THREE.MeshStandardMaterial({ color: 0x7dd4e8, roughness: 0.35, metalness: 0.15 });
 
+const _avgVel  = new THREE.Vector3();
+const _avgPos  = new THREE.Vector3();
+
 class Boid {
   constructor() {
     this.pos = new THREE.Vector3(
@@ -307,6 +311,7 @@ class Boid {
     this.marker = new THREE.Mesh(_markerGeo, _markerMat);
     this.marker.visible = false;
     scene.add(this.marker);
+
   }
 
   steer(desired) {
@@ -341,7 +346,7 @@ class Boid {
     return this.steer(desired).multiplyScalar(0.55);
   }
   boundary() {
-    const f = new THREE.Vector3(), k = 0.18, margin = 4;
+    const f = new THREE.Vector3(), k = 0.25, margin = 4.5;
     const push = (v, b) => v > b-margin ? -k*(v-(b-margin))/margin : v < -b+margin ? k*(-b+margin-v)/margin : 0;
     f.x = push(this.pos.x, BND.x);
     f.y = push(this.pos.y, BND.y);
@@ -397,13 +402,45 @@ const boids = Array.from({ length: NUM_FISH }, () => new Boid());
 
 // ── SEPARATION SPHERES ────────────────────────────────────────────────────────
 const _sphereWireGeo = new THREE.WireframeGeometry(new THREE.SphereGeometry(1, 12, 8));
-const _sphereMat = new THREE.LineBasicMaterial({ color: 0x7dd4e8, transparent: true, opacity: 0.25 });
+const _sphereMat = new THREE.LineBasicMaterial({
+  color: new THREE.Color(200/255, 80/255, 80/255), transparent: true, opacity: 0.25,
+});
+const _aliSphereMat = new THREE.LineBasicMaterial({
+  color: new THREE.Color(220/255, 170/255, 40/255), transparent: true, opacity: 0.25,
+});
+const _cohSphereMat = new THREE.LineBasicMaterial({
+  color: new THREE.Color(40/255, 190/255, 130/255), transparent: true, opacity: 0.25,
+});
 const sepSpheres = boids.map(() => {
   const s = new THREE.LineSegments(_sphereWireGeo, _sphereMat);
   s.visible = false;
   scene.add(s);
   return s;
 });
+const aliSpheres = boids.map(() => {
+  const s = new THREE.LineSegments(_sphereWireGeo, _aliSphereMat);
+  s.visible = false;
+  scene.add(s);
+  return s;
+});
+const cohSpheres = boids.map(() => {
+  const s = new THREE.LineSegments(_sphereWireGeo, _cohSphereMat);
+  s.visible = false;
+  scene.add(s);
+  return s;
+});
+
+// ── ALIGNMENT ARROW (custom mesh — not ArrowHelper) ───────────────────────────
+const _arrowMat = new THREE.MeshStandardMaterial({ color: 0xffe600, roughness: 0.4, metalness: 0.1 });
+const _arrowShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 1, 8), _arrowMat);
+_arrowShaft.position.y = 0.5;
+const _arrowHead = new THREE.Mesh(new THREE.ConeGeometry(0.6, 1.1, 12), _arrowMat);
+_arrowHead.position.y = 1.55;
+const aliArrow = new THREE.Group();
+aliArrow.add(_arrowShaft);
+aliArrow.add(_arrowHead);
+aliArrow.visible = false;
+scene.add(aliArrow);
 
 // ── INTER-BOID DISTANCE LINES ─────────────────────────────────────────────────
 // tang-tang pairs + tang-triggerfish pairs
@@ -749,7 +786,7 @@ function animate(ts) {
 
   const showFish = params.SHOW_FISH !== false;
   for (const b of boids) {
-    if (b.mesh.userData.ready) b.mesh.visible = showFish;
+    b.mesh.visible = showFish;
     b.marker.visible = !showFish;
     b.marker.position.copy(b.pos);
   }
@@ -758,11 +795,54 @@ function animate(ts) {
   if (tf.marker.visible) tf.marker.position.copy(tf.pos);
 
   const showSpheres = params.SHOW_SPHERES === true;
+  const sphereMode  = params.SPHERE_MODE || 'sep';
   for (let i = 0; i < boids.length; i++) {
-    sepSpheres[i].visible = showSpheres;
-    if (showSpheres) {
+    const showSep = showSpheres && sphereMode === 'sep';
+    const showAli = showSpheres && sphereMode === 'ali';
+    const showCoh = showSpheres && sphereMode === 'coh';
+    sepSpheres[i].visible = showSep;
+    aliSpheres[i].visible = showAli;
+    cohSpheres[i].visible = showCoh;
+    if (showSep) {
       sepSpheres[i].position.copy(boids[i].pos);
       sepSpheres[i].scale.setScalar(params.SEP_R);
+    }
+    if (showAli) {
+      aliSpheres[i].position.copy(boids[i].pos);
+      aliSpheres[i].scale.setScalar(params.ALI_R);
+    }
+    if (showCoh) {
+      cohSpheres[i].position.copy(boids[i].pos);
+      cohSpheres[i].scale.setScalar(params.COH_R);
+    }
+  }
+
+  // ── ALIGNMENT ARROW ─────────────────────────────────────────────────────
+  const showArrow = showSpheres && sphereMode === 'ali';
+  aliArrow.visible = showArrow;
+  if (showArrow) {
+    _avgPos.set(0, 0, 0);
+    _avgVel.set(0, 0, 0);
+    for (const b of boids) { _avgPos.add(b.pos); _avgVel.add(b.vel); }
+    _avgPos.divideScalar(boids.length);
+    _avgVel.divideScalar(boids.length);
+    aliArrow.position.copy(_avgPos);
+    if (_avgVel.lengthSq() > 0.001) {
+      const dir = _avgVel.clone().normalize();
+      // Scale arrow by alignment strength: 1× at default (1.5), up to ~2.5× at max (8)
+      const s = Math.min(2.0, params.W_ALI / 1.5);
+      const shaftLen = 3.5 * s;
+      _arrowShaft.visible = s > 0.01;
+      if (_arrowShaft.visible) {
+        _arrowShaft.scale.set(s, shaftLen, s);
+        _arrowShaft.position.y = shaftLen / 2;
+      }
+      const hs = Math.max(0.4, s);
+      _arrowHead.scale.setScalar(hs);
+      _arrowHead.position.y = shaftLen + 0.3 * hs;
+      // Orient: default group Y-axis → dir
+      const up = new THREE.Vector3(0, 1, 0);
+      aliArrow.quaternion.setFromUnitVectors(up, dir);
     }
   }
 

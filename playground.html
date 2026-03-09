@@ -442,7 +442,25 @@
         </span>
         <span class="leg-item">
           <span class="leg-header"><span class="leg-line" style="background:transparent; border: 1px solid rgba(125,212,232,0.3); border-radius:50%; width:12px; height:12px;"></span>Spheres</span>
-          <span class="leg-desc">Each sphere shows a tang's personal space — how close is too close</span>
+          <span class="leg-desc">Each sphere shows a tang's radius for the selected rule below</span>
+        </span>
+        <span class="leg-item" style="padding-left:16px">
+          <label style="display:flex;align-items:center;gap:4px;color:rgb(200,80,80);cursor:pointer;font-size:10px">
+            <input type="radio" name="sphere-mode" value="sep" checked style="accent-color:rgb(200,80,80);cursor:pointer;margin:0"> Separation
+          </label>
+          <span class="leg-desc">How close is too close — pair with the separation radius slider</span>
+        </span>
+        <span class="leg-item" style="padding-left:16px">
+          <label style="display:flex;align-items:center;gap:4px;color:rgb(200,180,50);cursor:pointer;font-size:10px">
+            <input type="radio" name="sphere-mode" value="ali" style="accent-color:rgb(200,180,50);cursor:pointer;margin:0"> Alignment
+          </label>
+          <span class="leg-desc">Heading-matching zone — the yellow arrow shows the school's average direction</span>
+        </span>
+        <span class="leg-item" style="padding-left:16px">
+          <label style="display:flex;align-items:center;gap:4px;color:rgb(60,180,70);cursor:pointer;font-size:10px">
+            <input type="radio" name="sphere-mode" value="coh" style="accent-color:rgb(60,180,70);cursor:pointer;margin:0"> Cohesion
+          </label>
+          <span class="leg-desc">Group-pull zone — fish steer toward the center of neighbors in this radius</span>
         </span>
       </div>
       <label><input type="checkbox" id="cb-SHOW_TITLE" checked> <span>Show floating title</span></label>
@@ -489,6 +507,11 @@ vizCb  .addEventListener('change', () => {
   panel.classList.toggle('viz-on', vizCb.checked);
 });
 
+// ── SPHERE MODE RADIOS ───────────────────────────────────────────────────────
+document.querySelectorAll('input[name="sphere-mode"]').forEach(radio => {
+  radio.addEventListener('change', () => { params.SPHERE_MODE = radio.value; });
+});
+
 // ── RESET ─────────────────────────────────────────────────────────────────────
 document.getElementById('param-reset').addEventListener('click', () => {
   for (const key of keys) {
@@ -501,6 +524,8 @@ document.getElementById('param-reset').addEventListener('click', () => {
   fishCb.checked  = DEFAULTS.SHOW_FISH;    params.SHOW_FISH    = DEFAULTS.SHOW_FISH;
   vizCb.checked   = DEFAULTS.SHOW_SPHERES; params.SHOW_SPHERES = DEFAULTS.SHOW_SPHERES;
   params.SHOW_LINES = DEFAULTS.SHOW_LINES;
+  params.SPHERE_MODE = DEFAULTS.SPHERE_MODE;
+  document.querySelector('input[name="sphere-mode"][value="sep"]').checked = true;
   vizLegend.classList.toggle('visible', vizCb.checked);
   panel.classList.toggle('viz-on', vizCb.checked);
 });

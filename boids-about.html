@@ -302,19 +302,46 @@
       <div class="rule-card">
         <h3>Radius spheres &amp; distances</h3>
         <p>
-          Draws a wireframe sphere around each blue tang showing its separation radius, and
-          color-coded lines between every pair of fish that are close enough to interact:
+          This toggle draws color-coded lines between every pair of fish that are close
+          enough to interact, plus wireframe spheres around each tang whose color and
+          size match one of the three boid rules. Use the radio buttons to choose which
+          rule's radius to visualize:
         </p>
         <ul style="margin: 8px 0 0 18px; font-size: 0.88rem; line-height: 1.7; color: var(--color-text);">
+          <li><span style="color:#c85050">Separation spheres</span> — show how close is
+            "too close." Drag the separation radius slider while these are visible and
+            watch the spheres grow or shrink, directly revealing how much personal space
+            each fish demands.</li>
+          <li><span style="color:#c8b432">Alignment spheres</span> — show the zone where
+            fish try to match headings. A bold yellow arrow also appears at the school's
+            center, pointing in the average swimming direction. The arrow's size responds
+            to the alignment strength slider — crank it up and the arrow grows, giving you
+            an at-a-glance sense of how dominant alignment is in the current mix of forces.
+            This arrow is a convenient shorthand for the whole school's heading — but keep
+            in mind that in the actual simulation each fish computes its <em>own</em> local
+            average from just the neighbors inside its alignment radius. Those per-fish
+            vectors are generally similar but each a little different; that local-only
+            information is what makes boid alignment emergent.</li>
+          <li><span style="color:#3cb446">Cohesion spheres</span> — show how far each fish
+            looks when deciding where "the group" is. Each fish steers toward the center
+            of whichever neighbors fall inside this radius. There's no extra overlay here
+            because drawing each fish's individual target point would add visual noise
+            without much insight — the spheres themselves already reveal who's pulling
+            whom.</li>
+        </ul>
+        <p style="margin-top: 10px;">
+          The distance lines use the same color logic:
+        </p>
+        <ul style="margin: 4px 0 0 18px; font-size: 0.88rem; line-height: 1.7; color: var(--color-text);">
           <li><span style="color:#ff4444">Red</span> — inside the separation radius (pushing apart)</li>
           <li><span style="color:#ffe600">Yellow</span> — inside the alignment radius (matching headings)</li>
           <li><span style="color:#00d930">Green</span> — inside the cohesion radius (pulling together)</li>
           <li><span style="color:#ff6633">Orange</span> — tang fleeing the triggerfish</li>
         </ul>
         <p style="margin-top: 10px;">
-          Try adjusting the separation, alignment, and cohesion radii while this is
-          enabled — you'll see the spheres and line colors update in real time, making it
-          easy to see exactly how each radius shapes the school's behavior.
+          Try adjusting a radius slider while viewing its matching sphere type — the
+          spheres and line colors update in real time, making it easy to see exactly how
+          each radius shapes the school's behavior.
         </p>
       </div>
       <div class="rule-card">
