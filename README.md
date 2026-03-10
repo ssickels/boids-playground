@@ -6,6 +6,7 @@ A real-time slider panel lets you tune all boid behavior values while the simula
 
 **Live demo:** [stevessite.com/playground.html](https://stevessite.com/playground.html)
 
+![Preview of the live Boids Playground, with the "Show spheres and distances" option selected](https://stevessite.com/boids_playground_preview.jpg)
 ---
 
 ## Pages
