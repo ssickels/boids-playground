@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How Boids Work — Steve's Site</title>
+  <link rel="stylesheet" href="/theme.css" />
+  <style>
+    html, body { height: auto; overflow: auto; }
+
+    .page-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+    }
+
+    .page-hero {
+      margin-bottom: 40px;
+    }
+    .page-hero h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      color: var(--color-primary);
+      margin-bottom: 10px;
+    }
+    .page-hero p {
+      color: var(--color-text-dim);
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+
+    section {
+      margin-bottom: 44px;
+    }
+    section h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    section p {
+      color: var(--color-text);
+      line-height: 1.7;
+      margin-bottom: 14px;
+    }
+    section p:last-child { margin-bottom: 0; }
+
+    /* ── Demo containers ─────────────────────────────────────── */
+    .demo-container {
+      background: #001018;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin: 20px 0;
+    }
+    .demo-canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: var(--radius-sm);
+    }
+
+    /* ── Vector legend ───────────────────────────────────────── */
+    .demo-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 10px 4px 6px;
+      font-size: 0.78rem;
+      color: var(--color-text-dim);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-swatch {
+      display: inline-block;
+      width: 10px;
+      height: 3px;
+      border-radius: 1px;
+    }
+
+    /* ── Slider controls ─────────────────────────────────────── */
+    .demo-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 8px 4px 4px;
+    }
+    .demo-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
+      color: var(--color-text-dim);
+    }
+    .demo-control-label {
+      min-width: 60px;
+      text-align: right;
+    }
+    .demo-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 130px;
+      height: 4px;
+      background: rgba(100, 210, 230, 0.15);
+      border-radius: 2px;
+      border: none;
+      outline: none;
+      cursor: pointer;
+    }
+    .demo-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #7dd4e8;
+      cursor: pointer;
+      border: none;
+    }
+    .demo-slider::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #7dd4e8;
+      cursor: pointer;
+      border: none;
+    }
+    .demo-control-value {
+      min-width: 36px;
+      color: var(--color-primary);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    /* ── Placeholder for future demos ────────────────────────── */
+    .demo-placeholder {
+      background: #001018;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-dim);
+      font-size: 0.88rem;
+      margin: 20px 0;
+    }
+
+    .playground-link {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 9px 20px;
+      background: rgba(125, 212, 232, 0.08);
+      border: 1px solid rgba(125, 212, 232, 0.28);
+      border-radius: var(--radius-sm);
+      color: var(--color-primary);
+      font-size: 0.9rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .playground-link:hover {
+      background: rgba(125, 212, 232, 0.16);
+      color: var(--color-primary-hi);
+    }
+    .playground-hint {
+      margin-top: 10px;
+      font-size: 0.82rem;
+      color: var(--color-text-dim);
+      font-style: italic;
+    }
+
+    @media (max-width: 600px) {
+      .page-wrap { padding: 50px 16px 60px; }
+      .demo-controls { flex-direction: column; gap: 10px; }
+      .demo-slider { width: 100px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="page-hero">
+    <h1>How Boids Work</h1>
+    <p>See the vector math behind each boid rule — in real time.</p>
+  </div>
+
+  <!-- ── Introduction ────────────────────────────────────────────────────── -->
+  <section>
+    <h2>The Vector Arithmetic</h2>
+    <p>
+      Each boid rule — separation, alignment, and cohesion — boils down to a single
+      steering vector. Every frame, the simulation computes all three vectors for every
+      boid, adds them together, and nudges the boid's velocity in that direction.
+      That's it. The rich collective behavior you see in the playground on this site emerges entirely
+      from this per-boid vector addition.
+    </p>
+    <p>
+      The demos below isolate each rule so you can watch the vectors form in real time.
+      A fixed <span style="color:#e4f6fb">central boid</span> sits at the center of each
+      canvas while <span style="color:#5a9aaa">passing boids</span> follow looping paths
+      around it. When a neighbor enters the boid's radius for a given rule, the corresponding force vector
+      appears and the central boid's heading deflects. Drag the sliders to change the
+      radius and strength and see how the vectors respond.
+    </p>
+    <p>
+      A note on perspective: the central boid's position stays fixed because we're
+      looking at its environment from <em>its</em> point of view. Imagine you're
+      swimming just above this boid, keeping pace with it — you see the same
+      neighborhood it sees, with other boids drifting in and out of its radius. The
+      boid isn't sitting still; <em>we're moving with it</em>, so everything else
+      appears to move around it. It's a bit like watching the world scroll past from
+      a car window — the car feels stationary, the landscape moves.
+    </p>
+    <p>
+      Below, we'll isolate each rule one at a time so the effect is clear on its
+      own. Then we'll combine all three and watch the interplay. It's only in
+      combination that the emergent, lifelike behavior appears — without any
+      boid knowing the big picture.
+    </p>
+  </section>
+
+  <!-- ── Separation ──────────────────────────────────────────────────────── -->
+  <section>
+    <h2>1 &middot; Separation</h2>
+    <p>
+      Separation keeps boids from crowding each other. For every neighbor inside the
+      separation radius, a repulsion vector points <em>away</em> from that neighbor.
+      Closer neighbors produce stronger repulsion — the force falls off linearly with
+      distance. All the individual repulsion vectors are summed and scaled by the
+      strength parameter to produce the final <span style="color:#ff0000">separation
+      delta</span>.
+    </p>
+    <p style="color: var(--color-text-dim); font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px;">Arrows</p>
+    <ul style="list-style:none; padding:0; margin:0 0 18px;">
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:#ffffff; font-weight:600;">White arrow</span> —
+        the boid's current velocity (the direction it's swimming).
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:#ff0000; font-weight:600;">Red arrow</span> —
+        the separation delta: the sum of all "push away" forces from neighbors inside the radius.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:#888; font-weight:600;">Gray arrow</span> —
+        the target: current velocity + separation delta. This is what the velocity
+        <em>becomes</em> after the force is applied — this is the boid
+        <em>turning to its left or right</em>.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:rgba(255,0,0,0.65); font-weight:600;">Red circle</span> —
+        the separation radius. Any neighbor inside this circle triggers a repulsion force.
+      </li>
+    </ul>
+
+    <p style="color: var(--color-text-dim); font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px;">Sliders</p>
+    <ul style="list-style:none; padding:0; margin:0 0 14px;">
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <strong>Radius</strong> —
+        sets how far the boid can "see." Any neighbor inside this distance
+        (the red circle) triggers a repulsion force; anything outside it is
+        invisible to this rule.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <strong>Strength</strong> —
+        how aggressively the boid reacts. At low strength the target arrow
+        barely budges from the current velocity; crank it up and even a
+        distant neighbor inside the radius produces a strong push.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <strong>Speed</strong> —
+        how fast the simulation runs.
+      </li>
+    </ul>
+
+    <p style="color: var(--color-text-dim); font-size: 0.84rem; line-height: 1.6; margin-bottom: 14px;">
+      <em>In the weeds:</em> When the gray target arrow is longer than the white
+      velocity arrow, that's the boid literally speeding up — not just turning. The
+      raw vector math produces both a direction change and a magnitude increase.
+      In practice, most boids implementations (including the playground on this site) clamp each
+      boid's speed to a maximum, so the burst of acceleration is brief and the speed
+      normalizes. The lasting effect is the direction change. But the length of the
+      gray arrow is honest: it shows the true force magnitude before clamping.
+    </p>
+
+    <div class="demo-container">
+      <canvas id="sep-canvas" class="demo-canvas" width="800" height="400"></canvas>
+      <div class="demo-legend">
+        <span class="legend-item"><span class="legend-swatch" style="background:#fff"></span> Current velocity</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#ff0000"></span> Separation delta</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#888"></span> Target</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:rgba(255,0,0,0.35); height:1px; border:1px solid rgba(255,0,0,0.5)"></span> Separation radius</span>
+      </div>
+      <div class="demo-controls">
+        <div class="demo-control">
+          <span class="demo-control-label">Radius</span>
+          <input type="range" id="sep-radius" class="demo-slider" min="40" max="200" value="120" step="1" />
+          <span id="sep-radius-val" class="demo-control-value">120</span>
+        </div>
+        <div class="demo-control">
+          <span class="demo-control-label">Strength</span>
+          <input type="range" id="sep-strength" class="demo-slider" min="0" max="3" value="1.0" step="0.1" />
+          <span id="sep-strength-val" class="demo-control-value">1.0</span>
+        </div>
+        <div class="demo-control">
+          <span class="demo-control-label">Speed</span>
+          <input type="range" id="sep-speed" class="demo-slider" min="0.1" max="2" value="0.5" step="0.1" />
+          <span id="sep-speed-val" class="demo-control-value">0.5×</span>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── Alignment ───────────────────────────────────────────────────────── -->
+  <section>
+    <h2>2 &middot; Alignment</h2>
+    <p>
+      Alignment makes boids swim in the same direction as their neighbors. The rule
+      computes the average velocity of every neighbor inside the alignment radius, then
+      steers the boid toward that average heading. The result is a
+      <span style="color:#ffe600">yellow delta vector</span> that gently rotates the
+      boid until it matches the group's direction.
+    </p>
+    <p>
+      When neighbors are heading in wildly different directions their contributions
+      partially cancel out, producing a small delta. When the group is already
+      well-aligned the delta nearly vanishes — the rule only pushes when there's
+      disagreement.
+    </p>
+
+    <p style="color: var(--color-text-dim); font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px;">Arrows</p>
+    <ul style="list-style:none; padding:0; margin:0 0 18px;">
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:#ffffff; font-weight:600;">White arrow</span> —
+        the boid's current velocity. When the white arrow rotates to fully match
+        the gray target arrow, the boid is fully aligned with its current
+        neighbors.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:rgba(255,230,0,0.7); font-weight:600;">Dashed yellow arrow</span> —
+        the average heading of all neighbors inside the radius. This is where the
+        group is swimming.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:#888; font-weight:600;">Gray arrow</span> —
+        the target: current velocity + alignment force. This is what the
+        velocity <em>becomes</em> after the force is applied — this is the boid
+        <em>turning to match the school's heading</em>.
+      </li>
+    </ul>
+
+    <p style="color: var(--color-text-dim); font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px;">Sliders</p>
+    <ul style="list-style:none; padding:0; margin:0 0 14px;">
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <strong>Radius</strong> —
+        sets how far the boid can "see." Any neighbor inside this distance
+        (the yellow circle) influences the boid's heading; anything outside
+        it is invisible to this rule.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <strong>Strength</strong> —
+        how far the gray target arrow swings toward the dashed yellow
+        average. At low strength, the boid only nudges toward the group's
+        heading; at high strength (near 1.0), the target snaps all the way
+        to the average and the boid aligns almost immediately.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <strong>Speed</strong> —
+        how fast the simulation runs.
+      </li>
+    </ul>
+    <p style="color: var(--color-text-dim); font-size: 0.88rem; line-height: 1.65;">
+      The alignment force itself — the "delta" — is the gap between the white
+      arrow and the dashed yellow arrow. Watch for it: when a school passes
+      through, the dashed yellow snaps to the school's heading, the gray arrow
+      swings toward it, and the white arrow gradually follows. That rotation is
+      alignment at work.
+    </p>
+
+    <div class="demo-container">
+      <canvas id="ali-canvas" class="demo-canvas" width="800" height="400"></canvas>
+      <div class="demo-legend">
+        <span class="legend-item"><span class="legend-swatch" style="background:#fff"></span> Current velocity</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:rgba(255,230,0,0.6); border-top:1px dashed rgba(255,230,0,0.8)"></span> Neighbor average</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#888"></span> Target</span>
+      </div>
+      <div class="demo-controls">
+        <div class="demo-control">
+          <span class="demo-control-label">Radius</span>
+          <input type="range" id="ali-radius" class="demo-slider" min="40" max="200" value="120" step="1" />
+          <span id="ali-radius-val" class="demo-control-value">120</span>
+        </div>
+        <div class="demo-control">
+          <span class="demo-control-label">Strength</span>
+          <input type="range" id="ali-strength" class="demo-slider" min="0" max="1.5" value="0.35" step="0.05" />
+          <span id="ali-strength-val" class="demo-control-value">0.35</span>
+        </div>
+        <div class="demo-control">
+          <span class="demo-control-label">Speed</span>
+          <input type="range" id="ali-speed" class="demo-slider" min="0.1" max="2" value="0.5" step="0.1" />
+          <span id="ali-speed-val" class="demo-control-value">0.5×</span>
+        </div>
+      </div>
+    </div>
+
+    <p style="color: var(--color-text-dim); font-size: 0.88rem; line-height: 1.65; margin-top: 16px;">
+      Keep in mind: everything on this page shows a <em>single</em> boid's
+      perspective — one boid reacting to its neighbors. In the full simulation
+      (the playground on this site, for instance), <em>every</em> boid is doing
+      this simultaneously to every <em>other</em> boid. Boid&nbsp;A adjusts its
+      heading based on what it sees around it; boid&nbsp;B does the same —
+      and&nbsp;A is part of B's neighborhood, and vice versa. There's no
+      coordinator, no global plan. The schooling behavior that emerges — the
+      tight formations, the sweeping synchronized turns — is "just" individual
+      boids with radius-limited vision making their own small velocity
+      adjustments each frame. <strong style="color: var(--color-text);">That's the core insight of boids:
+      coordinated collective motion from purely local, individual
+      decisions.</strong>
+    </p>
+  </section>
+
+  <!-- ── Cohesion ────────────────────────────────────────────────────────── -->
+  <section>
+    <h2>3 &middot; Cohesion</h2>
+    <p>
+      Cohesion pulls boids toward the center of mass of their neighbors. The rule finds
+      the average position of all neighbors inside the cohesion radius — the
+      <span style="color:#00d930">centroid</span> — and steers toward it. This is what
+      holds the school together: without cohesion, separation and alignment would
+      gradually scatter the group across the scene.
+    </p>
+    <p>
+      The centroid jumps whenever a new neighbor enters the radius from the opposite
+      side, abruptly shifting the target. These discontinuities create the quick,
+      organic-looking course corrections that make boid flocks feel alive.
+    </p>
+
+    <p style="color: var(--color-text-dim); font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px;">Arrows</p>
+    <ul style="list-style:none; padding:0; margin:0 0 18px;">
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:#ffffff; font-weight:600;">White arrow</span> —
+        the boid's current velocity.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:#00d930; font-weight:600;">Green dot</span> —
+        the centroid: the average position of all neighbors inside the radius.
+        This is where the group "is," and where the boid wants to steer toward.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:rgba(0,217,48,0.5); font-weight:600;">Green dashed lines</span> —
+        connect each in-radius neighbor to the centroid, showing which positions
+        are being averaged.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:#00d930; font-weight:600;">Green arrow</span> —
+        the cohesion force: points from the central boid toward the centroid.
+        The farther the centroid, the stronger the pull.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:#888; font-weight:600;">Gray arrow</span> —
+        the target: current velocity + cohesion force. This is what the velocity
+        <em>becomes</em> after the force is applied — this is the boid
+        <em>turning toward the group</em>.
+      </li>
+    </ul>
+
+    <p style="color: var(--color-text-dim); font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px;">Sliders</p>
+    <ul style="list-style:none; padding:0; margin:0 0 14px;">
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <strong>Radius</strong> —
+        sets how far the boid can "see." Any neighbor inside this distance
+        (the green circle) counts toward the centroid; anything outside it
+        is invisible to this rule.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <strong>Strength</strong> —
+        how hard the boid pulls toward the centroid. At low strength the
+        target arrow barely deflects; at high strength the boid steers
+        aggressively toward the group center.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <strong>Speed</strong> —
+        how fast the simulation runs.
+      </li>
+    </ul>
+
+    <div class="demo-container">
+      <canvas id="coh-canvas" class="demo-canvas" width="800" height="400"></canvas>
+      <div class="demo-legend">
+        <span class="legend-item"><span class="legend-swatch" style="background:#fff"></span> Current velocity</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#00d930; border-radius:50%; width:7px; height:7px"></span> Centroid</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#00d930"></span> Cohesion force</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#888"></span> Target</span>
+      </div>
+      <div class="demo-controls">
+        <div class="demo-control">
+          <span class="demo-control-label">Radius</span>
+          <input type="range" id="coh-radius" class="demo-slider" min="40" max="200" value="120" step="1" />
+          <span id="coh-radius-val" class="demo-control-value">120</span>
+        </div>
+        <div class="demo-control">
+          <span class="demo-control-label">Strength</span>
+          <input type="range" id="coh-strength" class="demo-slider" min="0" max="1.5" value="0.5" step="0.05" />
+          <span id="coh-strength-val" class="demo-control-value">0.50</span>
+        </div>
+        <div class="demo-control">
+          <span class="demo-control-label">Speed</span>
+          <input type="range" id="coh-speed" class="demo-slider" min="0.1" max="2" value="0.5" step="0.1" />
+          <span id="coh-speed-val" class="demo-control-value">0.5×</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Combined ────────────────────────────────────────────────────────── -->
+  <section>
+    <h2>4 &middot; Putting It Together</h2>
+    <p>
+      In the real simulation, all three rules run simultaneously. Each produces its own
+      delta vector; the three deltas are summed into a single
+      <span style="color:#888">gray target</span> that steers the boid. The relative
+      strength sliders control how much weight each rule gets in that sum.
+    </p>
+    <p>
+      Interesting moments arise when the rules conflict — for instance, a boid may be
+      inside both the separation radius of one neighbor and the cohesion radius of
+      another, pulled in two directions at once. The interplay of these competing forces
+      is what produces the fluid, unpredictable motion of a real flock.
+    </p>
+    <p style="color: var(--color-text-dim); font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px;">Arrows</p>
+    <ul style="list-style:none; padding:0; margin:0 0 18px;">
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:#ffffff; font-weight:600;">White arrow</span> —
+        the boid's current velocity, same as in every demo above.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:#ff0000; font-weight:600;">Red arrow</span> —
+        the separation delta: pushes away from nearby neighbors.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:rgba(255,230,0,0.7); font-weight:600;">Yellow dashed arrow</span> —
+        the alignment delta: steers toward the group's average heading.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:#00d930; font-weight:600;">Green arrow</span> —
+        the cohesion delta: pulls toward the group's center of mass.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <span style="color:#888; font-weight:600;">Gray arrow</span> —
+        the combined target: current velocity + all three deltas summed. This is
+        where the boid is actually heading next.
+      </li>
+    </ul>
+
+    <p style="color: var(--color-text-dim); font-size: 0.82rem; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 8px;">Sliders</p>
+    <ul style="list-style:none; padding:0; margin:0 0 14px;">
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <strong>Radius</strong> —
+        a shared detection radius. Any neighbor inside this distance triggers
+        all three rules simultaneously. (In the playground, each rule has its
+        own radius that can be tuned independently.)
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <strong>Sep / Ali / Coh</strong> —
+        the relative strength of each rule. Try zeroing out two and watching
+        just one — it behaves like the individual demos above. Then bring them
+        back and watch the forces compete.
+      </li>
+      <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
+        <strong>Speed</strong> —
+        how fast the simulation runs.
+      </li>
+    </ul>
+
+    <p style="color: var(--color-text-dim); font-size: 0.84rem; line-height: 1.6; margin-bottom: 14px;">
+      <em>Try this:</em> Set separation high and cohesion high with alignment low.
+      The boid oscillates — pushed away from nearby neighbors but pulled back by
+      cohesion. Now raise alignment and watch the oscillation smooth out as the
+      boid finds a heading that satisfies all three rules.
+    </p>
+
+    <div class="demo-container">
+      <canvas id="all-canvas" class="demo-canvas" width="800" height="400"></canvas>
+      <div class="demo-legend">
+        <span class="legend-item"><span class="legend-swatch" style="background:#fff"></span> Velocity</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#ff0000"></span> Separation</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:rgba(255,230,0,0.6); border-top:1px dashed rgba(255,230,0,0.8)"></span> Alignment</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#00d930"></span> Cohesion</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#888"></span> Combined target</span>
+        <span class="legend-item"><span class="legend-swatch" style="background:#00d930; border-radius:50%; width:7px; height:7px"></span> Centroid</span>
+      </div>
+      <div class="demo-controls">
+        <div class="demo-control">
+          <span class="demo-control-label">Radius</span>
+          <input type="range" id="all-radius" class="demo-slider" min="40" max="200" value="120" step="1" />
+          <span id="all-radius-val" class="demo-control-value">120</span>
+        </div>
+        <div class="demo-control">
+          <span class="demo-control-label">Speed</span>
+          <input type="range" id="all-speed" class="demo-slider" min="0.1" max="2" value="0.5" step="0.1" />
+          <span id="all-speed-val" class="demo-control-value">0.5×</span>
+        </div>
+      </div>
+      <div class="demo-controls">
+        <div class="demo-control">
+          <span class="demo-control-label" style="color:#ff6060">Sep</span>
+          <input type="range" id="all-sep" class="demo-slider" min="0" max="3" value="1.0" step="0.1" />
+          <span id="all-sep-val" class="demo-control-value">1.0</span>
+        </div>
+        <div class="demo-control">
+          <span class="demo-control-label" style="color:#ffe066">Ali</span>
+          <input type="range" id="all-ali" class="demo-slider" min="0" max="1.5" value="0.35" step="0.05" />
+          <span id="all-ali-val" class="demo-control-value">0.35</span>
+        </div>
+        <div class="demo-control">
+          <span class="demo-control-label" style="color:#44e868">Coh</span>
+          <input type="range" id="all-coh" class="demo-slider" min="0" max="1.5" value="0.50" step="0.05" />
+          <span id="all-coh-val" class="demo-control-value">0.50</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Closing ─────────────────────────────────────────────────────────── -->
+  <section>
+    <h2>From Rules to Emergence</h2>
+    <p>
+      Three local rules. No global plan. No boid knows the shape of the flock or where
+      the school is headed. Each one simply looks at its immediate neighbors and adjusts
+      its velocity. The collective behavior — the tight schooling, the sweeping turns, the
+      way the group splits around an obstacle and re-forms on the other side — all of it
+      <em>emerges</em> from per-boid vector addition repeated sixty times a second.
+    </p>
+    <p>
+      Craig Reynolds' original insight was that you don't need choreography to create
+      coordinated motion. You just need the right handful of simple rules operating on
+      local information. The same principle drives real schools of fish, flocks of
+      starlings, and swarms of insects.
+    </p>
+    <a href="/playground.html?view=arrows" class="playground-link">Try the 3D Playground →</a>
+    <p class="playground-hint">
+      Same arrowheads, same rules — the circles become spheres in 3D.
+    </p>
+  </section>
+
+</div>
+
+<script src="/boids-nav.js"></script>
+<script>
+(function () {
+  /* ── Shared constants ──────────────────────────────────────────────── */
+  var W = 800, H = 400;
+  var cx = W / 2, cy = H / 2;
+
+  /* ── Vector utilities ──────────────────────────────────────────────── */
+  function vecLen(x, y) { return Math.sqrt(x * x + y * y); }
+
+  function angleDiff(from, to) {
+    var d = to - from;
+    while (d > Math.PI)  d -= 2 * Math.PI;
+    while (d < -Math.PI) d += 2 * Math.PI;
+    return d;
+  }
+
+  /* ── Drawing utilities ─────────────────────────────────────────────── */
+  function drawChevron(ctx, x, y, heading, size, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(heading);
+    ctx.beginPath();
+    ctx.moveTo(size, 0);
+    ctx.lineTo(-size * 0.6, -size * 0.55);
+    ctx.lineTo(-size * 0.2, 0);
+    ctx.lineTo(-size * 0.6, size * 0.55);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawVector(ctx, x, y, dx, dy, color, lineWidth) {
+    var len = vecLen(dx, dy);
+    if (len < 2) return;
+    var angle = Math.atan2(dy, dx);
+    var headLen = Math.min(10, len * 0.28);
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + dx, y + dy);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x + dx, y + dy);
+    ctx.lineTo(x + dx - headLen * Math.cos(angle - 0.38),
+               y + dy - headLen * Math.sin(angle - 0.38));
+    ctx.lineTo(x + dx - headLen * Math.cos(angle + 0.38),
+               y + dy - headLen * Math.sin(angle + 0.38));
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  function getPathPos(path) {
+    var cosR = Math.cos(path.rot);
+    var sinR = Math.sin(path.rot);
+    var px = path.a * Math.cos(path.t);
+    var py = path.b * Math.sin(path.t);
+    var vx = -path.a * Math.sin(path.t) * path.speed;
+    var vy =  path.b * Math.cos(path.t) * path.speed;
+    return {
+      x:  cx + px * cosR - py * sinR,
+      y:  cy + px * sinR + py * cosR,
+      vx: vx * cosR - vy * sinR,
+      vy: vx * sinR + vy * cosR
+    };
+  }
+
+  /** Wire a slider: returns a getter for the current value. */
+  function bindSlider(id, valId, fmt) {
+    var slider = document.getElementById(id);
+    var display = document.getElementById(valId);
+    var val = +slider.value;
+    slider.addEventListener('input', function () {
+      val = +slider.value;
+      display.textContent = fmt(val);
+    });
+    return function () { return val; };
+  }
+
+  /* ════════════════════════════════════════════════════════════════════
+     Separation Demo
+     ════════════════════════════════════════════════════════════════════ */
+  (function () {
+    var canvas = document.getElementById('sep-canvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+
+    var getRadius   = bindSlider('sep-radius',   'sep-radius-val',   function (v) { return v; });
+    var getStrength = bindSlider('sep-strength',  'sep-strength-val', function (v) { return v.toFixed(1); });
+    var getSpeed    = bindSlider('sep-speed',     'sep-speed-val',    function (v) { return v.toFixed(1) + '\u00d7'; });
+
+    var velAngle   = 0;
+    var BASE_ANGLE = 0;
+    var TURN_RATE  = 3.0;
+    var HOME_RATE  = 0.8;
+    var VEL_LEN    = 55;
+    var DELTA_SCALE = 90;
+
+    var paths = [
+      { a: 320, b: 45, rot: 0,              speed: 0.50, t: Math.PI / 2 },
+      { a: 280, b: 55, rot: Math.PI / 3,    speed: 0.38, t: 0 },
+      { a: 260, b: 60, rot: -Math.PI / 4.5, speed: 0.46, t: Math.PI },
+    ];
+
+    var lastTime = performance.now();
+
+    function animate(now) {
+      var dt = Math.min((now - lastTime) / 1000, 0.05) * getSpeed();
+      lastTime = now;
+      var radius   = getRadius();
+      var strength = getStrength();
+
+      for (var i = 0; i < paths.length; i++) paths[i].t += paths[i].speed * dt;
+      var boids = paths.map(getPathPos);
+
+      // Separation force
+      var sepX = 0, sepY = 0, neighbors = [];
+      for (var i = 0; i < boids.length; i++) {
+        var b = boids[i];
+        var dx = cx - b.x, dy = cy - b.y;
+        var dist = vecLen(dx, dy);
+        if (dist > 0 && dist < radius) {
+          var factor = 1 - dist / radius;
+          sepX += (dx / dist) * factor;
+          sepY += (dy / dist) * factor;
+          neighbors.push(b);
+        }
+      }
+
+      var deltaDx = sepX * strength * DELTA_SCALE;
+      var deltaDy = sepY * strength * DELTA_SCALE;
+      var velDx = Math.cos(velAngle) * VEL_LEN;
+      var velDy = Math.sin(velAngle) * VEL_LEN;
+      var resDx = velDx + deltaDx;
+      var resDy = velDy + deltaDy;
+
+      if (neighbors.length > 0 && vecLen(deltaDx, deltaDy) > 0.5) {
+        var diff = angleDiff(velAngle, Math.atan2(resDy, resDx));
+        velAngle += diff * Math.min(1, TURN_RATE * dt);
+      } else {
+        velAngle += angleDiff(velAngle, BASE_ANGLE) * Math.min(1, HOME_RATE * dt);
+      }
+
+      // ── Draw ──
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#001018'; ctx.fillRect(0, 0, W, H);
+
+      // Radius circle
+      ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.04)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 0, 0, 0.32)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+      // Connection lines
+      for (var i = 0; i < neighbors.length; i++) {
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(neighbors[i].x, neighbors[i].y);
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.35)'; ctx.lineWidth = 1; ctx.stroke();
+      }
+
+      // Passing boids
+      for (var i = 0; i < boids.length; i++) {
+        drawChevron(ctx, boids[i].x, boids[i].y, Math.atan2(boids[i].vy, boids[i].vx), 8, '#5a9aaa');
+      }
+
+      if (vecLen(resDx, resDy) > 2)     drawVector(ctx, cx, cy, resDx, resDy, '#888888', 2.2);
+      if (vecLen(deltaDx, deltaDy) > 1) drawVector(ctx, cx, cy, deltaDx, deltaDy, '#ff0000', 1.8);
+      drawVector(ctx, cx, cy, velDx, velDy, '#ffffff', 1.8);
+      drawChevron(ctx, cx, cy, velAngle, 12, '#e4f6fb');
+
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  })();
+
+  /* ════════════════════════════════════════════════════════════════════
+     Alignment Demo
+     ════════════════════════════════════════════════════════════════════ */
+  (function () {
+    var canvas = document.getElementById('ali-canvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+
+    var getRadius   = bindSlider('ali-radius',   'ali-radius-val',   function (v) { return v; });
+    var getStrength = bindSlider('ali-strength',  'ali-strength-val', function (v) { return v.toFixed(1); });
+    var getSpeed    = bindSlider('ali-speed',     'ali-speed-val',    function (v) { return v.toFixed(1) + '\u00d7'; });
+
+    var velAngle   = 0;
+    var BASE_ANGLE = 0;
+    var TURN_RATE  = 0.8;   // slower than separation — lets the delta arrow persist
+    var HOME_RATE  = 0.5;
+    var VEL_LEN    = 55;
+
+    // Two schools as elliptical clusters.  Within each group, boids share
+    // the same speed (so they stay together over time) but have varied b
+    // (semi-minor axis = distance from center at closest approach) for
+    // SIDE-TO-SIDE spread, and staggered phases for FRONT-TO-BACK depth.
+    // Pairs with similar phase but different b travel abreast.
+    var paths = [
+      // Group A (5) — heading upper-left near center
+      //   front pair (similar phase, different b → side by side)
+      { a: 242, b: 60, rot: -0.46, speed: 0.38, t: Math.PI / 2 - 0.04 },
+      { a: 252, b: 34, rot: -0.54, speed: 0.38, t: Math.PI / 2 + 0.03 },
+      //   middle
+      { a: 248, b: 48, rot: -0.50, speed: 0.38, t: Math.PI / 2 + 0.22 },
+      //   back pair (similar phase, different b → side by side)
+      { a: 238, b: 56, rot: -0.47, speed: 0.38, t: Math.PI / 2 + 0.38 },
+      { a: 256, b: 38, rot: -0.53, speed: 0.38, t: Math.PI / 2 + 0.42 },
+      // Group B (5) — heading lower-right near center
+      //   front pair
+      { a: 238, b: 58, rot: 1.27,  speed: 0.35, t: -0.04 },
+      { a: 250, b: 35, rot: 1.33,  speed: 0.35, t: 0.03 },
+      //   middle
+      { a: 244, b: 46, rot: 1.30,  speed: 0.35, t: 0.22 },
+      //   back pair
+      { a: 236, b: 54, rot: 1.28,  speed: 0.35, t: 0.38 },
+      { a: 254, b: 38, rot: 1.32,  speed: 0.35, t: 0.42 },
+    ];
+
+    var lastTime = performance.now();
+
+    function animate(now) {
+      var dt = Math.min((now - lastTime) / 1000, 0.05) * getSpeed();
+      lastTime = now;
+      var radius   = getRadius();
+      var strength = getStrength();
+
+      for (var i = 0; i < paths.length; i++) paths[i].t += paths[i].speed * dt;
+      var boids = paths.map(getPathPos);
+
+      // Find neighbors & compute average heading
+      var avgVx = 0, avgVy = 0, nCount = 0;
+      var neighbors = [];
+      for (var i = 0; i < boids.length; i++) {
+        var b = boids[i];
+        var dist = vecLen(cx - b.x, cy - b.y);
+        if (dist > 0 && dist < radius) {
+          // Normalize each neighbor's velocity to unit before averaging
+          var bLen = vecLen(b.vx, b.vy);
+          if (bLen > 0) { avgVx += b.vx / bLen; avgVy += b.vy / bLen; }
+          nCount++;
+          neighbors.push(b);
+        }
+      }
+
+      var velDx = Math.cos(velAngle) * VEL_LEN;
+      var velDy = Math.sin(velAngle) * VEL_LEN;
+
+      // Average heading display vector (muted yellow)
+      var avgDispX = 0, avgDispY = 0;
+      var deltaDx = 0, deltaDy = 0;
+
+      if (nCount > 0) {
+        avgVx /= nCount; avgVy /= nCount;
+        var avgAngle = Math.atan2(avgVy, avgVx);
+        avgDispX = Math.cos(avgAngle) * VEL_LEN;
+        avgDispY = Math.sin(avgAngle) * VEL_LEN;
+
+        // Delta: steer from current heading toward average heading
+        deltaDx = (avgDispX - velDx) * strength;
+        deltaDy = (avgDispY - velDy) * strength;
+      }
+
+      var resDx = velDx + deltaDx;
+      var resDy = velDy + deltaDy;
+
+      // Update central boid heading
+      if (nCount > 0 && vecLen(deltaDx, deltaDy) > 0.5) {
+        var diff = angleDiff(velAngle, Math.atan2(resDy, resDx));
+        velAngle += diff * Math.min(1, TURN_RATE * dt);
+      } else {
+        velAngle += angleDiff(velAngle, BASE_ANGLE) * Math.min(1, HOME_RATE * dt);
+      }
+
+      // ── Draw ──
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#001018'; ctx.fillRect(0, 0, W, H);
+
+      // Alignment radius circle (yellow)
+      ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255, 230, 0, 0.03)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(255, 230, 0, 0.30)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+      // Connection lines (yellow)
+      for (var i = 0; i < neighbors.length; i++) {
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(neighbors[i].x, neighbors[i].y);
+        ctx.strokeStyle = 'rgba(255, 230, 0, 0.25)'; ctx.lineWidth = 1; ctx.stroke();
+      }
+
+      // Passing boids
+      for (var i = 0; i < boids.length; i++) {
+        drawChevron(ctx, boids[i].x, boids[i].y, Math.atan2(boids[i].vy, boids[i].vx), 8, '#5a9aaa');
+      }
+
+      // Heading indicators on in-radius neighbors (short muted-yellow arrows)
+      for (var i = 0; i < neighbors.length; i++) {
+        var nb = neighbors[i];
+        var nLen = vecLen(nb.vx, nb.vy);
+        if (nLen > 0) {
+          var hx = (nb.vx / nLen) * 22;
+          var hy = (nb.vy / nLen) * 22;
+          drawVector(ctx, nb.x, nb.y, hx, hy, 'rgba(255, 230, 0, 0.55)', 1.2);
+        }
+      }
+
+      // Target (gray)
+      if (vecLen(resDx, resDy) > 2) {
+        drawVector(ctx, cx, cy, resDx, resDy, '#888888', 2.2);
+      }
+
+      // Average heading of neighbors (muted yellow, dashed, longer)
+      if (nCount > 0) {
+        var AVG_SCALE = 1.4;
+        ctx.save(); ctx.setLineDash([5, 4]);
+        drawVector(ctx, cx, cy, avgDispX * AVG_SCALE, avgDispY * AVG_SCALE, 'rgba(255, 230, 0, 0.6)', 1.5);
+        ctx.restore();
+      }
+
+      // Velocity (white)
+      drawVector(ctx, cx, cy, velDx, velDy, '#ffffff', 1.8);
+
+      drawChevron(ctx, cx, cy, velAngle, 12, '#e4f6fb');
+
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  })();
+
+  /* ════════════════════════════════════════════════════════════════════
+     Cohesion Demo
+     ════════════════════════════════════════════════════════════════════ */
+  (function () {
+    var canvas = document.getElementById('coh-canvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+
+    var getRadius   = bindSlider('coh-radius',   'coh-radius-val',   function (v) { return v; });
+    var getStrength = bindSlider('coh-strength',  'coh-strength-val', function (v) { return v.toFixed(2); });
+    var getSpeed    = bindSlider('coh-speed',     'coh-speed-val',    function (v) { return v.toFixed(1) + '\u00d7'; });
+
+    var velAngle   = 0;
+    var BASE_ANGLE = 0;
+    var TURN_RATE  = 1.2;
+    var HOME_RATE  = 0.5;
+    var VEL_LEN    = 55;
+    var FORCE_SCALE = 0.8;   // visual scaling of cohesion force
+
+    // Paths from clearly different directions so the centroid jumps
+    // when a new neighbor enters from the opposite side.
+    // Boids approach individually (not as schools) to keep the centroid
+    // movements easy to follow.
+    var paths = [
+      { a: 280, b: 48, rot: 0,             speed: 0.42, t: Math.PI / 2 },
+      { a: 260, b: 52, rot: Math.PI * 0.6, speed: 0.36, t: 0.2 },
+      { a: 270, b: 44, rot: -Math.PI / 3,  speed: 0.48, t: Math.PI },
+      { a: 250, b: 50, rot: Math.PI / 2,   speed: 0.40, t: Math.PI * 1.4 },
+    ];
+
+    var lastTime = performance.now();
+
+    function animate(now) {
+      var dt = Math.min((now - lastTime) / 1000, 0.05) * getSpeed();
+      lastTime = now;
+      var radius   = getRadius();
+      var strength = getStrength();
+
+      for (var i = 0; i < paths.length; i++) paths[i].t += paths[i].speed * dt;
+      var boids = paths.map(getPathPos);
+
+      // Find neighbors & compute centroid
+      var centX = 0, centY = 0, nCount = 0;
+      var neighbors = [];
+      for (var i = 0; i < boids.length; i++) {
+        var b = boids[i];
+        var dist = vecLen(cx - b.x, cy - b.y);
+        if (dist > 0 && dist < radius) {
+          centX += b.x; centY += b.y;
+          nCount++;
+          neighbors.push(b);
+        }
+      }
+
+      var velDx = Math.cos(velAngle) * VEL_LEN;
+      var velDy = Math.sin(velAngle) * VEL_LEN;
+      var deltaDx = 0, deltaDy = 0;
+      var centroidX = cx, centroidY = cy;
+
+      if (nCount > 0) {
+        centroidX = centX / nCount;
+        centroidY = centY / nCount;
+
+        // Cohesion force: steer toward centroid
+        deltaDx = (centroidX - cx) * strength * FORCE_SCALE;
+        deltaDy = (centroidY - cy) * strength * FORCE_SCALE;
+      }
+
+      var resDx = velDx + deltaDx;
+      var resDy = velDy + deltaDy;
+
+      // Update central boid heading
+      if (nCount > 0 && vecLen(deltaDx, deltaDy) > 0.5) {
+        var diff = angleDiff(velAngle, Math.atan2(resDy, resDx));
+        velAngle += diff * Math.min(1, TURN_RATE * dt);
+      } else {
+        velAngle += angleDiff(velAngle, BASE_ANGLE) * Math.min(1, HOME_RATE * dt);
+      }
+
+      // ── Draw ──
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#001018'; ctx.fillRect(0, 0, W, H);
+
+      // Cohesion radius circle (green)
+      ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 217, 48, 0.03)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(0, 217, 48, 0.30)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+      // Connection lines from central boid to neighbors (green)
+      for (var i = 0; i < neighbors.length; i++) {
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(neighbors[i].x, neighbors[i].y);
+        ctx.strokeStyle = 'rgba(0, 217, 48, 0.20)'; ctx.lineWidth = 1; ctx.stroke();
+      }
+
+      // Dashed lines from each neighbor to centroid
+      if (nCount > 0) {
+        ctx.save(); ctx.setLineDash([4, 4]);
+        for (var i = 0; i < neighbors.length; i++) {
+          ctx.beginPath();
+          ctx.moveTo(neighbors[i].x, neighbors[i].y);
+          ctx.lineTo(centroidX, centroidY);
+          ctx.strokeStyle = 'rgba(0, 217, 48, 0.35)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // Passing boids
+      for (var i = 0; i < boids.length; i++) {
+        drawChevron(ctx, boids[i].x, boids[i].y, Math.atan2(boids[i].vy, boids[i].vx), 8, '#5a9aaa');
+      }
+
+      // Centroid dot
+      if (nCount > 0) {
+        ctx.beginPath(); ctx.arc(centroidX, centroidY, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#00d930'; ctx.fill();
+      }
+
+      // Target (gray)
+      if (vecLen(resDx, resDy) > 2) {
+        drawVector(ctx, cx, cy, resDx, resDy, '#888888', 2.2);
+      }
+
+      // Cohesion force (green) — toward centroid
+      if (vecLen(deltaDx, deltaDy) > 1) {
+        drawVector(ctx, cx, cy, deltaDx, deltaDy, '#00d930', 1.8);
+      }
+
+      // Velocity (white)
+      drawVector(ctx, cx, cy, velDx, velDy, '#ffffff', 1.8);
+
+      drawChevron(ctx, cx, cy, velAngle, 12, '#e4f6fb');
+
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  })();
+
+  /* ════════════════════════════════════════════════════════════════════
+     Combined Demo
+     ════════════════════════════════════════════════════════════════════ */
+  (function () {
+    var canvas = document.getElementById('all-canvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+
+    var getRadius     = bindSlider('all-radius', 'all-radius-val', function (v) { return v; });
+    var getSpeed      = bindSlider('all-speed',  'all-speed-val',  function (v) { return v.toFixed(1) + '\u00d7'; });
+    var getSepStrength = bindSlider('all-sep',   'all-sep-val',    function (v) { return v.toFixed(1); });
+    var getAliStrength = bindSlider('all-ali',   'all-ali-val',    function (v) { return v.toFixed(2); });
+    var getCohStrength = bindSlider('all-coh',   'all-coh-val',    function (v) { return v.toFixed(2); });
+
+    var velAngle   = 0;
+    var BASE_ANGLE = 0;
+    var TURN_RATE  = 2.0;
+    var HOME_RATE  = 0.6;
+    var VEL_LEN    = 55;
+    var DELTA_SCALE = 90;    // separation visual scale
+    var FORCE_SCALE = 0.8;   // cohesion visual scale
+
+    var paths = [
+      { a: 290, b: 50, rot: 0,               speed: 0.42, t: Math.PI / 2 },
+      { a: 260, b: 55, rot: Math.PI * 0.55,  speed: 0.36, t: 0.15 },
+      { a: 270, b: 45, rot: -Math.PI / 3.5,  speed: 0.44, t: Math.PI },
+      { a: 250, b: 52, rot: Math.PI / 1.8,   speed: 0.40, t: Math.PI * 1.35 },
+    ];
+
+    var lastTime = performance.now();
+
+    function animate(now) {
+      var dt = Math.min((now - lastTime) / 1000, 0.05) * getSpeed();
+      lastTime = now;
+      var radius     = getRadius();
+      var sepStrength = getSepStrength();
+      var aliStrength = getAliStrength();
+      var cohStrength = getCohStrength();
+
+      for (var i = 0; i < paths.length; i++) paths[i].t += paths[i].speed * dt;
+      var boids = paths.map(getPathPos);
+
+      // ── Find neighbors & compute all three forces ──
+      var sepX = 0, sepY = 0;
+      var avgVx = 0, avgVy = 0, aliCount = 0;
+      var centX = 0, centY = 0, cohCount = 0;
+      var neighbors = [];
+
+      for (var i = 0; i < boids.length; i++) {
+        var b = boids[i];
+        var dx = cx - b.x, dy = cy - b.y;
+        var dist = vecLen(dx, dy);
+        if (dist > 0 && dist < radius) {
+          neighbors.push(b);
+
+          // Separation: repulsion weighted by proximity
+          var factor = 1 - dist / radius;
+          sepX += (dx / dist) * factor;
+          sepY += (dy / dist) * factor;
+
+          // Alignment: accumulate normalized velocities
+          var bLen = vecLen(b.vx, b.vy);
+          if (bLen > 0) { avgVx += b.vx / bLen; avgVy += b.vy / bLen; aliCount++; }
+
+          // Cohesion: accumulate positions for centroid
+          centX += b.x; centY += b.y; cohCount++;
+        }
+      }
+
+      var velDx = Math.cos(velAngle) * VEL_LEN;
+      var velDy = Math.sin(velAngle) * VEL_LEN;
+
+      // Separation delta
+      var sepDx = sepX * sepStrength * DELTA_SCALE;
+      var sepDy = sepY * sepStrength * DELTA_SCALE;
+
+      // Alignment delta
+      var aliDx = 0, aliDy = 0;
+      var avgDispX = 0, avgDispY = 0;
+      if (aliCount > 0) {
+        avgVx /= aliCount; avgVy /= aliCount;
+        var avgAngle = Math.atan2(avgVy, avgVx);
+        avgDispX = Math.cos(avgAngle) * VEL_LEN;
+        avgDispY = Math.sin(avgAngle) * VEL_LEN;
+        aliDx = (avgDispX - velDx) * aliStrength;
+        aliDy = (avgDispY - velDy) * aliStrength;
+      }
+
+      // Cohesion delta
+      var cohDx = 0, cohDy = 0;
+      var centroidX = cx, centroidY = cy;
+      if (cohCount > 0) {
+        centroidX = centX / cohCount;
+        centroidY = centY / cohCount;
+        cohDx = (centroidX - cx) * cohStrength * FORCE_SCALE;
+        cohDy = (centroidY - cy) * cohStrength * FORCE_SCALE;
+      }
+
+      // Combined target
+      var resDx = velDx + sepDx + aliDx + cohDx;
+      var resDy = velDy + sepDy + aliDy + cohDy;
+
+      // Update central boid heading
+      var totalDelta = vecLen(sepDx + aliDx + cohDx, sepDy + aliDy + cohDy);
+      if (neighbors.length > 0 && totalDelta > 0.5) {
+        var diff = angleDiff(velAngle, Math.atan2(resDy, resDx));
+        velAngle += diff * Math.min(1, TURN_RATE * dt);
+      } else {
+        velAngle += angleDiff(velAngle, BASE_ANGLE) * Math.min(1, HOME_RATE * dt);
+      }
+
+      // ── Draw ──
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#001018'; ctx.fillRect(0, 0, W, H);
+
+      // Radius circle (neutral)
+      ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(180, 200, 210, 0.03)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(180, 200, 210, 0.25)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+      // Connection lines to in-radius neighbors (faint white)
+      for (var i = 0; i < neighbors.length; i++) {
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(neighbors[i].x, neighbors[i].y);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)'; ctx.lineWidth = 1; ctx.stroke();
+      }
+
+      // Cohesion: dashed lines from neighbors to centroid + centroid dot
+      if (cohStrength > 0 && cohCount > 0) {
+        ctx.save(); ctx.setLineDash([4, 4]);
+        for (var i = 0; i < neighbors.length; i++) {
+          ctx.beginPath();
+          ctx.moveTo(neighbors[i].x, neighbors[i].y);
+          ctx.lineTo(centroidX, centroidY);
+          ctx.strokeStyle = 'rgba(0, 217, 48, 0.35)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // Alignment: heading indicators on in-radius neighbors
+      if (aliStrength > 0) {
+        for (var i = 0; i < neighbors.length; i++) {
+          var nb = neighbors[i];
+          var nLen = vecLen(nb.vx, nb.vy);
+          if (nLen > 0) {
+            var hx = (nb.vx / nLen) * 22;
+            var hy = (nb.vy / nLen) * 22;
+            drawVector(ctx, nb.x, nb.y, hx, hy, 'rgba(255, 230, 0, 0.55)', 1.2);
+          }
+        }
+      }
+
+      // Passing boids
+      for (var i = 0; i < boids.length; i++) {
+        drawChevron(ctx, boids[i].x, boids[i].y, Math.atan2(boids[i].vy, boids[i].vx), 8, '#5a9aaa');
+      }
+
+      // Cohesion centroid dot
+      if (cohStrength > 0 && cohCount > 0) {
+        ctx.beginPath(); ctx.arc(centroidX, centroidY, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#00d930'; ctx.fill();
+      }
+
+      // Gray combined target
+      if (vecLen(resDx, resDy) > 2) {
+        drawVector(ctx, cx, cy, resDx, resDy, '#888888', 2.2);
+      }
+
+      // Separation delta (red)
+      if (sepStrength > 0 && vecLen(sepDx, sepDy) > 1) {
+        drawVector(ctx, cx, cy, sepDx, sepDy, '#ff0000', 1.8);
+      }
+
+      // Alignment delta (yellow, dashed)
+      if (aliStrength > 0 && vecLen(aliDx, aliDy) > 1) {
+        ctx.save(); ctx.setLineDash([5, 4]);
+        drawVector(ctx, cx, cy, aliDx, aliDy, 'rgba(255, 230, 0, 0.7)', 1.5);
+        ctx.restore();
+      }
+
+      // Cohesion delta (green)
+      if (cohStrength > 0 && vecLen(cohDx, cohDy) > 1) {
+        drawVector(ctx, cx, cy, cohDx, cohDy, '#00d930', 1.8);
+      }
+
+      // Velocity (white)
+      drawVector(ctx, cx, cy, velDx, velDy, '#ffffff', 1.8);
+
+      drawChevron(ctx, cx, cy, velAngle, 12, '#e4f6fb');
+
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+  })();
+
+})();
+</script>
+</body>
+</html>

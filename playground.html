@@ -282,6 +282,162 @@
     #param-desc-btn:hover { color: #7dd4e8; }
     #param-desc-btn.active { color: #7dd4e8; }
 
+    /* ── ONBOARDING OVERLAY ──────────────────────────────────────────────── */
+    #onboarding-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 20, 30, 0.85);
+      z-index: 150;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, -apple-system, sans-serif;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    #onboarding-overlay.visible {
+      display: flex;
+      opacity: 1;
+    }
+    #onboarding-overlay.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .onboard-card {
+      background: rgba(0, 35, 50, 0.95);
+      border: 1px solid rgba(100, 210, 230, 0.22);
+      border-radius: 8px;
+      padding: 28px 32px;
+      max-width: 520px;
+      width: 90%;
+      color: #e4f6fb;
+      line-height: 1.7;
+      font-size: 0.92rem;
+    }
+    .onboard-card h2 {
+      color: #7dd4e8;
+      font-size: 1.15rem;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+    .onboard-card p {
+      margin-bottom: 12px;
+      color: #c8dfe6;
+    }
+    .onboard-card .highlight {
+      color: #7dd4e8;
+    }
+    .onboard-more-toggle {
+      background: none;
+      border: none;
+      color: rgba(125, 212, 232, 0.7);
+      font-size: 0.88rem;
+      cursor: pointer;
+      padding: 4px 0;
+      margin: 8px 0 4px;
+      font-family: inherit;
+      transition: color 0.15s;
+    }
+    .onboard-more-toggle:hover { color: #c8f0f8; }
+    .onboard-more-toggle .arrow {
+      display: inline-block;
+      transition: transform 0.2s;
+      font-size: 0.75rem;
+      margin-left: 4px;
+    }
+    .onboard-more-toggle.expanded .arrow { transform: rotate(90deg); }
+    .onboard-more {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    .onboard-more.expanded {
+      max-height: 500px;
+    }
+    .onboard-more-inner {
+      padding: 10px 0 4px;
+      color: #a8ccd6;
+      font-size: 0.86rem;
+      line-height: 1.7;
+    }
+    .onboard-more-inner h3 {
+      color: rgba(125, 212, 232, 0.7);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 12px 0 4px;
+      font-weight: 600;
+    }
+    .onboard-more-inner h3:first-child { margin-top: 0; }
+    .onboard-more-inner ul {
+      margin: 4px 0 8px 18px;
+      padding: 0;
+    }
+    .onboard-more-inner li { margin-bottom: 4px; }
+    .onboard-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 18px;
+      gap: 12px;
+    }
+    .onboard-dismiss {
+      background: rgba(125, 212, 232, 0.1);
+      border: 1px solid rgba(125, 212, 232, 0.3);
+      border-radius: 5px;
+      color: #7dd4e8;
+      font-size: 0.9rem;
+      padding: 8px 18px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+    }
+    .onboard-dismiss:hover {
+      background: rgba(125, 212, 232, 0.2);
+      color: #c8f0f8;
+    }
+    .onboard-remember {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: rgba(125, 212, 232, 0.5);
+      cursor: pointer;
+      user-select: none;
+    }
+    .onboard-remember input {
+      accent-color: #7dd4e8;
+      cursor: pointer;
+    }
+
+    /* ── GUIDE ARROWS ────────────────────────────────────────────────────── */
+    .guide-arrow {
+      position: fixed;
+      z-index: 250;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #f5d84a;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      white-space: nowrap;
+    }
+    .guide-arrow.visible { opacity: 1; }
+    .guide-arrow.fade-out { opacity: 0; }
+    .guide-arrow .arrow-char {
+      font-size: 22px;
+      animation: pulse-arrow 1s ease-in-out infinite;
+    }
+    @keyframes pulse-arrow {
+      0%, 100% { opacity: 1; transform: translateX(0); }
+      50% { opacity: 0.5; transform: translateX(4px); }
+    }
+
     /* viz-linked label colors */
     #param-panel.viz-on .param-label[data-viz-color="sep"] { color: #ff4444; transition: color 0.2s; }
     #param-panel.viz-on .param-label[data-viz-color="ali"] { color: #ffe600; transition: color 0.2s; }
@@ -301,6 +457,60 @@
   <div class="loader-title"><span style="display:block">Boids</span><span style="display:block">Playground</span></div>
   <div class="loader-spinner"></div>
   <div class="loader-note">Good things take a moment&nbsp;—&nbsp;worth the wait!</div>
+</div>
+
+<!-- ── ONBOARDING OVERLAY ──────────────────────────────────────────────────── -->
+<div id="onboarding-overlay">
+  <div class="onboard-card">
+    <h2>Watch how a school of fish organizes itself</h2>
+    <p>
+      Click <span class="highlight">"Radius spheres &amp; distances"</span> (in the panel at right)
+      to see under the hood. Then play with the sliders to see how the schooling
+      changes — with visual cues showing what's going on.
+    </p>
+    <p>
+      Click the <span class="highlight">?</span> button (upper right of the panel) for short descriptions of every slider.
+    </p>
+    <button class="onboard-more-toggle" id="onboard-more-btn">
+      Want to explore more? <span class="arrow">&#9654;</span>
+    </button>
+    <div class="onboard-more" id="onboard-more">
+      <div class="onboard-more-inner">
+        <h3>The three rules</h3>
+        <p>
+          Every fish follows just three simple rules — and the schooling emerges on its own:
+        </p>
+        <ul>
+          <li><strong>Separation</strong> — don't crowd your neighbors</li>
+          <li><strong>Alignment</strong> — swim the way your neighbors swim</li>
+          <li><strong>Cohesion</strong> — steer toward the group center</li>
+        </ul>
+        <h3>Try this</h3>
+        <ul>
+          <li>Crank <strong>Separation strength</strong> to max — watch them scatter</li>
+          <li>Drop <strong>Alignment strength</strong> to zero — the school falls apart</li>
+          <li>Max out <strong>Cohesion strength</strong> — they cluster into a tight ball</li>
+        </ul>
+        <h3>What the spheres show</h3>
+        <p>
+          With "Radius spheres &amp; distances" checked, each sphere shows a fish's
+          awareness range for the selected rule — that's all it can "see." The colored
+          lines show which fish are listening to each other. Toggle between Separation,
+          Alignment, and Cohesion spheres to see how each rule operates.
+        </p>
+        <p>
+          For a deeper dive, the <a href="/boids-about.html" style="color:#7dd4e8">About Boids</a> page
+          explains the algorithm in detail.
+        </p>
+      </div>
+    </div>
+    <div class="onboard-footer">
+      <button class="onboard-dismiss" id="onboard-dismiss">Got it — let me play</button>
+      <label class="onboard-remember">
+        <input type="checkbox" id="onboard-remember-cb"> Don't show again
+      </label>
+    </div>
+  </div>
 </div>
 
 <!-- ── SLIDER PANEL ────────────────────────────────────────────────────────── -->
@@ -507,6 +717,19 @@ vizCb  .addEventListener('change', () => {
   panel.classList.toggle('viz-on', vizCb.checked);
 });
 
+// ── DEEP LINK: ?view=arrows ──────────────────────────────────────────────────
+const urlParams = new URLSearchParams(window.location.search);
+const arrowsMode = urlParams.get('view') === 'arrows';
+if (arrowsMode) {
+  fishCb.checked = false;
+  params.SHOW_FISH = false;
+  vizCb.checked = true;
+  params.SHOW_SPHERES = true;
+  params.SHOW_LINES   = true;
+  vizLegend.classList.add('visible');
+  document.getElementById('param-panel').classList.add('viz-on');
+}
+
 // ── SPHERE MODE RADIOS ───────────────────────────────────────────────────────
 document.querySelectorAll('input[name="sphere-mode"]').forEach(radio => {
   radio.addEventListener('change', () => { params.SPHERE_MODE = radio.value; });
@@ -554,6 +777,117 @@ document.querySelectorAll('.param-section-header').forEach(header => {
     header.closest('.param-section').classList.toggle('collapsed');
   });
 });
+
+// ── ONBOARDING OVERLAY ──────────────────────────────────────────────────────
+const overlayKey = arrowsMode ? 'boidsArrowsOverlayDismissed' : 'boidsOverlayDismissed';
+if (!localStorage.getItem(overlayKey)) {
+  const overlay = document.getElementById('onboarding-overlay');
+  const loader  = document.getElementById('loader');
+
+  // Swap overlay content for arrows mode
+  if (arrowsMode) {
+    const card = overlay.querySelector('.onboard-card');
+    card.innerHTML = `
+      <h2>You've seen the rules — now watch them in 3D</h2>
+      <p>
+        The arrowheads match the 2D diagrams you just read.
+        The circles from those diagrams are now
+        <span class="highlight">spheres</span> — same idea, just in three
+        dimensions. The colored lines are new: they connect every pair of boids
+        that falls within the selected rule's radius.
+      </p>
+      <p>
+        Use the <span class="highlight">?</span> button (upper right of the
+        panel) for descriptions of every slider. Check
+        <span class="highlight">"Show fish"</span> to swap the arrowheads for
+        fish models, or click <span class="highlight">"Reset to defaults"</span>
+        to start fresh.
+      </p>
+      <div class="onboard-footer">
+        <button class="onboard-dismiss" id="onboard-dismiss">Got it — let me play</button>
+        <label class="onboard-remember">
+          <input type="checkbox" id="onboard-remember-cb"> Don't show again
+        </label>
+      </div>`;
+  }
+
+  // Show overlay after loader fades out
+  const showOverlay = () => {
+    setTimeout(() => {
+      overlay.style.display = 'flex';
+      requestAnimationFrame(() => overlay.classList.add('visible'));
+    }, 800);
+  };
+
+  if (loader) {
+    const obs = new MutationObserver(() => {
+      if (loader.classList.contains('fade-out')) { obs.disconnect(); showOverlay(); }
+    });
+    obs.observe(loader, { attributes: true, attributeFilter: ['class'] });
+  } else {
+    showOverlay();
+  }
+
+  // Dismiss + show guide arrows
+  document.getElementById('onboard-dismiss').addEventListener('click', () => {
+    if (document.getElementById('onboard-remember-cb').checked) {
+      localStorage.setItem(overlayKey, 'true');
+    }
+    overlay.classList.add('fade-out');
+    setTimeout(() => overlay.remove(), 500);
+
+    // Position arrows next to the two target controls
+    const showGuideArrows = () => {
+      const makeArrow = (target, text) => {
+        const rect = target.getBoundingClientRect();
+        const el = document.createElement('div');
+        el.className = 'guide-arrow';
+        el.innerHTML = `<span>${text}</span> <span class="arrow-char">&#9654;</span>`;
+        el.style.top  = rect.top + rect.height / 2 - 10 + 'px';
+        el.style.right = (window.innerWidth - rect.left + 8) + 'px';
+        document.body.appendChild(el);
+        requestAnimationFrame(() => el.classList.add('visible'));
+        return el;
+      };
+
+      if (arrowsMode) {
+        const helpBtn   = document.getElementById('param-desc-btn');
+        const fishLabel = document.querySelector('#cb-SHOW_FISH')?.closest('label');
+        if (!helpBtn || !fishLabel) return;
+        const a1 = makeArrow(helpBtn, 'Descriptions');
+        const a2 = makeArrow(fishLabel, 'Show fish');
+        setTimeout(() => {
+          a1.classList.add('fade-out');
+          a2.classList.add('fade-out');
+          setTimeout(() => { a1.remove(); a2.remove(); }, 500);
+        }, 6000);
+      } else {
+        const vizLabel = document.querySelector('#cb-SHOW_VIZ')?.closest('label');
+        const helpBtn  = document.getElementById('param-desc-btn');
+        if (!vizLabel || !helpBtn) return;
+        const a1 = makeArrow(vizLabel, 'Try this');
+        const a2 = makeArrow(helpBtn, 'Descriptions');
+        setTimeout(() => {
+          a1.classList.add('fade-out');
+          a2.classList.add('fade-out');
+          setTimeout(() => { a1.remove(); a2.remove(); }, 500);
+        }, 6000);
+      }
+    };
+
+    setTimeout(showGuideArrows, 600);
+  });
+
+  // Expand "more" section (only exists in default mode)
+  const moreBtn = document.getElementById('onboard-more-btn');
+  if (moreBtn) {
+    moreBtn.addEventListener('click', () => {
+      const more = document.getElementById('onboard-more');
+      more.classList.toggle('expanded');
+      moreBtn.classList.toggle('expanded');
+    });
+  }
+}
 </script>
 <script src="/boids-nav.js"></script>
 </body>

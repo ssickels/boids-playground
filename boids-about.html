@@ -131,6 +131,22 @@
       background: rgba(125, 212, 232, 0.16);
       color: var(--color-primary-hi);
     }
+    .see-also {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: rgba(125, 212, 232, 0.06);
+      border-left: 3px solid rgba(125, 212, 232, 0.3);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.88rem;
+      color: var(--color-text-dim);
+      line-height: 1.6;
+    }
+    .see-also a {
+      color: var(--color-primary);
+    }
+    .see-also a:hover {
+      color: var(--color-primary-hi);
+    }
   </style>
 </head>
 <body>
@@ -156,6 +172,10 @@
       because it <em>is</em> organic — the same process drives real schools of fish, flocks of
       starlings, and swarms of insects.
     </p>
+    <div class="see-also">
+      Want to see it step by step? The <a href="/boids-explain.html">How Boids Work</a> page
+      walks through each rule with interactive diagrams.
+    </div>
   </section>
 
   <!-- ── Three Rules ──────────────────────────────────────────────────────── -->
@@ -183,6 +203,11 @@
           the school back together whenever individuals start to drift apart.
         </p>
       </div>
+    </div>
+    <div class="see-also" style="margin-top:16px;">
+      See each rule in action: <a href="/boids-explain.html">How Boids Work</a> has
+      interactive demos where you can adjust radii and strengths and watch the
+      behavior change in real time.
     </div>
     <p style="margin-top:16px; color: var(--color-text-dim); font-size:0.88rem;">
       The playground simulates Blue Tang boids using all three rules, plus a solo Orangestripe
@@ -294,9 +319,10 @@
         <h3>Show fish</h3>
         <p>
           Enabled by default. Uncheck it and the 3D fish models are replaced by small
-          shaded spheres — one at each boid's center. This strips away visual clutter and
-          makes it easier to track individual agents, especially when combined with the
-          distance lines below.
+          arrowheads pointing in each boid's travel direction — the same markers used in
+          the <a href="/boids-explain.html" style="color: var(--color-primary)">How Boids Work</a>
+          diagrams. This strips away visual clutter and makes it easier to track individual
+          agents, especially when combined with the distance lines below.
         </p>
       </div>
       <div class="rule-card">
@@ -352,6 +378,35 @@
         </p>
       </div>
     </div>
+  </section>
+
+  <!-- ── Other Resources ─────────────────────────────────────────────────── -->
+  <section>
+    <h2>Other Resources</h2>
+    <p>
+      There are quite a few boids simulations on the web. One I particularly like is
+      Daniel Huang's elegant and beautiful
+      <a href="https://boids.dan.onl/" target="_blank" rel="noopener">Boids Simulation</a>.
+      It's a 2D world with up to 5,000 boids that does a wonderful job of highlighting
+      <em>emergent patterns of behavior</em>. I particularly like his toggle to
+      "show vision areas," which are analogous to our spheres, and which create beautiful
+      heatmaps — particularly when "change hues to indicate speed" is selected. And which
+      help to show what's going on internally.
+    </p>
+    <p>
+      For this playground, I began with the schooling fish simulation on my homepage, and then
+      layered in the vision areas — as spheres, vs. circles, in my 3D world. I am particularly
+      interested in how the hard-limit (in or out) radius settings lead to "soft" and emergent
+      behaviors as the individual fish cross in and out of each others' spheres, as indicated by
+      the connection lines that switch on and off when the "Radius spheres &amp; distances" box
+      is checked. I also wanted to dig into how the three different radii (separation, alignment,
+      and cohesion) operate individually and collectively.
+    </p>
+    <p>
+      In short: for larger-scale emergent behaviors, I highly recommend Daniel Huang's work.
+      For a more granular "under-the-hood" view, I think this playground does a good job. I hope
+      you enjoy it. And regardless, I hope you find the boids algorithm as fascinating as I do!
+    </p>
   </section>
 
   <!-- ── Credits ──────────────────────────────────────────────────────────── -->

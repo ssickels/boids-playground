@@ -283,7 +283,8 @@ const _flee    = new THREE.Vector3();
 const _sideUp  = new THREE.Vector3(1, 0, 0);
 const _blendUp = new THREE.Vector3();
 
-const _markerGeo = new THREE.SphereGeometry(0.45, 12, 8);
+const _markerGeo = new THREE.ConeGeometry(0.35, 1.0, 8);
+_markerGeo.rotateX(-Math.PI / 2);
 const _markerMat = new THREE.MeshStandardMaterial({ color: 0x7dd4e8, roughness: 0.35, metalness: 0.15 });
 
 const _avgVel  = new THREE.Vector3();
@@ -786,13 +787,18 @@ function animate(ts) {
 
   const showFish = params.SHOW_FISH !== false;
   for (const b of boids) {
-    b.mesh.visible = showFish;
-    b.marker.visible = !showFish;
+    const canShow = showFish && !!b.mesh.userData.ready;
+    b.mesh.visible = canShow;
+    b.marker.visible = !canShow;
     b.marker.position.copy(b.pos);
+    b.marker.quaternion.copy(b.ownQ);
   }
   if (tf.mesh) tf.mesh.visible = showFish;
-  tf.marker.visible = !showFish && tf.active;
-  if (tf.marker.visible) tf.marker.position.copy(tf.pos);
+  tf.marker.visible = (!showFish || !tf.mesh) && tf.active;
+  if (tf.marker.visible) {
+    tf.marker.position.copy(tf.pos);
+    tf.marker.quaternion.copy(tf.ownQ);
+  }
 
   const showSpheres = params.SHOW_SPHERES === true;
   const sphereMode  = params.SPHERE_MODE || 'sep';
