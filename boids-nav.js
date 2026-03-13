@@ -33,6 +33,7 @@
       <a href="https://github.com/ssickels/boids-playground" target="_blank" class="nav-panel-github">GitHub (Playground) ↗</a>
       <a href="https://stevessite.com/about.html" class="nav-panel-top-link" style="padding-left:28px">About This Site</a>
     </div>
+    <a href="https://stevessite.com/contact.html" class="nav-panel-contact">Contact</a>
   </div>
 </nav>`;
 
@@ -151,6 +152,16 @@
 .nav-panel-github:hover {
   color: rgba(100, 210, 230, 0.75) !important;
 }
+.nav-panel-contact {
+  color: #7dd4e8;
+  text-decoration: none;
+  padding: 7px 18px;
+  display: block;
+  border-top: 1px solid rgba(100, 210, 230, 0.12);
+  margin-top: 4px;
+  transition: background 0.12s;
+}
+.nav-panel-contact:hover { background: rgba(100, 210, 230, 0.08); }
 `;
 
   const style = document.createElement('style');
@@ -181,4 +192,10 @@
       tab.classList.add('nav-tab-active');
     }
   });
+
+  // Hide Contact link on playground page
+  if (path === '/playground.html' || path.endsWith('/playground.html')) {
+    var cl = document.querySelector('.nav-panel-contact');
+    if (cl) cl.style.display = 'none';
+  }
 })();

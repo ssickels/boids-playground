@@ -190,38 +190,52 @@
     <p>See the vector math behind each boid rule — in real time.</p>
   </div>
 
+  <!-- ── Framing ────────────────────────────────────────────────────────── -->
+  <section>
+    <h2>What You're Seeing</h2>
+    <p>
+      In a real school of fish or flock of birds — or in the
+      <a href="/playground.html">Playground</a> simulation on this site —
+      every entity is a boid, following the same three rules simultaneously.
+      No single boid knows the shape of the flock or where the group is headed.
+      The complex, seemingly coordinated behavior — tight formations, sweeping
+      turns, splitting around obstacles and re-forming — emerges entirely from
+      many individuals making small, local adjustments at the same time.
+    </p>
+    <p>
+      On this page, we've stripped that away to focus on how a
+      <em>single</em> boid responds. A fixed
+      <span style="color:#e4f6fb">central boid</span> sits at the center of
+      each demo while <span style="color:#5a9aaa">passing neighbors</span>
+      follow scripted looping paths around it. These neighbors aren't reacting
+      to our boid or to each other the way real boids would — they're just
+      stand-ins that let you see each rule's effect in isolation, without the
+      feedback loops that make the full simulation so rich and unpredictable.
+    </p>
+    <p>
+      The central boid appears fixed because we're looking at its environment
+      from <em>its</em> point of view. Imagine you're swimming just above this
+      boid, keeping pace with it — you see the same neighborhood it sees, with
+      other fish drifting in and out of its radius. The boid isn't sitting
+      still; <em>we're moving with it</em>, so everything else appears to move
+      around it. It's a bit like watching the world scroll past from a car
+      window — the car feels stationary, the landscape moves.
+    </p>
+  </section>
+
   <!-- ── Introduction ────────────────────────────────────────────────────── -->
   <section>
     <h2>The Vector Arithmetic</h2>
     <p>
-      Each boid rule — separation, alignment, and cohesion — boils down to a single
-      steering vector. Every frame, the simulation computes all three vectors for every
-      boid, adds them together, and nudges the boid's velocity in that direction.
-      That's it. The rich collective behavior you see in the playground on this site emerges entirely
-      from this per-boid vector addition.
+      Each boid rule — separation, alignment, and cohesion — boils down to a
+      single steering vector. Every frame, the simulation computes all three
+      vectors for every boid, adds them together, and nudges the boid's
+      velocity in that direction. That's it — the rest is emergence.
     </p>
     <p>
-      The demos below isolate each rule so you can watch the vectors form in real time.
-      A fixed <span style="color:#e4f6fb">central boid</span> sits at the center of each
-      canvas while <span style="color:#5a9aaa">passing boids</span> follow looping paths
-      around it. When a neighbor enters the boid's radius for a given rule, the corresponding force vector
-      appears and the central boid's heading deflects. Drag the sliders to change the
-      radius and strength and see how the vectors respond.
-    </p>
-    <p>
-      A note on perspective: the central boid's position stays fixed because we're
-      looking at its environment from <em>its</em> point of view. Imagine you're
-      swimming just above this boid, keeping pace with it — you see the same
-      neighborhood it sees, with other boids drifting in and out of its radius. The
-      boid isn't sitting still; <em>we're moving with it</em>, so everything else
-      appears to move around it. It's a bit like watching the world scroll past from
-      a car window — the car feels stationary, the landscape moves.
-    </p>
-    <p>
-      Below, we'll isolate each rule one at a time so the effect is clear on its
-      own. Then we'll combine all three and watch the interplay. It's only in
-      combination that the emergent, lifelike behavior appears — without any
-      boid knowing the big picture.
+      Below, we isolate each rule one at a time so the effect is clear on its
+      own, then combine all three and watch the interplay. Drag the sliders to
+      change each rule's radius and strength and see how the vectors respond.
     </p>
   </section>
 
@@ -248,9 +262,9 @@
       </li>
       <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
         <span style="color:#888; font-weight:600;">Gray arrow</span> —
-        the target: current velocity + separation delta. This is what the velocity
-        <em>becomes</em> after the force is applied — this is the boid
-        <em>turning to its left or right</em>.
+        the target: current velocity + separation delta. The velocity
+        <em>turns toward</em> this point — this is the boid
+        <em>steering to its left or right</em>.
       </li>
       <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
         <span style="color:rgba(255,0,0,0.65); font-weight:600;">Red circle</span> —
@@ -323,9 +337,10 @@
     <p>
       Alignment makes boids swim in the same direction as their neighbors. The rule
       computes the average velocity of every neighbor inside the alignment radius, then
-      steers the boid toward that average heading. The result is a
-      <span style="color:#ffe600">yellow delta vector</span> that gently rotates the
-      boid until it matches the group's direction.
+      produces a steering force — the delta — that rotates the boid toward that average
+      heading. The delta isn't shown in the diagram (it would add visual clutter without
+      much clarity), but you can see its effect: the gray target arrow swings toward the
+      dashed yellow average, and the white velocity arrow gradually follows.
     </p>
     <p>
       When neighbors are heading in wildly different directions their contributions
@@ -349,9 +364,9 @@
       </li>
       <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
         <span style="color:#888; font-weight:600;">Gray arrow</span> —
-        the target: current velocity + alignment force. This is what the
-        velocity <em>becomes</em> after the force is applied — this is the boid
-        <em>turning to match the school's heading</em>.
+        the target: current velocity + alignment force. The velocity
+        <em>turns toward</em> this point — this is the boid
+        <em>steering to match the school's heading</em>.
       </li>
     </ul>
 
@@ -376,11 +391,9 @@
       </li>
     </ul>
     <p style="color: var(--color-text-dim); font-size: 0.88rem; line-height: 1.65;">
-      The alignment force itself — the "delta" — is the gap between the white
-      arrow and the dashed yellow arrow. Watch for it: when a school passes
-      through, the dashed yellow snaps to the school's heading, the gray arrow
-      swings toward it, and the white arrow gradually follows. That rotation is
-      alignment at work.
+      Watch for it: when a school passes through, the dashed yellow snaps to
+      the school's heading, the gray target swings toward it, and the white
+      velocity arrow gradually follows. That rotation is alignment at work.
     </p>
 
     <div class="demo-container">
@@ -410,18 +423,11 @@
     </div>
 
     <p style="color: var(--color-text-dim); font-size: 0.88rem; line-height: 1.65; margin-top: 16px;">
-      Keep in mind: everything on this page shows a <em>single</em> boid's
-      perspective — one boid reacting to its neighbors. In the full simulation
-      (the playground on this site, for instance), <em>every</em> boid is doing
-      this simultaneously to every <em>other</em> boid. Boid&nbsp;A adjusts its
-      heading based on what it sees around it; boid&nbsp;B does the same —
-      and&nbsp;A is part of B's neighborhood, and vice versa. There's no
-      coordinator, no global plan. The schooling behavior that emerges — the
-      tight formations, the sweeping synchronized turns — is "just" individual
-      boids with radius-limited vision making their own small velocity
-      adjustments each frame. <strong style="color: var(--color-text);">That's the core insight of boids:
-      coordinated collective motion from purely local, individual
-      decisions.</strong>
+      Remember: in the full simulation, this isn't one-way. Every boid is
+      simultaneously aligning with every other boid in its radius — and those
+      neighbors are adjusting right back. That mutual, decentralized alignment
+      is what produces the sweeping synchronized turns you see in the
+      <a href="/playground.html">Playground</a>.
     </p>
   </section>
 
@@ -464,9 +470,9 @@
       </li>
       <li style="padding:5px 0; color:var(--color-text); line-height:1.6;">
         <span style="color:#888; font-weight:600;">Gray arrow</span> —
-        the target: current velocity + cohesion force. This is what the velocity
-        <em>becomes</em> after the force is applied — this is the boid
-        <em>turning toward the group</em>.
+        the target: current velocity + cohesion force. The velocity
+        <em>turns toward</em> this point — this is the boid
+        <em>steering toward the group</em>.
       </li>
     </ul>
 
