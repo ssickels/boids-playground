@@ -30,7 +30,7 @@
       <a href="https://stevessite.com/boids-explain.html">How It Works</a>
       <a href="https://stevessite.com/boids-about.html">About</a>
       <a href="https://stevessite.com/boids-impl.html">Dev Notes</a>
-      <a href="https://github.com/ssickels/boids-playgrounds" target="_blank" class="nav-panel-github">GitHub (Playground) ↗</a>
+      <a href="https://github.com/ssickels/boids-playgrounds" target="_blank" class="nav-panel-github">GitHub ↗</a>
       <a href="https://stevessite.com/about.html" class="nav-panel-top-link" style="padding-left:28px">About This Site</a>
     </div>
     <div class="nav-panel-section">

@@ -172,7 +172,7 @@
   <section>
     <h2>Key Parameters</h2>
     <p>
-      The slider panel has eleven parameters grouped into three sections. Here are the
+      The slider panel has thirteen parameters grouped into three sections. Here are the
       ones that matter most for shaping the murmuration's character:
     </p>
 
@@ -198,13 +198,14 @@
     </div>
 
     <div class="param-card">
-      <h3>Max Speed &amp; Max Force</h3>
+      <h3>Max Speed, Min Speed &amp; Max Force</h3>
       <p>
-        These two together control the "feel" of the flock's flight. Max speed sets
-        the top speed; max force caps how quickly a bird can change direction. Fast
-        birds with moderate force make wide, graceful arcs — slow turns, big sweeps.
-        Fast birds with high force turn on a dime. The ratio matters more than
-        either value alone.
+        These three together control the "feel" of the flock's flight. Max speed sets
+        the top speed; min speed (as a percentage of max) sets the stall speed — birds
+        are boosted to at least this speed so they can't hover. Max force caps how
+        quickly a bird can change direction. Fast birds with moderate force make wide,
+        graceful arcs — slow turns, big sweeps. Fast birds with high force turn on a
+        dime. The ratios matter more than any single value.
       </p>
     </div>
 
@@ -261,6 +262,34 @@
       <p class="placeholder">[Placeholder — describe the resulting behavior and
         theories about what's driving it once preset values are settled.]</p>
     </div>
+  </section>
+
+  <!-- ── Saving & Loading Presets ───────────────────────────────────── -->
+  <section>
+    <h2>Saving &amp; Loading Presets</h2>
+    <p>
+      Found a combination you like? You can save it as a preset with one click
+      and switch back to it anytime.
+    </p>
+    <ul>
+      <li><strong>Save as preset</strong> — instantly saves your current slider
+        values. You can give it a name, or just hit Enter for a default.
+        The preset appears in the panel under "Your presets" and persists in
+        your browser between sessions.</li>
+      <li>Click any saved preset to apply it, just like the built-in ones.</li>
+      <li>Click <strong>&darr;</strong> on a saved preset to download it as a
+        <code>.json</code> file — useful for backing up a favourite or sharing
+        it with someone.</li>
+      <li><strong>Import preset from file</strong> — opens a
+        <code>.json</code> or <code>.txt</code> file and adds it to your saved
+        presets.</li>
+      <li>Click <strong>&times;</strong> on a preset to remove it.</li>
+    </ul>
+    <p>
+      Everything stays local — your presets are stored in your browser and
+      nothing is uploaded anywhere. The downloaded files are plain JSON, so you
+      can edit them by hand if you want.
+    </p>
   </section>
 
   <!-- ── What's Next ────────────────────────────────────────────────── -->

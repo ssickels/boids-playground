@@ -20,6 +20,8 @@ export const DEFAULTS = {
   MAX_SPEED: 15.0,
   MAX_FORCE: 0.5,
   FRONT_BIAS: 1.0,  // 1.0 = no bias; >1 = weight forward neighbors more for alignment
+  PERSONAL_SPACE: 2.0, // metric separation radius — all birds within this distance get pushed away
+  MIN_SPEED_RATIO: 0.53, // min speed as fraction of MAX_SPEED — stall speed
   // WIND: true,  — removed from UI; see wind section below
   HOMING: 0.75,
 };
@@ -45,6 +47,7 @@ class SpatialHash {
   // Pre-allocated scratch arrays to avoid GC pressure
   _candIdx = new Int32Array(512);
   _candD2  = new Float32Array(512);
+  _nCand   = 0; // exposed so callers can iterate all candidates for metric checks
 
   findNearest(selfIdx, x, y, z, N, px, py, pz, out) {
     const cx = Math.floor(x / HASH_CELL), cy = Math.floor(y / HASH_CELL), cz = Math.floor(z / HASH_CELL);
@@ -70,6 +73,7 @@ class SpatialHash {
         }
       }
     }
+    this._nCand = nCand; // store for metric personal-space checks
     // insertion sort for small N — find N smallest
     const len = Math.min(N, nCand);
     for (let i = 0; i < len; i++) {
@@ -264,7 +268,7 @@ export function initScene(container, params) {
     const Nmax = Math.max(params.N_SEP, params.N_ALI_COH);
     const Nsep = params.N_SEP;
     const mSpd = params.MAX_SPEED, mFrc = params.MAX_FORCE;
-    const minSpd = mSpd * 0.53; // MIN_SPEED tracks MAX_SPEED proportionally
+    const minSpd = mSpd * params.MIN_SPEED_RATIO;
 
     for (let i = 0; i < count; i++) {
       const nLen = hash.findNearest(i, px[i], py[i], pz[i], Nmax, px, py, pz, _neighbors);
@@ -293,6 +297,35 @@ export function initScene(container, params) {
         sepX /= sepCnt; sepY /= sepCnt; sepZ /= sepCnt;
         steerScalar(sepX, sepY, sepZ, vx[i], vy[i], vz[i], mSpd, mFrc);
         ax += _steer[0] * params.W_SEP; ay += _steer[1] * params.W_SEP; az += _steer[2] * params.W_SEP;
+      }
+
+      // ── Metric personal space (all nearby birds, not just topological N) ──
+      // Topological separation above only checks the N nearest neighbors.
+      // This checks ALL birds in the spatial hash neighborhood within a
+      // metric radius — collision avoidance that scales with actual density,
+      // producing more uniform flock density with a sharper boundary.
+      const psR = params.PERSONAL_SPACE;
+      if (psR > 0) {
+        const psR2 = psR * psR;
+        let psX = 0, psY = 0, psZ = 0, psCnt = 0;
+        const nCand = hash._nCand;
+        const candIdx = hash._candIdx, candD2 = hash._candD2;
+        for (let j = 0; j < nCand; j++) {
+          const cd2 = candD2[j];
+          if (cd2 > 0 && cd2 < psR2) {
+            const ci = candIdx[j];
+            const dx = px[i] - px[ci], dy = py[i] - py[ci], dz = pz[i] - pz[ci];
+            const d = Math.sqrt(cd2);
+            const inv = 1 / d;
+            psX += dx * inv; psY += dy * inv; psZ += dz * inv;
+            psCnt++;
+          }
+        }
+        if (psCnt > 0) {
+          psX /= psCnt; psY /= psCnt; psZ /= psCnt;
+          steerScalar(psX, psY, psZ, vx[i], vy[i], vz[i], mSpd, mFrc);
+          ax += _steer[0] * params.W_SEP; ay += _steer[1] * params.W_SEP; az += _steer[2] * params.W_SEP;
+        }
       }
 
       // ── Alignment (front/back hemisphere weighting) ─────────────────

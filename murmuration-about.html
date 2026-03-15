@@ -217,16 +217,6 @@
       than what's behind.
     </p>
     <p>
-      The one exception is <em class="term">wind</em>. It's a uniform external
-      force, not a local rule — the same push applied to every bird regardless
-      of its neighbors. We include it because without some source of directional
-      instability, the flock tends to hover in place, and real murmurations
-      sweep and drift. Wind is a proxy for whatever global-scale mechanism
-      actually causes that movement — atmospheric currents, collective momentum,
-      or something we don't yet understand. It's the one place where we cheat,
-      and we flag it as such.
-    </p>
-    <p>
       The payoff for this discipline is that the behaviors that emerge —
       coherent sweeping waves, dense cloud-like formations that stretch and
       compress, breakaway clusters that rejoin the group — weren't designed.
@@ -327,7 +317,7 @@
   <section>
     <h2>The Forces, in Detail</h2>
     <p>
-      Each frame, every bird computes a steering acceleration from seven sources. These are
+      Each frame, every bird computes a steering acceleration from six sources. These are
       summed, applied to velocity, and velocity is clamped between a minimum and maximum
       speed (birds can't hover, and they can't exceed a sprint speed).
     </p>
@@ -418,18 +408,7 @@
     </div>
 
     <div class="concept-card">
-      <h3>5. Wind drift</h3>
-      <p>
-        A gentle uniform acceleration applied to every bird — the same direction and strength
-        for all. The direction wanders randomly, smoothly lerping to a new target every
-        5&ndash;12 seconds. This gives the entire flock net momentum so it sweeps across the
-        sky rather than hovering in place. Vertical drift is damped to 40% of horizontal,
-        because real wind is mostly lateral.
-      </p>
-    </div>
-
-    <div class="concept-card">
-      <h3>6. Boundary</h3>
+      <h3>5. Boundary</h3>
       <p>
         A soft quadratic push-back that activates when a bird enters the boundary margin
         (20 units from the edge of a 200&times;140&times;160 unit arena). The force grows
@@ -440,7 +419,7 @@
     </div>
 
     <div class="concept-card">
-      <h3>7. Ground plane</h3>
+      <h3>6. Ground plane</h3>
       <p>
         A checkerboard floor sits beneath the flock to give a sense of altitude and motion.
         Birds feel a soft upward push that begins 40 units above the ground &mdash; double the
@@ -466,7 +445,7 @@
   <section>
     <h2>The Steer Function</h2>
     <p>
-      All of the above forces (except boundary and wind) use the same steering formula,
+      All of the above forces (except boundary) use the same steering formula,
       adapted from Reynolds' original work. Given a "desired direction" vector:
     </p>
     <code class="math">
@@ -528,9 +507,20 @@
   <section>
     <h2>The Sliders</h2>
     <p>
-      The experiment panel exposes twelve parameters plus a wind toggle. All update in
-      real time except bird count, which rebuilds the flock on mouse-up. Click
-      <strong>?</strong> in the panel header for inline descriptions.
+      The experiment panel exposes thirteen parameters. All update in real time except
+      bird count, which rebuilds the flock on mouse-up. Click <strong>?</strong> in the
+      panel header for inline descriptions.
+    </p>
+    <p>
+      <strong>A note on units:</strong> the simulation world has no explicit physical
+      scale, but the checkerboard floor gives a useful reference. Each tile is
+      40&times;40 units, and the soft-walled arena where birds fly is roughly
+      160&times;100&times;120 units — about 4 tiles wide by 3 deep. At the default
+      max speed of 15 units/s, a bird flying flat across the grid crosses one
+      tile in about 2.7 seconds. Distance parameters like personal space (default
+      2.0) are small fractions of a tile — you'd fit 20 birds shoulder-to-shoulder
+      across one. Keeping these proportions in mind helps make sense of what the
+      slider values actually mean.
     </p>
 
     <table class="slider-table">
@@ -564,6 +554,12 @@
             out; lower values allow tighter packing.</td>
         </tr>
         <tr>
+          <td>Personal space</td>
+          <td>Metric distance bubble (default 2.0). All birds within this radius get
+            pushed away, regardless of neighbor count. Creates more uniform flock density.
+            Set to 0 to disable.</td>
+        </tr>
+        <tr>
           <td>Alignment</td>
           <td>How strongly birds match their neighbors' heading. This is the dominant
             murmuration force — high alignment is what creates the coherent, sweeping
@@ -588,6 +584,12 @@
             sweeps.</td>
         </tr>
         <tr>
+          <td>Min speed %</td>
+          <td>Stall speed as a fraction of max speed (default 53%). Birds are boosted to
+            at least this speed — they can't hover. At 0% birds can decelerate to a stop;
+            at 100% every bird flies at exactly max speed.</td>
+        </tr>
+        <tr>
           <td>Max force</td>
           <td>Maximum steering acceleration per frame (default 0.5). Lower values mean
             slower, wider turns; higher values let birds change direction more
@@ -598,12 +600,6 @@
           <td>Strength of the adaptive centroid pull for isolated birds (default 0.75).
             Higher values pull stray clusters back more aggressively. This force bypasses
             the max-force cap, so large values can overpower other steering.</td>
-        </tr>
-        <tr>
-          <td>Wind</td>
-          <td>Toggle (on/off). When enabled, a gentle uniform breeze pushes all birds in
-            a slowly wandering direction, giving the flock net momentum so it sweeps
-            across the sky rather than hovering in place.</td>
         </tr>
       </tbody>
     </table>

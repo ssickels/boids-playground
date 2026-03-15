@@ -236,7 +236,9 @@
     }
     .preset-item:last-child { margin-bottom: 0; }
     .preset-btn {
-      display: block;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       width: 100%;
       padding: 5px 8px;
       background: rgba(136, 136, 204, 0.06);
@@ -270,7 +272,7 @@
     #param-panel.show-desc .preset-desc { display: block; }
 
     /* reset button */
-    #param-reset {
+    #param-reset, #param-copy {
       display: block;
       width: calc(100% - 20px);
       margin: 6px 10px 4px;
@@ -284,10 +286,49 @@
       cursor: pointer;
       transition: background 0.12s, color 0.12s;
     }
-    #param-reset:hover {
+    #param-reset:hover, #param-copy:hover,
+    #param-save:hover, #param-load:hover {
       background: rgba(136, 136, 204, 0.15);
       color: #aaaaee;
     }
+    #param-save, #param-load {
+      display: block;
+      width: calc(100% - 20px);
+      margin: 6px 10px 4px;
+      padding: 5px;
+      background: rgba(136, 136, 204, 0.08);
+      border: 1px solid rgba(136, 136, 204, 0.22);
+      border-radius: 4px;
+      color: rgba(136, 136, 204, 0.75);
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+    .user-presets-label {
+      font-size: 9px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: rgba(136, 136, 204, 0.35);
+      padding: 6px 10px 2px;
+    }
+    .user-preset-actions {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+      margin-left: auto;
+      padding-left: 6px;
+    }
+    .user-preset-action {
+      font-size: 13px;
+      line-height: 1;
+      color: rgba(136, 136, 204, 0.35);
+      cursor: pointer;
+      transition: color 0.12s;
+      padding: 0 2px;
+    }
+    .user-preset-action:hover { color: #aaaaee; }
+    .user-preset-action.remove:hover { color: #ee6666; }
 
     /* inline descriptions */
     .param-desc {
@@ -299,6 +340,10 @@
       display: none;
     }
     #param-panel.show-desc .param-desc { display: block; }
+    .btn-desc {
+      padding: 2px 10px 4px;
+      margin: 0 10px;
+    }
   </style>
 </head>
 <body>
@@ -322,8 +367,8 @@
     </div>
     <div id="param-panel-body">
 
-      <!-- ── Presets (hidden until names/descriptions are ready) ── -->
-      <div class="preset-list" style="display:none">
+      <!-- ── Presets ───────────────────────────────────────────── -->
+      <div class="preset-list">
         <div class="preset-item">
           <button class="preset-btn" data-preset="0">Preset 1</button>
           <div class="preset-desc">Placeholder description for preset 1.</div>
@@ -341,8 +386,9 @@
           <div class="preset-desc">Placeholder description for preset 4.</div>
         </div>
       </div>
+      <div id="user-presets-container"></div>
 
-      <div class="param-divider" style="display:none"></div>
+      <div class="param-divider"></div>
 
       <!-- ── Simulation ──────────────────────────────────────────── -->
       <div class="param-section">
@@ -399,6 +445,13 @@
             <span class="param-desc">Strength of push-away from neighbors within minimum distance.</span>
           </div>
           <div class="param-row">
+            <span class="param-label" title="Metric distance bubble — all birds within this radius get pushed away">Personal space</span>
+            <span class="param-value" id="val-ps">2.0</span>
+            <input class="param-slider" type="range" id="sl-ps"
+              min="0" max="10" step="0.1" value="2.0" />
+            <span class="param-desc">Metric distance bubble. All birds within this radius get pushed away, regardless of neighbor count. Creates more uniform flock density. 0 = disabled.</span>
+          </div>
+          <div class="param-row">
             <span class="param-label" title="Velocity matching with neighbors">Alignment</span>
             <span class="param-value" id="val-ali">4.0</span>
             <input class="param-slider" type="range" id="sl-ali"
@@ -436,7 +489,14 @@
             <span class="param-value" id="val-maxspd">15.0</span>
             <input class="param-slider" type="range" id="sl-maxspd"
               min="3" max="30" step="0.5" value="15.0" />
-            <span class="param-desc">Maximum flight speed. Min speed tracks at ~53%. Higher speed = wider sweeping arcs.</span>
+            <span class="param-desc">Maximum flight speed. Higher speed = wider sweeping arcs.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Minimum speed as a fraction of max speed — stall speed">Min speed %</span>
+            <span class="param-value" id="val-minspd">53%</span>
+            <input class="param-slider" type="range" id="sl-minspd"
+              min="0" max="1.0" step="0.01" value="0.53" />
+            <span class="param-desc">Stall speed as a fraction of max speed. Birds are boosted to at least this speed — they can't hover. 0 = birds can stop. 1.0 = all birds fly at exactly max speed.</span>
           </div>
           <div class="param-row">
             <span class="param-label" title="Maximum steering force per frame">Max force</span>
@@ -458,6 +518,13 @@
       <div class="param-divider"></div>
 
       <button id="param-reset">Reset defaults</button>
+      <button id="param-save" title="Save the current slider values as a named preset">Save as preset</button>
+      <div class="param-desc btn-desc">Saves your current settings as a preset you can switch back to. Stored in your browser.</div>
+      <button id="param-load" title="Import a previously saved .json preset file from your computer">Import preset from file</button>
+      <div class="param-desc btn-desc">Opens a .json or .txt preset file and adds it to your saved presets.</div>
+      <button id="param-copy" title="Copy all current slider values to clipboard as JSON">Copy current config</button>
+      <div class="param-desc btn-desc">Copies the current slider values to your clipboard as JSON — handy for pasting into a message or note.</div>
+      <input type="file" id="preset-file-input" accept=".json,.txt" style="display:none" />
     </div>
   </div>
 
@@ -549,10 +616,12 @@
       nsep:      { el: 'sl-nsep',      val: 'val-nsep',      key: 'N_SEP',     fmt: v => String(v) },
       nalicoh:   { el: 'sl-nalicoh',   val: 'val-nalicoh',   key: 'N_ALI_COH', fmt: v => String(v) },
       sep:       { el: 'sl-sep',       val: 'val-sep',       key: 'W_SEP',     fmt: v => Number(v).toFixed(1) },
+      ps:        { el: 'sl-ps',        val: 'val-ps',        key: 'PERSONAL_SPACE', fmt: v => Number(v).toFixed(1) },
       ali:       { el: 'sl-ali',       val: 'val-ali',       key: 'W_ALI',     fmt: v => Number(v).toFixed(1) },
       coh:       { el: 'sl-coh',       val: 'val-coh',       key: 'W_COH',     fmt: v => Number(v).toFixed(1) },
       fbias:     { el: 'sl-fbias',     val: 'val-fbias',     key: 'FRONT_BIAS',fmt: v => Number(v).toFixed(1) },
       maxspd:    { el: 'sl-maxspd',    val: 'val-maxspd',    key: 'MAX_SPEED', fmt: v => Number(v).toFixed(1) },
+      minspd:    { el: 'sl-minspd',    val: 'val-minspd',    key: 'MIN_SPEED_RATIO', fmt: v => Math.round(Number(v) * 100) + '%' },
       maxfrc:    { el: 'sl-maxfrc',    val: 'val-maxfrc',    key: 'MAX_FORCE', fmt: v => Number(v).toFixed(2) },
       homing:    { el: 'sl-homing',    val: 'val-homing',    key: 'HOMING',    fmt: v => Number(v).toFixed(2) },
     };
@@ -614,6 +683,214 @@
     document.getElementById('param-reset').addEventListener('click', () => {
       applyConfig(DEFAULTS);
       clearActivePreset();
+    });
+
+    // ── Copy config ───────────────────────────────────────────────
+    function buildConfigJSON() {
+      return JSON.stringify(buildConfigObj(), null, 2);
+    }
+
+    document.getElementById('param-copy').addEventListener('click', () => {
+      const btn = document.getElementById('param-copy');
+      const text = buildConfigJSON();
+      const showResult = (msg, ms = 1500) => {
+        btn.textContent = msg;
+        setTimeout(() => { btn.textContent = 'Copy current config'; }, ms);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => showResult('Copied!')).catch(() => {
+          // Fallback for non-HTTPS
+          try {
+            const ta = Object.assign(document.createElement('textarea'), { value: text });
+            ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            document.execCommand('copy') ? showResult('Copied!') : showResult('Failed to copy');
+            ta.remove();
+          } catch { showResult('Failed to copy'); }
+        });
+      } else {
+        try {
+          const ta = Object.assign(document.createElement('textarea'), { value: text });
+          ta.style.position = 'fixed'; ta.style.opacity = '0';
+          document.body.appendChild(ta); ta.select();
+          document.execCommand('copy') ? showResult('Copied!') : showResult('Failed to copy');
+          ta.remove();
+        } catch { showResult('Failed to copy'); }
+      }
+    });
+
+    // ── User presets (localStorage-backed) ────────────────────────
+    const STORAGE_KEY = 'murmuration-user-presets';
+    const EXPECTED_KEYS = ['MAX_SPEED', 'W_ALI', 'W_COH', 'W_SEP'];
+    const MAX_USER_PRESETS = 10;
+
+    function loadUserPresets() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+      catch { return []; }
+    }
+    function saveUserPresets(arr) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    }
+
+    function buildConfigObj() {
+      const cfg = {};
+      for (const [, s] of Object.entries(sliders)) cfg[s.key] = params[s.key];
+      return cfg;
+    }
+
+    function truncName(name) {
+      return name.length > 20 ? name.slice(0, 18) + '\u2026' : name;
+    }
+
+    function downloadPreset(preset) {
+      const safeName = preset.name.replace(/[^a-zA-Z0-9 _\-]/g, '').replace(/\s+/g, '-') || 'preset';
+      const json = JSON.stringify(preset.config, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = Object.assign(document.createElement('a'), {
+        href: url, download: safeName + '.json'
+      });
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function renderUserPresets() {
+      const container = document.getElementById('user-presets-container');
+      const presets = loadUserPresets();
+      container.innerHTML = '';
+      if (presets.length === 0) return;
+
+      const label = document.createElement('div');
+      label.className = 'user-presets-label';
+      label.textContent = 'Your presets';
+      container.appendChild(label);
+
+      const list = document.createElement('div');
+      list.className = 'preset-list';
+      container.appendChild(list);
+
+      presets.forEach((preset, idx) => {
+        const item = document.createElement('div');
+        item.className = 'preset-item';
+
+        const btn = document.createElement('button');
+        btn.className = 'preset-btn';
+        btn.innerHTML = `<span>${truncName(preset.name)}</span>`;
+
+        const actions = document.createElement('span');
+        actions.className = 'user-preset-actions';
+
+        const dlBtn = document.createElement('span');
+        dlBtn.className = 'user-preset-action';
+        dlBtn.title = 'Download as .json file';
+        dlBtn.textContent = '\u2193';
+        dlBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          downloadPreset(preset);
+        });
+
+        const rmBtn = document.createElement('span');
+        rmBtn.className = 'user-preset-action remove';
+        rmBtn.title = 'Remove preset';
+        rmBtn.textContent = '\u00d7';
+        rmBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const arr = loadUserPresets();
+          arr.splice(idx, 1);
+          saveUserPresets(arr);
+          renderUserPresets();
+          clearActivePreset();
+        });
+
+        actions.appendChild(dlBtn);
+        actions.appendChild(rmBtn);
+        btn.appendChild(actions);
+
+        btn.addEventListener('click', () => {
+          applyConfig(preset.config);
+          clearActivePreset();
+          btn.classList.add('active');
+        });
+
+        item.appendChild(btn);
+        list.appendChild(item);
+      });
+    }
+
+    function addUserPreset(name, config) {
+      const arr = loadUserPresets();
+      if (arr.length >= MAX_USER_PRESETS) {
+        alert('Maximum of ' + MAX_USER_PRESETS + ' saved presets. Remove one first.');
+        return false;
+      }
+      arr.push({ name, config });
+      saveUserPresets(arr);
+      renderUserPresets();
+      return true;
+    }
+
+    function validateConfig(cfg) {
+      if (!cfg || typeof cfg !== 'object' || Array.isArray(cfg)) return false;
+      return EXPECTED_KEYS.some(k => k in cfg);
+    }
+
+    function coerceConfigNumbers(cfg) {
+      for (const k of Object.keys(cfg)) {
+        if (typeof cfg[k] === 'string') cfg[k] = Number(cfg[k]);
+      }
+    }
+
+    // Restore on page load
+    renderUserPresets();
+
+    // ── Save as preset ─────────────────────────────────────────────
+    const saveBtn = document.getElementById('param-save');
+    saveBtn.addEventListener('click', () => {
+      const input = prompt('Name your preset (or leave blank):', '');
+      if (input === null) return;  // cancelled
+      const name = input.trim() || 'Your preset';
+      const config = buildConfigObj();
+      if (addUserPreset(name, config)) {
+        saveBtn.textContent = 'Saved!';
+        setTimeout(() => { saveBtn.textContent = 'Save as preset'; }, 1500);
+      }
+    });
+
+    // ── Import preset from file ────────────────────────────────────
+    const fileInput = document.getElementById('preset-file-input');
+    const loadBtn = document.getElementById('param-load');
+
+    loadBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      fileInput.value = '';
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        let cfg;
+        try { cfg = JSON.parse(reader.result); }
+        catch {
+          loadBtn.textContent = 'Invalid file';
+          setTimeout(() => { loadBtn.textContent = 'Import preset from file'; }, 2000);
+          return;
+        }
+        if (!validateConfig(cfg)) {
+          loadBtn.textContent = 'Invalid file';
+          setTimeout(() => { loadBtn.textContent = 'Import preset from file'; }, 2000);
+          return;
+        }
+        coerceConfigNumbers(cfg);
+        const presetName = file.name.replace(/\.\w+$/, '');
+        if (addUserPreset(presetName, cfg)) {
+          loadBtn.textContent = 'Imported!';
+          setTimeout(() => { loadBtn.textContent = 'Import preset from file'; }, 1500);
+        }
+      };
+      reader.readAsText(file);
     });
 
     // ── Panel collapse ────────────────────────────────────────────
