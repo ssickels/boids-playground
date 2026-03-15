@@ -34,6 +34,8 @@ A school of Blue Tang fish exhibits emergent flocking behavior while an Orangest
 
 ## Starling Murmurations
 
+![Preview of the Boids Playground](https://stevessite.com/murmuration_preview.jpg)
+
 A murmuration of 3,000+ starlings sweeping across a twilight sky. Extends the classic boids algorithm with topological neighbors (nearest-N instead of fixed radius), split neighbor counts, adaptive centroid homing, front-bias hemisphere weighting, and a velocity-aware ground plane. The simulation grew out of the fish schooling playground but shares no code with it.
 
 | Page | Description |
