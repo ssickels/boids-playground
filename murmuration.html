@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Murmuration — Steve's Site</title>
+  <meta property="og:title" content="Murmuration Playground" />
+  <meta property="og:description" content="An interactive starling murmuration simulation. 3,000 birds, three simple rules, and emergent large-scale dynamics you can tune in real time." />
+  <meta property="og:image" content="https://stevessite.com/murmuration_preview.jpg" />
+  <meta property="og:url" content="https://stevessite.com/murmuration.html" />
+  <meta property="og:type" content="website" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #0a0a2e; overflow: hidden; }
+    canvas { display: block; }
+
+    /* ── LOADER / SPLASH ───────────────────────────────────────────── */
+    #loader {
+      position: fixed; inset: 0;
+      background: #0a0a2e;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 100;
+      transition: opacity 0.9s ease;
+    }
+    #loader.fade-out { opacity: 0; pointer-events: none; }
+    .loader-title {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 1.5rem; font-weight: 300;
+      color: #8888cc; letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+    .loader-spinner {
+      width: 36px; height: 36px;
+      border: 2px solid rgba(136, 136, 204, 0.18);
+      border-top-color: #8888cc;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-note {
+      margin-top: 20px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 0.85rem;
+      color: rgba(136, 136, 204, 0.55);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── GUIDE ARROWS ──────────────────────────────────────────────── */
+    .guide-arrow {
+      position: fixed;
+      z-index: 250;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #f5d84a;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      white-space: nowrap;
+    }
+    .guide-arrow.visible { opacity: 1; }
+    .guide-arrow.fade-out { opacity: 0; }
+    .guide-arrow .arrow-char {
+      font-size: 22px;
+      animation: pulse-arrow 1s ease-in-out infinite;
+    }
+    @keyframes pulse-arrow {
+      0%, 100% { opacity: 1; transform: translateX(0); }
+      50% { opacity: 0.5; transform: translateX(4px); }
+    }
+
+    /* ── SLIDER PANEL ──────────────────────────────────────────────── */
+    #param-panel {
+      position: fixed;
+      top: 46px;
+      right: 12px;
+      width: 240px;
+      background: rgba(14, 14, 50, 0.82);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(136, 136, 204, 0.18);
+      border-radius: 6px;
+      z-index: 200;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 12px;
+      color: #b8b8dd;
+      overflow: hidden;
+    }
+    #param-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(136, 136, 204, 0.14);
+      user-select: none;
+    }
+    #param-panel-header:hover { background: rgba(136, 136, 204, 0.05); }
+    #param-panel-title {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(136, 136, 204, 0.75);
+    }
+    .panel-header-btns {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #param-desc-btn {
+      background: none; border: none; cursor: pointer;
+      color: rgba(136, 136, 204, 0.40);
+      font-size: 13px; line-height: 1;
+      padding: 0 2px;
+      transition: color 0.15s;
+    }
+    #param-desc-btn:hover { color: #8888cc; }
+    #param-desc-btn.active { color: #8888cc; }
+    #param-collapse-btn {
+      background: none; border: none; cursor: pointer;
+      color: rgba(136, 136, 204, 0.55);
+      font-size: 14px; line-height: 1;
+      padding: 0 2px;
+      transition: color 0.15s;
+    }
+    #param-collapse-btn:hover { color: #8888cc; }
+    #param-panel-body {
+      padding: 6px 0 4px;
+      max-height: calc(100vh - 90px);
+      overflow-y: auto;
+    }
+    #param-panel-body::-webkit-scrollbar { width: 3px; }
+    #param-panel-body::-webkit-scrollbar-track { background: transparent; }
+    #param-panel-body::-webkit-scrollbar-thumb {
+      background: rgba(136, 136, 204, 0.30);
+      border-radius: 2px;
+    }
+    #param-panel.collapsed #param-panel-body { display: none; }
+    #param-panel.collapsed { border-radius: 6px; }
+
+    /* section toggle */
+    .param-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 10px 4px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .param-section-header:hover { background: rgba(136, 136, 204, 0.05); }
+    .param-section-label {
+      font-size: 10px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: rgba(136, 136, 204, 0.55);
+    }
+    .param-section-arrow {
+      font-size: 10px;
+      color: rgba(136, 136, 204, 0.40);
+      transition: transform 0.15s;
+    }
+    .param-section.collapsed .param-section-arrow { transform: rotate(-90deg); }
+    .param-section-body { padding: 0 10px 6px; }
+    .param-section.collapsed .param-section-body { display: none; }
+
+    /* individual row */
+    .param-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 7px;
+    }
+    .param-row:last-child { margin-bottom: 0; }
+    .param-label {
+      font-size: 11px;
+      color: #8888cc;
+      cursor: help;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .param-value {
+      font-size: 11px;
+      color: rgba(136, 136, 204, 0.65);
+      text-align: right;
+      min-width: 32px;
+    }
+    .param-slider {
+      grid-column: 1 / -1;
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(136, 136, 204, 0.18);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    .param-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #8888cc;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .param-slider::-webkit-slider-thumb:hover { background: #aaaaee; }
+    .param-slider::-moz-range-thumb {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #8888cc;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* divider */
+    .param-divider {
+      height: 1px;
+      background: rgba(136, 136, 204, 0.10);
+      margin: 2px 0;
+    }
+
+    /* ── PRESETS ────────────────────────────────────────────────────── */
+    .preset-list {
+      padding: 4px 10px 2px;
+    }
+    .preset-item {
+      margin-bottom: 3px;
+    }
+    .preset-item:last-child { margin-bottom: 0; }
+    .preset-btn {
+      display: block;
+      width: 100%;
+      padding: 5px 8px;
+      background: rgba(136, 136, 204, 0.06);
+      border: 1px solid rgba(136, 136, 204, 0.18);
+      border-radius: 4px;
+      color: rgba(136, 136, 204, 0.65);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+      text-align: left;
+    }
+    .preset-btn:hover {
+      background: rgba(136, 136, 204, 0.12);
+      color: #aaaaee;
+      border-color: rgba(136, 136, 204, 0.30);
+    }
+    .preset-btn.active {
+      background: rgba(136, 136, 204, 0.15);
+      color: #aaaaee;
+      border-color: rgba(136, 136, 204, 0.40);
+    }
+    .preset-desc {
+      font-size: 10px;
+      color: rgba(136, 136, 204, 0.48);
+      line-height: 1.45;
+      padding: 2px 8px 4px;
+      display: none;
+    }
+    #param-panel.show-desc .preset-desc { display: block; }
+
+    /* reset button */
+    #param-reset {
+      display: block;
+      width: calc(100% - 20px);
+      margin: 6px 10px 4px;
+      padding: 5px;
+      background: rgba(136, 136, 204, 0.08);
+      border: 1px solid rgba(136, 136, 204, 0.22);
+      border-radius: 4px;
+      color: rgba(136, 136, 204, 0.75);
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+    #param-reset:hover {
+      background: rgba(136, 136, 204, 0.15);
+      color: #aaaaee;
+    }
+
+    /* inline descriptions */
+    .param-desc {
+      grid-column: 1 / -1;
+      font-size: 10px;
+      color: rgba(136, 136, 204, 0.48);
+      line-height: 1.45;
+      margin-top: 1px;
+      display: none;
+    }
+    #param-panel.show-desc .param-desc { display: block; }
+  </style>
+</head>
+<body>
+  <!-- ── LOADER / SPLASH ─────────────────────────────────────────── -->
+  <div id="loader">
+    <div class="loader-title"><span style="display:block">Murmuration</span></div>
+    <div class="loader-spinner"></div>
+    <div class="loader-note">Assembling the flock&hellip;</div>
+  </div>
+
+  <div id="scene-container"></div>
+
+  <!-- ── SLIDER PANEL ────────────────────────────────────────────── -->
+  <div id="param-panel">
+    <div id="param-panel-header">
+      <span id="param-panel-title">Murmuration</span>
+      <div class="panel-header-btns">
+        <button id="param-desc-btn" title="Toggle descriptions">?</button>
+        <button id="param-collapse-btn" title="Collapse panel">▾</button>
+      </div>
+    </div>
+    <div id="param-panel-body">
+
+      <!-- ── Presets (hidden until names/descriptions are ready) ── -->
+      <div class="preset-list" style="display:none">
+        <div class="preset-item">
+          <button class="preset-btn" data-preset="0">Preset 1</button>
+          <div class="preset-desc">Placeholder description for preset 1.</div>
+        </div>
+        <div class="preset-item">
+          <button class="preset-btn" data-preset="1">Preset 2</button>
+          <div class="preset-desc">Placeholder description for preset 2.</div>
+        </div>
+        <div class="preset-item">
+          <button class="preset-btn" data-preset="2">Preset 3</button>
+          <div class="preset-desc">Placeholder description for preset 3.</div>
+        </div>
+        <div class="preset-item">
+          <button class="preset-btn" data-preset="3">Preset 4</button>
+          <div class="preset-desc">Placeholder description for preset 4.</div>
+        </div>
+      </div>
+
+      <div class="param-divider" style="display:none"></div>
+
+      <!-- ── Simulation ──────────────────────────────────────────── -->
+      <div class="param-section">
+        <div class="param-section-header">
+          <span class="param-section-label">Simulation</span>
+          <span class="param-section-arrow">▾</span>
+        </div>
+        <div class="param-section-body">
+          <div class="param-row">
+            <span class="param-label" title="Number of birds">Bird count</span>
+            <span class="param-value" id="val-count">3000</span>
+            <input class="param-slider" type="range" id="sl-count"
+              min="100" max="6000" step="100" value="3000" />
+            <span class="param-desc">Total birds in the flock. Changes rebuild the simulation.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Time-scale multiplier">Sim speed</span>
+            <span class="param-value" id="val-speed">1.00</span>
+            <input class="param-slider" type="range" id="sl-speed"
+              min="0.25" max="4.0" step="0.05" value="1.0" />
+            <span class="param-desc">Scales simulation time. Higher = faster movement.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="param-divider"></div>
+
+      <!-- ── Flocking ───────────────────────────────────────────── -->
+      <div class="param-section">
+        <div class="param-section-header">
+          <span class="param-section-label">Flocking</span>
+          <span class="param-section-arrow">▾</span>
+        </div>
+        <div class="param-section-body">
+          <div class="param-row">
+            <span class="param-label" title="Nearest neighbors for separation">Sep neighbors</span>
+            <span class="param-value" id="val-nsep">7</span>
+            <input class="param-slider" type="range" id="sl-nsep"
+              min="3" max="25" step="1" value="7" />
+            <span class="param-desc">Nearest neighbors considered for separation. Fewer = only avoid the closest birds.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Nearest neighbors for alignment &amp; cohesion">Ali/Coh neighbors</span>
+            <span class="param-value" id="val-nalicoh">14</span>
+            <input class="param-slider" type="range" id="sl-nalicoh"
+              min="3" max="25" step="1" value="14" />
+            <span class="param-desc">Nearest neighbors for alignment and cohesion. More = longer-range coherence.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Repulsion from close neighbors">Separation</span>
+            <span class="param-value" id="val-sep">3.0</span>
+            <input class="param-slider" type="range" id="sl-sep"
+              min="0" max="15" step="0.1" value="3.0" />
+            <span class="param-desc">Strength of push-away from neighbors within minimum distance.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Velocity matching with neighbors">Alignment</span>
+            <span class="param-value" id="val-ali">4.0</span>
+            <input class="param-slider" type="range" id="sl-ali"
+              min="0" max="8" step="0.1" value="4.0" />
+            <span class="param-desc">Steer toward average heading of neighbors. Dominant force for coherent waves.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Pull toward center of neighbors">Cohesion</span>
+            <span class="param-value" id="val-coh">3.0</span>
+            <input class="param-slider" type="range" id="sl-coh"
+              min="0" max="8" step="0.1" value="3.0" />
+            <span class="param-desc">Steer toward average position of neighbors. Keeps flock together.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Weight forward neighbors more for alignment &amp; cohesion">Front bias</span>
+            <span class="param-value" id="val-fbias">1.0</span>
+            <input class="param-slider" type="range" id="sl-fbias"
+              min="0.2" max="5.0" step="0.1" value="1.0" />
+            <span class="param-desc">Weight neighbors in front vs. behind. 1.0 = equal. Higher = follow what's ahead, ignore what's behind. Creates leading-edge instability.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="param-divider"></div>
+
+      <!-- ── Dynamics ───────────────────────────────────────────── -->
+      <div class="param-section">
+        <div class="param-section-header">
+          <span class="param-section-label">Dynamics</span>
+          <span class="param-section-arrow">▾</span>
+        </div>
+        <div class="param-section-body">
+          <div class="param-row">
+            <span class="param-label" title="Maximum flight speed">Max speed</span>
+            <span class="param-value" id="val-maxspd">15.0</span>
+            <input class="param-slider" type="range" id="sl-maxspd"
+              min="3" max="30" step="0.5" value="15.0" />
+            <span class="param-desc">Maximum flight speed. Min speed tracks at ~53%. Higher speed = wider sweeping arcs.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Maximum steering force per frame">Max force</span>
+            <span class="param-value" id="val-maxfrc">0.50</span>
+            <input class="param-slider" type="range" id="sl-maxfrc"
+              min="0.05" max="2.0" step="0.05" value="0.50" />
+            <span class="param-desc">Steering force cap. Low force = gradual turns with inertia. High force = snappy, responsive turns.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="How strongly isolated birds home toward the flock">Homing</span>
+            <span class="param-value" id="val-homing">0.75</span>
+            <input class="param-slider" type="range" id="sl-homing"
+              min="0" max="10.0" step="0.1" value="0.75" />
+            <span class="param-desc">Isolated-bird centroid pull strength. 0 = no homing, stray clusters stay lost. Higher = stronger pull back to the flock.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="param-divider"></div>
+
+      <button id="param-reset">Reset defaults</button>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script src="/murmuration-nav.js"></script>
+  <script type="module">
+    import { DEFAULTS, initScene } from './murmuration.js';
+
+    // ── Serializable config object ────────────────────────────────
+    const params = { ...DEFAULTS };
+
+    // ── Presets (placeholder values — names and params TBD) ───────
+    const PRESETS = [
+      { name: 'Preset 1', config: { ...DEFAULTS } },
+      { name: 'Preset 2', config: { ...DEFAULTS } },
+      { name: 'Preset 3', config: { ...DEFAULTS } },
+      { name: 'Preset 4', config: { ...DEFAULTS } },
+    ];
+
+    // ── Init scene ────────────────────────────────────────────────
+    const container = document.getElementById('scene-container');
+    const api = initScene(container, params);
+
+    // ── Dismiss loader once first frame renders ──────────────────
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const loader = document.getElementById('loader');
+        if (loader) {
+          loader.classList.add('fade-out');
+          setTimeout(() => {
+            loader.remove();
+            showGuideArrows();
+          }, 950);
+        }
+      });
+    });
+    // Safety net: dismiss after 5s regardless
+    setTimeout(() => {
+      const loader = document.getElementById('loader');
+      if (loader) {
+        loader.classList.add('fade-out');
+        setTimeout(() => {
+          loader.remove();
+          showGuideArrows();
+        }, 950);
+      }
+    }, 5000);
+
+    // ── Guide arrows ──────────────────────────────────────────────
+    let arrowsShown = false;
+    function showGuideArrows() {
+      if (arrowsShown) return;
+      arrowsShown = true;
+
+      const makeArrow = (target, text) => {
+        const rect = target.getBoundingClientRect();
+        const el = document.createElement('div');
+        el.className = 'guide-arrow';
+        el.innerHTML = `<span>${text}</span> <span class="arrow-char">&#9654;</span>`;
+        el.style.top  = rect.top + rect.height / 2 - 10 + 'px';
+        el.style.right = (window.innerWidth - rect.left + 8) + 'px';
+        document.body.appendChild(el);
+        requestAnimationFrame(() => el.classList.add('visible'));
+        return el;
+      };
+
+      const helpBtn  = document.getElementById('param-desc-btn');
+      if (!helpBtn) return;
+
+      const a1 = makeArrow(helpBtn, 'Descriptions');
+
+      setTimeout(() => {
+        a1.classList.add('fade-out');
+        setTimeout(() => { a1.remove(); }, 500);
+      }, 6000);
+    }
+
+    // ── Slider wiring ─────────────────────────────────────────────
+    const sliders = {
+      count:     { el: 'sl-count',     val: 'val-count',     key: 'COUNT',     fmt: v => String(v) },
+      speed:     { el: 'sl-speed',     val: 'val-speed',     key: 'SIM_SPEED', fmt: v => Number(v).toFixed(2) },
+      nsep:      { el: 'sl-nsep',      val: 'val-nsep',      key: 'N_SEP',     fmt: v => String(v) },
+      nalicoh:   { el: 'sl-nalicoh',   val: 'val-nalicoh',   key: 'N_ALI_COH', fmt: v => String(v) },
+      sep:       { el: 'sl-sep',       val: 'val-sep',       key: 'W_SEP',     fmt: v => Number(v).toFixed(1) },
+      ali:       { el: 'sl-ali',       val: 'val-ali',       key: 'W_ALI',     fmt: v => Number(v).toFixed(1) },
+      coh:       { el: 'sl-coh',       val: 'val-coh',       key: 'W_COH',     fmt: v => Number(v).toFixed(1) },
+      fbias:     { el: 'sl-fbias',     val: 'val-fbias',     key: 'FRONT_BIAS',fmt: v => Number(v).toFixed(1) },
+      maxspd:    { el: 'sl-maxspd',    val: 'val-maxspd',    key: 'MAX_SPEED', fmt: v => Number(v).toFixed(1) },
+      maxfrc:    { el: 'sl-maxfrc',    val: 'val-maxfrc',    key: 'MAX_FORCE', fmt: v => Number(v).toFixed(2) },
+      homing:    { el: 'sl-homing',    val: 'val-homing',    key: 'HOMING',    fmt: v => Number(v).toFixed(2) },
+    };
+
+    function applyConfig(cfg) {
+      Object.assign(params, cfg);
+      for (const [name, s] of Object.entries(sliders)) {
+        const slider = document.getElementById(s.el);
+        if (cfg[s.key] !== undefined) {
+          slider.value = cfg[s.key];
+          document.getElementById(s.val).textContent = s.fmt(cfg[s.key]);
+        }
+      }
+      if (cfg.COUNT !== undefined) api.reinit(cfg.COUNT);
+    }
+
+    for (const [name, cfg] of Object.entries(sliders)) {
+      const slider = document.getElementById(cfg.el);
+      const display = document.getElementById(cfg.val);
+
+      if (name === 'count') {
+        slider.addEventListener('input', () => {
+          display.textContent = cfg.fmt(slider.value);
+        });
+        slider.addEventListener('change', () => {
+          const v = Number(slider.value);
+          params[cfg.key] = v;
+          display.textContent = cfg.fmt(v);
+          api.reinit(v);
+          clearActivePreset();
+        });
+      } else {
+        slider.addEventListener('input', () => {
+          const v = Number(slider.value);
+          params[cfg.key] = v;
+          display.textContent = cfg.fmt(v);
+          clearActivePreset();
+        });
+      }
+    }
+
+    // ── Presets ────────────────────────────────────────────────────
+    function clearActivePreset() {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    }
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.preset);
+        const preset = PRESETS[idx];
+        if (!preset) return;
+        applyConfig(preset.config);
+        clearActivePreset();
+        btn.classList.add('active');
+      });
+    });
+
+    // ── Reset ─────────────────────────────────────────────────────
+    document.getElementById('param-reset').addEventListener('click', () => {
+      applyConfig(DEFAULTS);
+      clearActivePreset();
+    });
+
+    // ── Panel collapse ────────────────────────────────────────────
+    const panel = document.getElementById('param-panel');
+    const collapseBtn = document.getElementById('param-collapse-btn');
+    document.getElementById('param-panel-header').addEventListener('click', (e) => {
+      if (e.target.id === 'param-desc-btn') return;
+      panel.classList.toggle('collapsed');
+      collapseBtn.textContent = panel.classList.contains('collapsed') ? '▸' : '▾';
+    });
+
+    // ── Description toggle ────────────────────────────────────────
+    const descBtn = document.getElementById('param-desc-btn');
+    descBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      panel.classList.toggle('show-desc');
+      descBtn.classList.toggle('active');
+    });
+
+    // ── Section collapse ──────────────────────────────────────────
+    document.querySelectorAll('.param-section-header').forEach(hdr => {
+      hdr.addEventListener('click', () => {
+        hdr.parentElement.classList.toggle('collapsed');
+      });
+    });
+  </script>
+</body>
+</html>

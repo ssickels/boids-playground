@@ -5,10 +5,9 @@
     <span></span><span></span><span></span>
   </button>
   <div id="nav-tabs">
-    <a href="/playground.html" class="nav-tab" data-path="playground">Playground</a>
-    <a href="/boids-explain.html" class="nav-tab" data-path="boids-explain">How It Works</a>
-    <a href="/boids-about.html" class="nav-tab" data-path="boids-about">About</a>
-    <a href="/boids-impl.html" class="nav-tab" data-path="boids-impl">Dev Notes</a>
+    <a href="/murmuration.html" class="nav-tab" data-path="murmuration.html">Playground</a>
+    <a href="/murmuration-about.html" class="nav-tab" data-path="murmuration-about">How It Works</a>
+    <a href="/murmuration-intro.html" class="nav-tab" data-path="murmuration-intro">About</a>
   </div>
   <div id="nav-panel" aria-hidden="true">
     <a href="https://stevessite.com" class="nav-panel-home">&#8962; Home</a>
@@ -31,13 +30,16 @@
       <a href="https://stevessite.com/boids-about.html">About</a>
       <a href="https://stevessite.com/boids-impl.html">Dev Notes</a>
       <a href="https://github.com/ssickels/boids-playgrounds" target="_blank" class="nav-panel-github">GitHub (Playground) ↗</a>
-      <a href="https://stevessite.com/about.html" class="nav-panel-top-link" style="padding-left:28px">About This Site</a>
     </div>
     <div class="nav-panel-section">
       <div class="nav-panel-heading">Boids / Murmurations</div>
       <a href="https://stevessite.com/murmuration.html">Playground</a>
       <a href="https://stevessite.com/murmuration-about.html">How It Works</a>
       <a href="https://stevessite.com/murmuration-intro.html">About</a>
+      <a href="https://github.com/ssickels/boids-playgrounds" target="_blank" class="nav-panel-github">GitHub ↗</a>
+    </div>
+    <div class="nav-panel-section">
+      <a href="https://stevessite.com/about.html" class="nav-panel-top-link">About This Site</a>
     </div>
     <a href="https://stevessite.com/contact.html" class="nav-panel-contact">Contact</a>
   </div>
@@ -48,13 +50,13 @@
   position: fixed;
   top: 0; left: 0; right: 0;
   height: 34px;
-  background: rgba(0, 28, 40, 0.82);
+  background: rgba(10, 10, 46, 0.82);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   padding: 0 12px;
   z-index: 9999;
-  border-bottom: 1px solid rgba(100, 210, 230, 0.12);
+  border-bottom: 1px solid rgba(136, 136, 204, 0.12);
   box-sizing: border-box;
 }
 #nav-tabs {
@@ -64,7 +66,7 @@
   margin-left: 8px;
 }
 .nav-tab {
-  color: rgba(125, 212, 232, 0.55);
+  color: rgba(136, 136, 204, 0.55);
   text-decoration: none;
   font-size: 12px;
   font-family: system-ui, -apple-system, sans-serif;
@@ -74,10 +76,10 @@
   border-bottom: 2px solid transparent;
   transition: color 0.15s, border-color 0.15s;
 }
-.nav-tab:hover { color: #c8f0f8; }
+.nav-tab:hover { color: #aaaaee; }
 .nav-tab.nav-tab-active {
-  color: #7dd4e8;
-  border-bottom: 2px solid #7dd4e8;
+  color: #8888cc;
+  border-bottom: 2px solid #8888cc;
 }
 #nav-hamburger {
   background: none;
@@ -94,10 +96,10 @@
   display: block;
   width: 18px;
   height: 1.5px;
-  background: #7dd4e8;
+  background: #8888cc;
   transition: background 0.15s;
 }
-#nav-hamburger:hover span { background: #c8f0f8; }
+#nav-hamburger:hover span { background: #aaaaee; }
 #nav-panel {
   display: none;
   flex-direction: column;
@@ -105,8 +107,8 @@
   top: 34px;
   left: 0;
   min-width: 220px;
-  background: rgba(0, 22, 34, 0.97);
-  border: 1px solid rgba(100, 210, 230, 0.14);
+  background: rgba(8, 8, 38, 0.97);
+  border: 1px solid rgba(136, 136, 204, 0.14);
   border-top: none;
   z-index: 10000;
   padding: 6px 0;
@@ -115,59 +117,59 @@
 }
 #nav-panel.is-open { display: flex; }
 .nav-panel-home {
-  color: #c8f0f8;
+  color: #aaaaee;
   text-decoration: none;
   padding: 7px 18px;
   display: block;
-  border-bottom: 1px solid rgba(100, 210, 230, 0.12);
+  border-bottom: 1px solid rgba(136, 136, 204, 0.12);
   margin-bottom: 4px;
   transition: background 0.12s;
 }
-.nav-panel-home:hover { background: rgba(100, 210, 230, 0.08); }
+.nav-panel-home:hover { background: rgba(136, 136, 204, 0.08); }
 .nav-panel-section {
   display: flex;
   flex-direction: column;
   padding: 4px 0;
-  border-bottom: 1px solid rgba(100, 210, 230, 0.10);
+  border-bottom: 1px solid rgba(136, 136, 204, 0.10);
 }
 .nav-panel-section:last-child { border-bottom: none; }
 .nav-panel-heading {
-  color: rgba(100, 210, 230, 0.55);
+  color: rgba(136, 136, 204, 0.55);
   font-size: 10.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 5px 18px 3px;
 }
 .nav-panel-section a {
-  color: #7dd4e8;
+  color: #8888cc;
   text-decoration: none;
   padding: 5px 18px 5px 28px;
   transition: background 0.12s, color 0.12s;
 }
 .nav-panel-section a:hover {
-  background: rgba(100, 210, 230, 0.10);
-  color: #c8f0f8;
+  background: rgba(136, 136, 204, 0.10);
+  color: #aaaaee;
 }
 .nav-panel-top-link {
   padding-left: 18px !important;
 }
 .nav-panel-github {
-  color: rgba(100, 210, 230, 0.4) !important;
+  color: rgba(136, 136, 204, 0.4) !important;
   font-size: 11.5px;
 }
 .nav-panel-github:hover {
-  color: rgba(100, 210, 230, 0.75) !important;
+  color: rgba(136, 136, 204, 0.75) !important;
 }
 .nav-panel-contact {
-  color: #7dd4e8;
+  color: #8888cc;
   text-decoration: none;
   padding: 7px 18px;
   display: block;
-  border-top: 1px solid rgba(100, 210, 230, 0.12);
+  border-top: 1px solid rgba(136, 136, 204, 0.12);
   margin-top: 4px;
   transition: background 0.12s;
 }
-.nav-panel-contact:hover { background: rgba(100, 210, 230, 0.08); }
+.nav-panel-contact:hover { background: rgba(136, 136, 204, 0.08); }
 `;
 
   const style = document.createElement('style');
@@ -198,10 +200,4 @@
       tab.classList.add('nav-tab-active');
     }
   });
-
-  // Hide Contact link on playground page
-  if (path === '/playground.html' || path.endsWith('/playground.html')) {
-    var cl = document.querySelector('.nav-panel-contact');
-    if (cl) cl.style.display = 'none';
-  }
 })();

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About the Murmuration Sim — Steve's Site</title>
+  <meta property="og:title" content="About the Murmuration Sim" />
+  <meta property="og:description" content="A personal experiment in emergent flocking — what this simulation is, why it has so many sliders, and what the key parameters do." />
+  <meta property="og:image" content="https://stevessite.com/murmuration_preview.jpg" />
+  <meta property="og:url" content="https://stevessite.com/murmuration-intro.html" />
+  <meta property="og:type" content="website" />
+  <link rel="stylesheet" href="/theme.css" />
+  <link rel="stylesheet" href="/murmuration-theme.css" />
+  <style>
+    html, body { height: auto; overflow: auto; }
+
+    .page-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+      padding-top: 70px; /* clear fixed nav bar */
+    }
+
+    .page-hero {
+      margin-bottom: 40px;
+    }
+    .page-hero h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      color: var(--color-primary);
+      margin-bottom: 10px;
+    }
+    .page-hero p {
+      color: var(--color-text-dim);
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+
+    section {
+      margin-bottom: 44px;
+    }
+    section h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    section p, section li {
+      color: var(--color-text);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    section p:last-child { margin-bottom: 0; }
+
+    ul {
+      margin: 8px 0 0 18px;
+      line-height: 1.8;
+    }
+
+    .param-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      margin-bottom: 12px;
+    }
+    .param-card:last-child { margin-bottom: 0; }
+    .param-card h3 {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--color-primary-hi);
+      margin-bottom: 5px;
+    }
+    .param-card p {
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .param-card p:last-child { margin-bottom: 0; }
+
+    .preset-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      margin-bottom: 12px;
+    }
+    .preset-card:last-child { margin-bottom: 0; }
+    .preset-card h3 {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--color-primary-hi);
+      margin-bottom: 5px;
+    }
+    .preset-card p {
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .preset-card p:last-child { margin-bottom: 0; }
+
+    .placeholder {
+      color: var(--color-accent);
+      font-style: italic;
+      font-size: 0.85rem;
+    }
+
+    .playground-link {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 9px 20px;
+      background: rgba(136, 136, 204, 0.08);
+      border: 1px solid rgba(136, 136, 204, 0.28);
+      border-radius: var(--radius-sm);
+      color: var(--color-primary);
+      font-size: 0.9rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .playground-link:hover {
+      background: rgba(136, 136, 204, 0.16);
+      color: var(--color-primary-hi);
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="page-hero">
+    <h1>About This Experiment</h1>
+    <p>What this is, why it looks like this, and what the sliders do.</p>
+  </div>
+
+  <!-- ── What This Is ───────────────────────────────────────────────── -->
+  <section>
+    <h2>What This Is</h2>
+    <p>
+      This started as a personal experiment: could I get the classic boids algorithm —
+      three simple rules, no global plan — to produce something that actually looks like
+      a starling murmuration? Not a physics paper, not a production tool. Just me and a
+      browser trying to figure out what makes those evening sky-dances tick.
+    </p>
+    <p>
+      It grew from my earlier <a href="/playground.html">fish boids playground</a>, but
+      the two simulations share no code. Murmurations demanded a different approach —
+      thousands of birds instead of ten fish, topological neighbors instead of fixed
+      radii, and a whole set of extensions to the basic three rules that turned out to
+      be more interesting than I expected.
+    </p>
+  </section>
+
+  <!-- ── Engineering Model ──────────────────────────────────────────── -->
+  <section>
+    <h2>Why So Many Sliders?</h2>
+    <p>
+      The playground is currently what I'd call an "engineering model." It intentionally
+      exposes a lot of parameters — more than a polished demo would — because the
+      interactions among them are the interesting thing. Crank up front bias and watch
+      the leading edge destabilize. Drop max force and see the flock carve wider arcs.
+      Dial homing to zero and watch stray clusters drift off permanently.
+    </p>
+    <p>
+      I may simplify the interface later, but for now the full parameter set is
+      deliberate. If you're the kind of person who likes tweaking knobs to see what
+      happens, this is for you.
+    </p>
+  </section>
+
+  <!-- ── Key Parameters ─────────────────────────────────────────────── -->
+  <section>
+    <h2>Key Parameters</h2>
+    <p>
+      The slider panel has eleven parameters grouped into three sections. Here are the
+      ones that matter most for shaping the murmuration's character:
+    </p>
+
+    <div class="param-card">
+      <h3>Alignment</h3>
+      <p>
+        How strongly each bird matches its neighbors' heading. This is the dominant
+        murmuration force — it's what makes the flock move as a coherent mass and
+        propagates turn waves across the group. High alignment produces sweeping,
+        coordinated movement. Low alignment makes the flock dissolve into noise.
+      </p>
+    </div>
+
+    <div class="param-card">
+      <h3>Front Bias</h3>
+      <p>
+        How much more weight birds give to neighbors ahead of them vs. behind.
+        At 1.0 (default), it's equal. Higher values make the leading edge less stable
+        — leaders have fewer birds ahead to follow — while trailing birds lock on
+        tightly. This produces the rolling, folding-in-on-itself motion that's
+        characteristic of real murmurations.
+      </p>
+    </div>
+
+    <div class="param-card">
+      <h3>Max Speed &amp; Max Force</h3>
+      <p>
+        These two together control the "feel" of the flock's flight. Max speed sets
+        the top speed; max force caps how quickly a bird can change direction. Fast
+        birds with moderate force make wide, graceful arcs — slow turns, big sweeps.
+        Fast birds with high force turn on a dime. The ratio matters more than
+        either value alone.
+      </p>
+    </div>
+
+    <div class="param-card">
+      <h3>Homing</h3>
+      <p>
+        How strongly isolated birds pull back toward the flock's center. At zero,
+        any cluster that breaks away stays lost. At high values, stray birds get
+        yanked back aggressively. The default (0.75) is a middle ground — breakaway
+        groups drift back gradually, which looks natural.
+      </p>
+    </div>
+
+    <div class="param-card">
+      <h3>Ali/Coh Neighbors</h3>
+      <p>
+        How many nearest birds each bird considers for alignment and cohesion. More
+        neighbors means longer-range coherence — the flock behaves as a larger, more
+        unified structure. Fewer neighbors means more local, fragmented behavior.
+        This is separate from separation, which uses its own (smaller) neighbor count.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Presets ────────────────────────────────────────────────────── -->
+  <section>
+    <h2>Presets</h2>
+    <p>
+      I'm still figuring out what this thing is doing. Here's what I think I know
+      about each preset — but honestly, some of these behaviors surprised me and I'm
+      not entirely sure why they work the way they do.
+    </p>
+
+    <div class="preset-card">
+      <h3>Preset 1</h3>
+      <p class="placeholder">[Placeholder — describe the resulting behavior and
+        theories about what's driving it once preset values are settled.]</p>
+    </div>
+
+    <div class="preset-card">
+      <h3>Preset 2</h3>
+      <p class="placeholder">[Placeholder — describe the resulting behavior and
+        theories about what's driving it once preset values are settled.]</p>
+    </div>
+
+    <div class="preset-card">
+      <h3>Preset 3</h3>
+      <p class="placeholder">[Placeholder — describe the resulting behavior and
+        theories about what's driving it once preset values are settled.]</p>
+    </div>
+
+    <div class="preset-card">
+      <h3>Preset 4</h3>
+      <p class="placeholder">[Placeholder — describe the resulting behavior and
+        theories about what's driving it once preset values are settled.]</p>
+    </div>
+  </section>
+
+  <!-- ── What's Next ────────────────────────────────────────────────── -->
+  <section>
+    <h2>What's Next</h2>
+    <p>
+      Real murmurations do things this simulation doesn't yet capture — dramatic
+      shape-shifting, sudden splits and recombinations, cascading turn waves that
+      move faster than the birds fly. Those probably involve predator avoidance
+      (a hawk triggers a panic wave) and possibly information transfer beyond
+      simple velocity matching. That's the frontier.
+    </p>
+    <p>
+      For now, I'm happy that three local rules plus a few extensions can produce
+      something that genuinely looks like starlings at dusk. If you find an
+      interesting parameter combination, I'd love to hear about it.
+    </p>
+    <a href="/murmuration.html" class="playground-link">Open the Playground →</a>
+  </section>
+
+</div>
+
+<script src="/murmuration-nav.js"></script>
+</body>
+</html>

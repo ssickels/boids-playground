@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About the Murmuration Experiment — Steve's Site</title>
+  <meta property="og:title" content="How the Murmuration Sim Works" />
+  <meta property="og:description" content="How we extended the classic boids algorithm to simulate 3,000+ starlings — topological neighbors, adaptive homing, front-bias weighting, and more." />
+  <meta property="og:image" content="https://stevessite.com/murmuration_preview.jpg" />
+  <meta property="og:url" content="https://stevessite.com/murmuration-about.html" />
+  <meta property="og:type" content="website" />
+  <link rel="stylesheet" href="/theme.css" />
+  <link rel="stylesheet" href="/murmuration-theme.css" />
+  <style>
+    html, body { height: auto; overflow: auto; }
+
+    .page-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+      padding-top: 70px; /* clear fixed nav bar */
+    }
+
+    .page-hero {
+      margin-bottom: 40px;
+    }
+    .page-hero h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      color: var(--color-primary);
+      margin-bottom: 10px;
+    }
+    .page-hero p {
+      color: var(--color-text-dim);
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+
+    section {
+      margin-bottom: 44px;
+    }
+    section h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    section p, section li {
+      color: var(--color-text);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    section p:last-child { margin-bottom: 0; }
+
+    .concept-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 14px;
+    }
+    .concept-card:last-child { margin-bottom: 0; }
+    .concept-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--color-primary-hi);
+      margin-bottom: 6px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: var(--color-text);
+      line-height: 1.6;
+    }
+    .concept-card p:last-child { margin-bottom: 0; }
+
+    .math {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--color-primary);
+      background: rgba(125, 212, 232, 0.06);
+      border-left: 3px solid rgba(125, 212, 232, 0.25);
+      padding: 10px 14px;
+      margin: 12px 0;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+
+    .see-also {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: rgba(125, 212, 232, 0.06);
+      border-left: 3px solid rgba(125, 212, 232, 0.3);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.88rem;
+      color: var(--color-text-dim);
+      line-height: 1.6;
+    }
+    .see-also a {
+      color: var(--color-primary);
+    }
+
+    .slider-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    .slider-table th {
+      color: var(--color-text-dim);
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 6px 12px;
+      border-bottom: 1px solid var(--color-border-hi);
+    }
+    .slider-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--color-border);
+      font-size: 0.88rem;
+      vertical-align: top;
+    }
+    .slider-table tr:last-child td { border-bottom: none; }
+    .slider-table td:first-child {
+      color: var(--color-primary);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      white-space: nowrap;
+      width: 140px;
+    }
+    .slider-table td:last-child {
+      color: var(--color-text);
+      line-height: 1.55;
+    }
+
+    .playground-link {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 9px 20px;
+      background: rgba(125, 212, 232, 0.08);
+      border: 1px solid rgba(125, 212, 232, 0.28);
+      border-radius: var(--radius-sm);
+      color: var(--color-primary);
+      font-size: 0.9rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .playground-link:hover {
+      background: rgba(125, 212, 232, 0.16);
+      color: var(--color-primary-hi);
+    }
+
+    em.term {
+      color: var(--color-primary-hi);
+      font-style: normal;
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="page-hero">
+    <h1>Building on Boids to Mimic Murmurations</h1>
+    <p>How we extended the classic three-rule algorithm to simulate 3,000+ starlings
+      sweeping across a twilight sky.</p>
+  </div>
+
+  <!-- ── Starting Point ──────────────────────────────────────────────────── -->
+  <section>
+    <h2>Starting Point: Classic Boids</h2>
+    <p>
+      Craig Reynolds' 1986 <em class="term">Boids</em> algorithm shows that three local rules
+      — separation, alignment, and cohesion — are enough to produce convincing flocking.
+      Each agent looks at its neighbors, computes a steering force from each rule, and
+      adjusts its velocity. No central planner, no global knowledge. The resulting school
+      of fish (or flock of birds) emerges on its own.
+    </p>
+    <p>
+      The <a href="playground.html">Boids Playground</a> on this site demonstrates that
+      beautifully with 10 fish. But murmurations are a different beast: thousands of
+      starlings moving in dense, fast, wave-like formations. Scaling up exposed several
+      problems — and the solutions turned out to be interesting in their own right.
+    </p>
+  </section>
+
+  <!-- ── Approach ──────────────────────────────────────────────────────── -->
+  <section>
+    <h2>Our Approach: Local Rules, Emergent Behavior</h2>
+    <p>
+      The genius of Reynolds' original algorithm is that no bird knows
+      what a "flock" is. Each bird follows simple local rules — react to
+      nearby neighbors — and the flock emerges as a side effect. There's no
+      conductor, no blueprint, no global plan. The whole is something that
+      none of the parts intended.
+    </p>
+    <p>
+      We wanted to preserve that principle. Every modification we made to the
+      classic three rules — topological neighbors, split neighbor counts,
+      adaptive centroid pull, front-bias hemisphere weighting — introduces or
+      adjusts only <em class="term">local rules</em>: what a single bird
+      perceives, and how it reacts to what it perceives. No bird is told
+      where the flock should go or what shape it should take.
+    </p>
+    <p>
+      We also tried to ground each rule in at least plausible biology.
+      Topological neighbors come directly from field research on real starlings.
+      Split neighbor counts reflect an intuition that collision avoidance and
+      heading-matching operate at different spatial scales. The adaptive centroid
+      pull models a bird's awareness that "I seem to be alone" — something a real
+      starling almost certainly notices and reacts to. Front-bias weighting
+      captures the idea that birds may pay more attention to what's ahead of them
+      than what's behind.
+    </p>
+    <p>
+      The one exception is <em class="term">wind</em>. It's a uniform external
+      force, not a local rule — the same push applied to every bird regardless
+      of its neighbors. We include it because without some source of directional
+      instability, the flock tends to hover in place, and real murmurations
+      sweep and drift. Wind is a proxy for whatever global-scale mechanism
+      actually causes that movement — atmospheric currents, collective momentum,
+      or something we don't yet understand. It's the one place where we cheat,
+      and we flag it as such.
+    </p>
+    <p>
+      The payoff for this discipline is that the behaviors that emerge —
+      coherent sweeping waves, dense cloud-like formations that stretch and
+      compress, breakaway clusters that rejoin the group — weren't designed.
+      They arise from local interactions the same way real murmurations do.
+      And they correlate strongly with what you see watching actual starlings
+      at dusk.
+    </p>
+  </section>
+
+  <!-- ── Scale ───────────────────────────────────────────────────────────── -->
+  <section>
+    <h2>Problem 1: Scale</h2>
+    <p>
+      The fish playground checks every pair of fish for neighbor interactions. With 10 fish
+      that's 45 pairs — trivial. With 3,000 birds it's nearly 4.5 million pairs per frame.
+      At 60 frames per second, that's over a quarter billion distance checks per second.
+      Even modern hardware can't keep up.
+    </p>
+
+    <div class="concept-card">
+      <h3>Spatial hashing</h3>
+      <p>
+        The fix is a <em class="term">spatial hash grid</em>. We divide 3D space into cells
+        (10 units on a side) and drop each bird into the cell that contains it. To find a
+        bird's neighbors, we only check the 27 cells in its 3&times;3&times;3 neighborhood
+        — typically 30&ndash;80 candidates instead of 3,000. The hash is rebuilt from scratch
+        every frame (clear all cells, re-insert all birds), which sounds expensive but is
+        actually O(n) and very fast.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>InstancedMesh rendering</h3>
+      <p>
+        The fish playground creates a separate 3D mesh for each agent. With 3,000 birds that
+        means 3,000 draw calls per frame — enough to tank any GPU. Instead, we use Three.js's
+        <em class="term">InstancedMesh</em>: one geometry (a 12-vertex icosahedron), one
+        material, and a single draw call that stamps it at 3,000 different positions. The
+        birds look like small grey dots, which turns out to be exactly what real starlings look
+        like at murmuration distance.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Structure-of-Arrays data layout</h3>
+      <p>
+        Instead of 3,000 Boid objects each containing a position vector and a velocity vector
+        (which scatters data across the heap and triggers garbage collection), we use six flat
+        <code>Float32Array</code>s — one each for px, py, pz, vx, vy, vz. This keeps the data
+        cache-friendly and avoids GC pauses entirely. No objects are allocated during the
+        simulation loop.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Topological Neighbors ───────────────────────────────────────────── -->
+  <section>
+    <h2>Problem 2: Who Are Your Neighbors?</h2>
+    <p>
+      Classic boids use a fixed radius for each rule: if another bird is within, say,
+      6.5 units, it's a neighbor for alignment. This is called <em class="term">metric</em>
+      interaction. It works fine for small groups, but it has a scaling problem: in a dense
+      flock, a bird might have 200 neighbors inside its radius, while a bird at the edge
+      has 3. The work per bird varies wildly, and the behavior changes with density.
+    </p>
+    <p>
+      Biologists studying real starling murmurations
+      (Cavagna et al., PNAS 2010) discovered that starlings don't use a
+      fixed radius. Instead, each bird interacts with its <em class="term">nearest 6&ndash;7
+      neighbors</em> regardless of how far away they are. This is called
+      <em class="term">topological</em> interaction. The number of interacting neighbors stays
+      constant whether the flock is dense or sparse, which is what makes murmurations
+      scale-free — a flock of 300 looks structurally similar to a flock of 3,000.
+    </p>
+    <p>
+      We adopt this approach, but with a twist: <em class="term">different neighbor counts
+      for different rules</em>.
+    </p>
+
+    <div class="concept-card">
+      <h3>Split neighbors</h3>
+      <p>
+        Separation only needs to know about the closest few birds — you dodge what's right
+        in front of you. So we use a small N (default 7) for the separation rule. But
+        alignment and cohesion benefit from a wider view — matching heading with more
+        neighbors creates longer-range coherence and the large-scale wave propagation that
+        gives murmurations their visual character. So those rules use a larger N (default 14).
+      </p>
+      <p>
+        The spatial hash query finds the largest N requested; the separation rule simply
+        only considers the closest subset. Since <code>findNearest</code> returns neighbors
+        sorted by distance, this is free — no extra work.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── The Forces ──────────────────────────────────────────────────────── -->
+  <section>
+    <h2>The Forces, in Detail</h2>
+    <p>
+      Each frame, every bird computes a steering acceleration from seven sources. These are
+      summed, applied to velocity, and velocity is clamped between a minimum and maximum
+      speed (birds can't hover, and they can't exceed a sprint speed).
+    </p>
+
+    <div class="concept-card">
+      <h3>1. Separation</h3>
+      <p>
+        For each of the nearest N<sub>sep</sub> neighbors that's closer than
+        <code>SEP_DIST</code> (1.5 units), compute a repulsion vector pointing away from
+        that neighbor, weighted by the inverse of the distance (closer = stronger push).
+        Average the repulsion vectors, then steer toward that direction.
+      </p>
+      <code class="math">
+        repulsion += (myPos - neighborPos) / distance<br>
+        steer toward average repulsion, scaled by W_SEP
+      </code>
+      <p>
+        The distance threshold means separation is self-limiting — it only fires when birds
+        get uncomfortably close, and the topological neighbor count for separation can be
+        different (smaller) than for the other rules.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>2. Alignment</h3>
+      <p>
+        Average the velocity vectors of all N<sub>ali/coh</sub> neighbors. Steer toward
+        that average heading. This is the dominant force in a murmuration — it's what makes
+        the flock move as a coherent mass, and it's what propagates turn waves across the
+        group.
+      </p>
+      <code class="math">
+        avgVelocity = sum(neighbor velocities) / N<br>
+        steer toward avgVelocity, scaled by W_ALI
+      </code>
+    </div>
+
+    <div class="concept-card">
+      <h3>3. Cohesion</h3>
+      <p>
+        Average the positions of all N<sub>ali/coh</sub> neighbors. Steer toward that
+        center point. This keeps the flock together — without it, alignment alone would
+        send birds marching off in formation but never pulling back together.
+      </p>
+      <code class="math">
+        center = sum(neighbor positions) / N<br>
+        steer toward (center - myPos), scaled by W_COH
+      </code>
+    </div>
+
+    <div class="concept-card">
+      <h3>4. Seek flock centroid (adaptive)</h3>
+      <p>
+        This is where things get interesting — and where we depart most from classic boids.
+        Each bird steers gently toward the <em class="term">centroid</em> (center of mass)
+        of the entire flock, computed each frame by averaging all bird positions. But the
+        strength of this pull <em>depends on how isolated the bird is</em>.
+      </p>
+      <p>
+        We measure isolation by the average distance to the bird's nearest neighbors.
+        A bird deep in the flock (average distance &lt; 2 units) is surrounded — it gets
+        barely any centroid pull (~0.05). A bird that's isolated or in a small breakaway
+        cluster (average distance &gt; 8 units) gets strong homing force (~0.8).
+      </p>
+      <code class="math">
+        isolation = clamp((avgNeighborDist - 2) / 6, 0, 1)<br>
+        pullWeight = 0.05 + isolation * 0.75<br>
+        steer toward centroid, scaled by pullWeight
+      </code>
+      <p>
+        This creates two distinct behavioral phases from a single continuous rule:
+      </p>
+      <p>
+        <strong>Dense flock (murmuration state):</strong> centroid pull is negligible. Pure
+        boids rules govern — alignment propagates waves, cohesion maintains density,
+        separation prevents collisions. The murmuration sustains itself.
+      </p>
+      <p>
+        <strong>Isolated birds:</strong> centroid pull dominates. Stray birds and broken-off
+        clusters are drawn back toward the main group. The murmuration reforms.
+      </p>
+      <p>
+        This mirrors a real intuition about murmurations: the mechanisms that
+        <em>maintain</em> the formation (local neighbor-matching) may differ from those that
+        <em>form</em> it (seeking the group). Rather than switching algorithms, the adaptive
+        weight creates a smooth phase transition between the two regimes.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>5. Wind drift</h3>
+      <p>
+        A gentle uniform acceleration applied to every bird — the same direction and strength
+        for all. The direction wanders randomly, smoothly lerping to a new target every
+        5&ndash;12 seconds. This gives the entire flock net momentum so it sweeps across the
+        sky rather than hovering in place. Vertical drift is damped to 40% of horizontal,
+        because real wind is mostly lateral.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>6. Boundary</h3>
+      <p>
+        A soft quadratic push-back that activates when a bird enters the boundary margin
+        (20 units from the edge of a 200&times;140&times;160 unit arena). The force grows
+        with the square of penetration depth, so it's barely noticeable at the edge but
+        becomes a hard wall deeper in. This keeps the flock in view without visible
+        bouncing.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>7. Ground plane</h3>
+      <p>
+        A checkerboard floor sits beneath the flock to give a sense of altitude and motion.
+        Birds feel a soft upward push that begins 40 units above the ground &mdash; double the
+        normal boundary margin &mdash; giving them plenty of room to turn away gradually.
+      </p>
+      <p>
+        The push is <em class="term">velocity-aware</em>: a bird diving toward the ground feels
+        extra resistance proportional to its downward speed, so it banks away in a smooth arc
+        rather than bouncing off a wall. A bird cruising horizontally near the ground barely
+        notices anything extra. This mirrors real birds, which see the ground coming and adjust
+        their trajectory long before impact.
+      </p>
+      <p>
+        Both the positional push and the velocity-damping term scale with the flock's max speed
+        setting, so even at high speeds the ground remains effective without needing to be tuned
+        separately. A hard floor clamp at the checkerboard surface acts as a last-resort safety
+        net, but the soft forces handle virtually all cases.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── The Steer Function ──────────────────────────────────────────────── -->
+  <section>
+    <h2>The Steer Function</h2>
+    <p>
+      All of the above forces (except boundary and wind) use the same steering formula,
+      adapted from Reynolds' original work. Given a "desired direction" vector:
+    </p>
+    <code class="math">
+      desired = normalize(desired) * MAX_SPEED<br>
+      steer   = desired - currentVelocity<br>
+      steer   = clamp(steer, MAX_FORCE)
+    </code>
+    <p>
+      This computes the velocity change needed to fly at maximum speed in the desired
+      direction, then caps the magnitude at <code>MAX_FORCE</code> (0.5). The cap is
+      crucial — it means birds can't make instant turns. They have inertia. A high
+      <code>MAX_SPEED</code> (15) with a moderate <code>MAX_FORCE</code> (0.5) produces
+      wide, sweeping arcs — exactly the character of starling flight.
+    </p>
+  </section>
+
+  <!-- ── Initial Conditions ──────────────────────────────────────────────── -->
+  <section>
+    <h2>Starting in the Murmuration State</h2>
+    <p>
+      An interesting question we deliberately set aside: how does a murmuration
+      <em>form</em>? When hundreds of scattered birds converge into a single coherent
+      mass, are the mechanisms the same as those that sustain it once it's underway?
+      We suspect not — formation likely involves different dynamics than maintenance,
+      perhaps analogous to a phase transition where the governing rules themselves
+      shift as the system crosses a density or alignment threshold.
+    </p>
+    <p>
+      Rather than trying to capture both regimes, we focused on
+      <em class="term">maintenance</em>: the mechanisms that keep a murmuration
+      coherent once it's already in its dynamic state. This is what we actually observe
+      when we watch starlings at dusk — by the time we notice the murmuration, it's
+      already underway. The question of how it got there is fascinating, but it's a
+      separate modeling challenge.
+    </p>
+    <p>
+      To start in-state, the simulation initializes with conditions that are already
+      murmuration-like:
+    </p>
+    <ul style="margin: 8px 0 0 18px; line-height: 1.8;">
+      <li><strong>Tight spawn:</strong> all birds start inside a sphere whose radius scales
+        with the cube root of the bird count (<code>r = cbrt(n) * 0.6</code>). This keeps
+        initial density roughly constant regardless of flock size, and ensures the neighbor
+        graph is fully connected from frame one.</li>
+      <li><strong>Common heading:</strong> a random direction is chosen for each reset, and
+        all birds start flying that way with small per-bird jitter (30% random deviation).
+        The flock is already aligned and moving — you're joining a murmuration in progress.</li>
+    </ul>
+    <p>
+      The adaptive centroid pull (described above) provides a bridge between these regimes:
+      isolated birds experience strong homing force, while birds already in the flock are
+      governed by local rules alone. This isn't a full formation model, but it does allow
+      the flock to recover from fragmentation — a necessary property of any robust
+      murmuration simulation.
+    </p>
+  </section>
+
+  <!-- ── The Sliders ─────────────────────────────────────────────────────── -->
+  <section>
+    <h2>The Sliders</h2>
+    <p>
+      The experiment panel exposes twelve parameters plus a wind toggle. All update in
+      real time except bird count, which rebuilds the flock on mouse-up. Click
+      <strong>?</strong> in the panel header for inline descriptions.
+    </p>
+
+    <table class="slider-table">
+      <thead>
+        <tr><th>Parameter</th><th>What it does</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Bird count</td>
+          <td>Total birds (100&ndash;6,000). Changes reset all positions and velocities.
+            Performance depends on your hardware; 3,000 runs smoothly on most machines.</td>
+        </tr>
+        <tr>
+          <td>Sim speed</td>
+          <td>Time-scale multiplier. All forces and velocities scale together, so dynamics
+            stay the same — they just happen faster or slower.</td>
+        </tr>
+        <tr>
+          <td>Sep neighbors</td>
+          <td>How many nearest birds to consider for separation (default 7). Fewer means
+            birds only dodge what's immediately close.</td>
+        </tr>
+        <tr>
+          <td>Ali/Coh neighbors</td>
+          <td>How many nearest birds to consider for alignment and cohesion (default 14).
+            More neighbors = longer-range coherence and bigger wave propagation.</td>
+        </tr>
+        <tr>
+          <td>Separation</td>
+          <td>Strength of repulsion from close neighbors. Higher values spread the flock
+            out; lower values allow tighter packing.</td>
+        </tr>
+        <tr>
+          <td>Alignment</td>
+          <td>How strongly birds match their neighbors' heading. This is the dominant
+            murmuration force — high alignment is what creates the coherent, sweeping
+            movement.</td>
+        </tr>
+        <tr>
+          <td>Cohesion</td>
+          <td>How strongly birds pull toward the center of their neighbor group. This
+            balances alignment's tendency to march birds off in a straight line.</td>
+        </tr>
+        <tr>
+          <td>Front bias</td>
+          <td>How much more weight birds give to neighbors ahead of them vs. behind
+            (default 1.0 = equal). Higher values make birds pay more attention to what's
+            in front, creating naturalistic directional instability at the flock's
+            leading edge.</td>
+        </tr>
+        <tr>
+          <td>Max speed</td>
+          <td>Top flight speed (default 15). Combined with max force, this controls the
+            arc radius of turns — fast birds with moderate force make wide, graceful
+            sweeps.</td>
+        </tr>
+        <tr>
+          <td>Max force</td>
+          <td>Maximum steering acceleration per frame (default 0.5). Lower values mean
+            slower, wider turns; higher values let birds change direction more
+            sharply.</td>
+        </tr>
+        <tr>
+          <td>Homing</td>
+          <td>Strength of the adaptive centroid pull for isolated birds (default 0.75).
+            Higher values pull stray clusters back more aggressively. This force bypasses
+            the max-force cap, so large values can overpower other steering.</td>
+        </tr>
+        <tr>
+          <td>Wind</td>
+          <td>Toggle (on/off). When enabled, a gentle uniform breeze pushes all birds in
+            a slowly wandering direction, giving the flock net momentum so it sweeps
+            across the sky rather than hovering in place.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <a href="murmuration.html" class="playground-link">Open the Murmuration Experiment →</a>
+  </section>
+
+  <!-- ── What We Learned ─────────────────────────────────────────────────── -->
+  <section>
+    <h2>What We Learned</h2>
+    <p>
+      The classic boids rules — separation, alignment, cohesion — are necessary but not
+      sufficient for murmuration dynamics. The extensions that mattered most:
+    </p>
+    <ul style="margin: 8px 0 0 18px; line-height: 1.8;">
+      <li><strong>Topological neighbors</strong> instead of metric radii. This matches
+        the biology and makes the algorithm scale-free.</li>
+      <li><strong>Split neighbor counts</strong> — small N for separation, larger N for
+        alignment and cohesion. Different rules need different awareness ranges.</li>
+      <li><strong>Adaptive centroid pull</strong> — the key insight. Isolated birds get
+        strong homing force; birds already in the flock get almost none. This creates
+        two behavioral phases (formation and maintenance) from one smooth function.</li>
+      <li><strong>Starting in-state</strong> — rather than trying to form a murmuration from
+        random initial conditions, we begin in the murmuration phase and let the algorithm
+        maintain it. This mirrors reality: murmurations are observed, not assembled.</li>
+      <li><strong>Speed matters</strong> — fast birds with moderate steering caps produce
+        wide, graceful arcs. Slow birds look like they're drifting in soup.</li>
+    </ul>
+    <p>
+      That said, real murmurations exhibit behaviors this simulation doesn't fully capture:
+      the dramatic shape-shifting, sudden splits and recombinations, and cascading turn
+      waves that propagate faster than the birds fly. Those phenomena likely arise from
+      predator avoidance (a hawk diving into the flock triggers a panic wave) and possibly
+      from information transfer mechanisms beyond simple velocity matching. That's a
+      frontier for future work.
+    </p>
+  </section>
+
+</div>
+
+<script src="/murmuration-nav.js"></script>
+</body>
+</html>
