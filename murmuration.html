@@ -49,6 +49,101 @@
       letter-spacing: 0.04em;
     }
 
+    /* ── ONBOARDING OVERLAY ──────────────────────────────────── */
+    #onboarding-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 6, 30, 0.85);
+      z-index: 150;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, -apple-system, sans-serif;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    #onboarding-overlay.visible {
+      display: flex;
+      opacity: 1;
+    }
+    #onboarding-overlay.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .onboard-card {
+      background: rgba(10, 10, 46, 0.95);
+      border: 1px solid rgba(136, 136, 204, 0.22);
+      border-radius: 8px;
+      padding: 28px 32px;
+      max-width: 480px;
+      width: 90%;
+      color: #d0d0ee;
+      line-height: 1.7;
+      font-size: 0.92rem;
+    }
+    .onboard-card h2 {
+      color: #8888cc;
+      font-size: 1.15rem;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+    .onboard-card p {
+      margin-bottom: 12px;
+      color: #b0b0d0;
+    }
+    .onboard-card .highlight {
+      color: #aaaaee;
+    }
+    .onboard-card ul {
+      margin: 0 0 12px 4px;
+      padding: 0;
+      list-style: none;
+    }
+    .onboard-card li {
+      padding: 3px 0;
+      color: #b0b0d0;
+      line-height: 1.6;
+    }
+    .onboard-card li strong {
+      color: #aaaaee;
+    }
+    .onboard-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 18px;
+      gap: 12px;
+    }
+    .onboard-dismiss {
+      background: rgba(136, 136, 204, 0.1);
+      border: 1px solid rgba(136, 136, 204, 0.3);
+      border-radius: 5px;
+      color: #8888cc;
+      font-size: 0.9rem;
+      padding: 8px 18px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+    }
+    .onboard-dismiss:hover {
+      background: rgba(136, 136, 204, 0.2);
+      color: #aaaaee;
+    }
+    .onboard-remember {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: rgba(136, 136, 204, 0.5);
+      cursor: pointer;
+      user-select: none;
+    }
+    .onboard-remember input {
+      accent-color: #8888cc;
+      cursor: pointer;
+    }
+
     /* ── GUIDE ARROWS ──────────────────────────────────────────────── */
     .guide-arrow {
       position: fixed;
@@ -372,6 +467,9 @@
       color: #aaaaee;
       border-color: rgba(136, 136, 204, 0.45);
     }
+    #cam-boidseye { color: rgba(245, 216, 74, 0.5); }
+    #cam-boidseye:hover { color: rgba(245, 216, 74, 0.75); }
+    #cam-boidseye.active { color: #f5d84a; }
     #cam-new-boid {
       display: none;
       width: 100%;
@@ -392,11 +490,38 @@
   </style>
 </head>
 <body>
-  <!-- ── LOADER / SPLASH ─────────────────────────────────────────── -->
+  <!-- ── LOADER ────────────────────────────────────────────────── -->
   <div id="loader">
     <div class="loader-title"><span style="display:block">Murmuration</span></div>
     <div class="loader-spinner"></div>
     <div class="loader-note">Assembling the flock&hellip;</div>
+  </div>
+
+  <!-- ── ONBOARDING OVERLAY ──────────────────────────────────── -->
+  <div id="onboarding-overlay">
+    <div class="onboard-card">
+      <h2>3,000 birds. Local rules. No choreography.</h2>
+      <p>
+        This is an engineering model &mdash; intentionally full of tunable
+        parameters. A few good starting points:
+      </p>
+      <ul>
+        <li><strong>?</strong> &mdash; toggle descriptions on every slider</li>
+        <li><strong>Presets</strong> &mdash; curated configurations to explore</li>
+        <li><strong>Orbit / Boid's eye</strong> &mdash; switch camera perspective</li>
+        <li><strong>Separation, Alignment, Cohesion</strong> &mdash; the three classic forces</li>
+      </ul>
+      <p>
+        For the full story, see
+        <a href="murmuration-about.html" style="color:#aaaaee">how it works</a>.
+      </p>
+      <div class="onboard-footer">
+        <button class="onboard-dismiss" id="onboard-dismiss">Got it &mdash; let me watch</button>
+        <label class="onboard-remember">
+          <input type="checkbox" id="onboard-remember-cb"> Don't show again
+        </label>
+      </div>
+    </div>
   </div>
 
   <div id="scene-container"></div>
@@ -415,20 +540,12 @@
       <!-- ── Presets ───────────────────────────────────────────── -->
       <div class="preset-list">
         <div class="preset-item">
-          <button class="preset-btn" data-preset="0">Preset 1</button>
-          <div class="preset-desc">Placeholder description for preset 1.</div>
+          <button class="preset-btn" data-preset="0">Internal waves</button>
+          <div class="preset-desc">High front bias and edge alignment with wide personal space. Visible wave-like patterns propagate through the flock.</div>
         </div>
         <div class="preset-item">
-          <button class="preset-btn" data-preset="1">Preset 2</button>
-          <div class="preset-desc">Placeholder description for preset 2.</div>
-        </div>
-        <div class="preset-item">
-          <button class="preset-btn" data-preset="2">Preset 3</button>
-          <div class="preset-desc">Placeholder description for preset 3.</div>
-        </div>
-        <div class="preset-item">
-          <button class="preset-btn" data-preset="3">Preset 4</button>
-          <div class="preset-desc">Placeholder description for preset 4.</div>
+          <button class="preset-btn" data-preset="1">Scatter and rejoin</button>
+          <div class="preset-desc">Strong separation blows the flock apart; aggressive homing pulls it back together. Watch cycles of fragmentation and reform.</div>
         </div>
       </div>
       <div id="user-presets-container"></div>
@@ -535,6 +652,13 @@
               min="0.2" max="5.0" step="0.1" value="1.0" />
             <span class="param-desc">Weight neighbors in front vs. behind. 1.0 = equal. Higher = follow what's ahead, ignore what's behind. Creates leading-edge instability.</span>
           </div>
+          <div class="param-row">
+            <span class="param-label" title="Extra alignment for boundary birds — sharper flock edges">Edge alignment</span>
+            <span class="param-value" id="val-edgeali">0.0</span>
+            <input class="param-slider" type="range" id="sl-edgeali"
+              min="0" max="5" step="0.1" value="0" />
+            <span class="param-desc">Extra alignment for boundary birds. Higher = sharper flock edges.</span>
+          </div>
         </div>
       </div>
 
@@ -580,7 +704,7 @@
 
       <div class="param-divider"></div>
 
-      <button id="param-reset">Reset defaults</button>
+      <button id="param-reset">Reset to defaults</button>
       <button id="param-save" title="Save the current slider values as a named preset">Save as preset</button>
       <div class="param-desc btn-desc">Saves your current settings as a preset you can switch back to. Stored in your browser.</div>
       <button id="param-load" title="Import a previously saved .json preset file from your computer">Import preset from file</button>
@@ -606,12 +730,20 @@
     // ── Serializable config object ────────────────────────────────
     const params = { ...DEFAULTS };
 
-    // ── Presets (placeholder values — names and params TBD) ───────
+    // ── Presets ────────────────────────────────────────────────
     const PRESETS = [
-      { name: 'Preset 1', config: { ...DEFAULTS } },
-      { name: 'Preset 2', config: { ...DEFAULTS } },
-      { name: 'Preset 3', config: { ...DEFAULTS } },
-      { name: 'Preset 4', config: { ...DEFAULTS } },
+      { name: 'Internal waves', config: {
+        COUNT: 3000, SIM_SPEED: 1.6, N_SEP: 9, N_ALI_COH: 18,
+        W_SEP: 7.8, PERSONAL_SPACE: 4.7, W_ALI: 4, W_COH: 4.7,
+        FRONT_BIAS: 4, EDGE_ALI: 2.5, MAX_SPEED: 15,
+        MIN_SPEED_RATIO: 0.08, MAX_FORCE: 1, HOMING: 7.5,
+      }},
+      { name: 'Scatter and rejoin', config: {
+        COUNT: 3000, SIM_SPEED: 1.25, N_SEP: 7, N_ALI_COH: 14,
+        W_SEP: 7.5, PERSONAL_SPACE: 2, W_ALI: 4, W_COH: 3,
+        FRONT_BIAS: 1, EDGE_ALI: 0, MAX_SPEED: 23,
+        MIN_SPEED_RATIO: 0.4, MAX_FORCE: 1, HOMING: 8.5,
+      }},
     ];
 
     // ── Init scene ────────────────────────────────────────────────
@@ -624,10 +756,7 @@
         const loader = document.getElementById('loader');
         if (loader) {
           loader.classList.add('fade-out');
-          setTimeout(() => {
-            loader.remove();
-            showGuideArrows();
-          }, 950);
+          setTimeout(() => loader.remove(), 950);
         }
       });
     });
@@ -636,12 +765,48 @@
       const loader = document.getElementById('loader');
       if (loader) {
         loader.classList.add('fade-out');
-        setTimeout(() => {
-          loader.remove();
-          showGuideArrows();
-        }, 950);
+        setTimeout(() => loader.remove(), 950);
       }
     }, 5000);
+
+    // ── Onboarding overlay ─────────────────────────────────────
+    const onboardKey = 'murmuationOverlayDismissed';
+    if (!localStorage.getItem(onboardKey)) {
+      const overlay = document.getElementById('onboarding-overlay');
+      const loader  = document.getElementById('loader');
+
+      const showOverlay = () => {
+        setTimeout(() => {
+          overlay.style.display = 'flex';
+          requestAnimationFrame(() => overlay.classList.add('visible'));
+        }, 800);
+      };
+
+      if (loader) {
+        const obs = new MutationObserver(() => {
+          if (loader.classList.contains('fade-out')) { obs.disconnect(); showOverlay(); }
+        });
+        obs.observe(loader, { attributes: true, attributeFilter: ['class'] });
+      } else {
+        showOverlay();
+      }
+
+      document.getElementById('onboard-dismiss').addEventListener('click', () => {
+        if (document.getElementById('onboard-remember-cb').checked) {
+          localStorage.setItem(onboardKey, 'true');
+        }
+        overlay.classList.add('fade-out');
+        setTimeout(() => { overlay.remove(); showGuideArrows(); }, 500);
+      });
+    } else {
+      // Already dismissed permanently — remove overlay, show arrows after loader
+      document.getElementById('onboarding-overlay').remove();
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setTimeout(showGuideArrows, 1800);
+        });
+      });
+    }
 
     // ── Guide arrows ──────────────────────────────────────────────
     let arrowsShown = false;
@@ -649,26 +814,36 @@
       if (arrowsShown) return;
       arrowsShown = true;
 
-      const makeArrow = (target, text) => {
+      const makeArrow = (target, text, nudgeUp = 6) => {
         const rect = target.getBoundingClientRect();
         const el = document.createElement('div');
         el.className = 'guide-arrow';
         el.innerHTML = `<span>${text}</span> <span class="arrow-char">&#9654;</span>`;
-        el.style.top  = rect.top + rect.height / 2 - 10 + 'px';
+        el.style.top  = rect.top + rect.height / 2 - 10 - nudgeUp + 'px';
         el.style.right = (window.innerWidth - rect.left + 8) + 'px';
         document.body.appendChild(el);
         requestAnimationFrame(() => el.classList.add('visible'));
         return el;
       };
 
-      const helpBtn  = document.getElementById('param-desc-btn');
-      if (!helpBtn) return;
+      const arrows = [];
+      const helpBtn = document.getElementById('param-desc-btn');
+      const presetBtn = document.querySelector('.preset-btn');
+      const boidseyeBtn = document.getElementById('cam-boidseye');
+      const sepSlider = document.getElementById('sl-sep');
+      const aliSlider = document.getElementById('sl-ali');
+      const cohSlider = document.getElementById('sl-coh');
 
-      const a1 = makeArrow(helpBtn, 'Descriptions');
+      if (helpBtn)     arrows.push(makeArrow(helpBtn, 'Descriptions'));
+      if (presetBtn)   arrows.push(makeArrow(presetBtn, 'Try a preset'));
+      if (boidseyeBtn) arrows.push(makeArrow(boidseyeBtn, 'Fly with a bird'));
+      if (sepSlider)   arrows.push(makeArrow(sepSlider, 'Separation', 14));
+      if (aliSlider)   arrows.push(makeArrow(aliSlider, 'Alignment', 14));
+      if (cohSlider)   arrows.push(makeArrow(cohSlider, 'Cohesion', 14));
 
       setTimeout(() => {
-        a1.classList.add('fade-out');
-        setTimeout(() => { a1.remove(); }, 500);
+        arrows.forEach(a => a.classList.add('fade-out'));
+        setTimeout(() => { arrows.forEach(a => a.remove()); }, 500);
       }, 6000);
     }
 
@@ -683,6 +858,7 @@
       ali:       { el: 'sl-ali',       val: 'val-ali',       key: 'W_ALI',     fmt: v => Number(v).toFixed(1) },
       coh:       { el: 'sl-coh',       val: 'val-coh',       key: 'W_COH',     fmt: v => Number(v).toFixed(1) },
       fbias:     { el: 'sl-fbias',     val: 'val-fbias',     key: 'FRONT_BIAS',fmt: v => Number(v).toFixed(1) },
+      edgeali:   { el: 'sl-edgeali',   val: 'val-edgeali',   key: 'EDGE_ALI',  fmt: v => Number(v).toFixed(1) },
       maxspd:    { el: 'sl-maxspd',    val: 'val-maxspd',    key: 'MAX_SPEED', fmt: v => Number(v).toFixed(1) },
       minspd:    { el: 'sl-minspd',    val: 'val-minspd',    key: 'MIN_SPEED_RATIO', fmt: v => Math.round(Number(v) * 100) + '%' },
       maxfrc:    { el: 'sl-maxfrc',    val: 'val-maxfrc',    key: 'MAX_FORCE', fmt: v => Number(v).toFixed(2) },

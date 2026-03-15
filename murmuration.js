@@ -22,6 +22,7 @@ export const DEFAULTS = {
   FRONT_BIAS: 1.0,  // 1.0 = no bias; >1 = weight forward neighbors more for alignment
   PERSONAL_SPACE: 2.0, // metric separation radius — all birds within this distance get pushed away
   MIN_SPEED_RATIO: 0.53, // min speed as fraction of MAX_SPEED — stall speed
+  EDGE_ALI: 0, // extra alignment for boundary birds; 0 = off (current behavior)
   // WIND: true,  — removed from UI; see wind section below
   HOMING: 0.75,
 };
@@ -295,9 +296,11 @@ export function initScene(container, params) {
       // Also track avg neighbor distance as a density proxy for centroid pull
       let sepX = 0, sepY = 0, sepZ = 0, sepCnt = 0;
       let avgDist = 0;
+      let ncX = 0, ncY = 0, ncZ = 0; // neighbor centroid accumulator
       const sepLen = Math.min(Nsep, nLen);
       for (let j = 0; j < nLen; j++) {
         const ni = _neighbors[j];
+        ncX += px[ni]; ncY += py[ni]; ncZ += pz[ni];
         const dx = px[i] - px[ni], dy = py[i] - py[ni], dz = pz[i] - pz[ni];
         const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
         avgDist += d;
@@ -308,6 +311,11 @@ export function initScene(container, params) {
         }
       }
       avgDist /= nLen;
+      // Boundary detection: how far the neighbor centroid is offset from this bird
+      ncX /= nLen; ncY /= nLen; ncZ /= nLen;
+      const edX = ncX - px[i], edY = ncY - py[i], edZ = ncZ - pz[i];
+      const edgeMag = Math.sqrt(edX * edX + edY * edY + edZ * edZ);
+      const edgeSignal = avgDist > 0.01 ? Math.min(edgeMag / avgDist, 1) : 0;
       if (sepCnt > 0) {
         sepX /= sepCnt; sepY /= sepCnt; sepZ /= sepCnt;
         steerScalar(sepX, sepY, sepZ, vx[i], vy[i], vz[i], mSpd, mFrc);
@@ -357,7 +365,8 @@ export function initScene(container, params) {
       }
       if (aliW > 0) { aliX /= aliW; aliY /= aliW; aliZ /= aliW; }
       steerScalar(aliX, aliY, aliZ, vx[i], vy[i], vz[i], mSpd, mFrc);
-      ax += _steer[0] * params.W_ALI; ay += _steer[1] * params.W_ALI; az += _steer[2] * params.W_ALI;
+      const effectiveAli = params.W_ALI * (1 + edgeSignal * params.EDGE_ALI);
+      ax += _steer[0] * effectiveAli; ay += _steer[1] * effectiveAli; az += _steer[2] * effectiveAli;
 
       // ── Cohesion (same front/back weighting) ──────────────────────
       let cohX = 0, cohY = 0, cohZ = 0, cohW = 0;

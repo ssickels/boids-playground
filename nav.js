@@ -19,6 +19,12 @@
     <div class="nav-panel-section">
       <div class="nav-panel-heading">Boids / Fish</div>
       <a href="/playground.html">Playground</a>
+    </div>
+    <div class="nav-panel-section">
+      <div class="nav-panel-heading">Boids / Murmurations</div>
+      <a href="/murmuration.html">Playground</a>
+      <a href="/murmuration-about.html">How It Works</a>
+      <a href="/murmuration-intro.html">About</a>
       <a href="/about.html" class="nav-panel-top-link" style="padding-left:28px">About This Site</a>
     </div>
   </div>

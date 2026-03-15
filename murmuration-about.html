@@ -181,10 +181,18 @@
       of fish (or flock of birds) emerges on its own.
     </p>
     <p>
-      The <a href="playground.html">Boids Playground</a> on this site demonstrates that
-      beautifully with 10 fish. But murmurations are a different beast: thousands of
-      starlings moving in dense, fast, wave-like formations. Scaling up exposed several
-      problems — and the solutions turned out to be interesting in their own right.
+      The <a href="boids-explain.html">How Boids Work</a> explainer on this site breaks
+      the three rules down with interactive demos — you can watch a single boid respond
+      to each force in isolation, drag sliders to change radii and strengths, and then
+      see all three combine. If you haven't seen it, it's the best way to build intuition
+      for what's happening below.
+    </p>
+    <p>
+      The <a href="playground.html">Boids Playground</a> applies those same rules to
+      10 fish in 3D. It's a beautiful small-scale demonstration. But murmurations are a
+      different beast: thousands of starlings moving in dense, fast, wave-like formations.
+      Scaling up exposed several problems — and the solutions turned out to be interesting
+      in their own right.
     </p>
   </section>
 
@@ -278,9 +286,12 @@
     <p>
       Classic boids use a fixed radius for each rule: if another bird is within, say,
       6.5 units, it's a neighbor for alignment. This is called <em class="term">metric</em>
-      interaction. It works fine for small groups, but it has a scaling problem: in a dense
-      flock, a bird might have 200 neighbors inside its radius, while a bird at the edge
-      has 3. The work per bird varies wildly, and the behavior changes with density.
+      interaction — you can see it in action in the
+      <a href="boids-explain.html">interactive demos</a>, where each rule's detection
+      circle is visible and adjustable. It works fine for small groups, but it has a
+      scaling problem: in a dense flock, a bird might have 200 neighbors inside its
+      radius, while a bird at the edge has 3. The work per bird varies wildly, and the
+      behavior changes with density.
     </p>
     <p>
       Biologists studying real starling murmurations
@@ -321,6 +332,15 @@
       summed, applied to velocity, and velocity is clamped between a minimum and maximum
       speed (birds can't hover, and they can't exceed a sprint speed).
     </p>
+    <div class="see-also">
+      The first three forces — separation, alignment, and cohesion — are the same
+      rules from classic boids. The
+      <a href="boids-explain.html">How Boids Work</a> page has interactive demos
+      that let you watch each one affect a single boid in isolation, with visible
+      vectors and adjustable sliders. The mechanics are identical here; what changes
+      is <em>how neighbors are selected</em> (topological counts instead of radii)
+      and the biologically-inspired extensions layered on top.
+    </div>
 
     <div class="concept-card">
       <h3>1. Separation</h3>
@@ -441,6 +461,91 @@
     </div>
   </section>
 
+  <!-- ── Boundary-Aware Alignment ────────────────────────────────────────── -->
+  <section>
+    <h2>Boundary-Aware Alignment (Edge Stiffening)</h2>
+    <p>
+      Real murmurations have strikingly sharp, well-defined boundaries. The flock
+      doesn't fade out at its edges — it ends. This is hard to explain with uniform
+      local rules, because boundary birds have neighbors on only one side and fewer
+      alignment influences pulling them inward. Left unchecked, they tend to drift
+      off, softening the flock's outline into a diffuse haze.
+    </p>
+    <p>
+      Our hypothesis is simple: a bird can <em>sense</em> that it's on the edge
+      because its neighbors are concentrated in one direction rather than spread
+      evenly around it. It responds by aligning more strongly — stiffening the
+      flock surface the way surface tension stiffens a water droplet.
+    </p>
+
+    <div class="concept-card">
+      <h3>The edge signal</h3>
+      <p>
+        Each bird already knows its neighbors' positions (for cohesion) and average
+        distance (for density). We compute one more quantity: the
+        <em class="term">neighbor centroid offset</em> — how far the average position
+        of its neighbors is from the bird itself, normalized by the average
+        inter-neighbor distance.
+      </p>
+      <code class="math">
+        neighborCentroid = avg(neighbor positions)<br>
+        edgeVec = neighborCentroid - myPosition<br>
+        edgeSignal = clamp(|edgeVec| / avgNeighborDist, 0, 1)
+      </code>
+      <p>
+        An <strong>interior bird</strong> is surrounded on all sides, so the neighbor
+        centroid lands roughly on top of it — signal &asymp; 0. A
+        <strong>boundary bird</strong> has all its neighbors on one side, pulling the
+        centroid well away from it — signal &asymp; 1. No global information is needed;
+        it's a purely local measurement that piggybacks on the existing neighbor
+        iteration at near-zero cost.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>How it modifies alignment</h3>
+      <p>
+        The edge signal scales alignment strength for each bird individually:
+      </p>
+      <code class="math">
+        effectiveAlignment = W_ALI * (1 + edgeSignal * EDGE_ALI)
+      </code>
+      <p>
+        Interior birds (edgeSignal &asymp; 0) get their normal alignment weight.
+        Boundary birds (edgeSignal &asymp; 1) get up to
+        <code>W_ALI * (1 + EDGE_ALI)</code> — stronger alignment that resists
+        drifting away from the group's heading. The slider defaults to 0 (off),
+        preserving the original behavior.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Why is this biologically plausible?</h3>
+      <p>
+        Starlings are highly gregarious and instinctively avoid being isolated.
+        A bird on the flock boundary is in the most exposed position — vulnerable
+        to predators and at risk of losing contact with the group. It makes sense
+        that such a bird would pay <em>extra</em> attention to what its neighbors
+        are doing, matching their heading more tightly to stay woven into the
+        formation rather than peeling off.
+      </p>
+      <p>
+        The asymmetric-neighbor signal itself is something a real bird almost
+        certainly perceives. If every bird you can see is to your left, you know
+        you're on the right edge of the flock — no computation required, just
+        spatial awareness. Responding to that perception with tighter alignment is
+        the kind of simple, local behavioral rule that evolution readily produces.
+      </p>
+      <p>
+        The result mirrors what we see in the field: murmuration boundaries are
+        sharply defined, with edge birds maintaining tight formation discipline
+        rather than trailing off into stragglers. The boundary acts less like a
+        fence and more like surface tension — an emergent stiffness arising from
+        each edge bird's heightened awareness of its exposed position.
+      </p>
+    </div>
+  </section>
+
   <!-- ── The Steer Function ──────────────────────────────────────────────── -->
   <section>
     <h2>The Steer Function</h2>
@@ -507,7 +612,7 @@
   <section>
     <h2>The Sliders</h2>
     <p>
-      The experiment panel exposes thirteen parameters. All update in real time except
+      The experiment panel exposes fourteen parameters. All update in real time except
       bird count, which rebuilds the flock on mouse-up. Click <strong>?</strong> in the
       panel header for inline descriptions.
     </p>
@@ -578,6 +683,13 @@
             leading edge.</td>
         </tr>
         <tr>
+          <td>Edge alignment</td>
+          <td>Extra alignment boost for boundary birds (default 0, off). Higher values
+            make birds on the flock's edge match their neighbors' heading more tightly,
+            producing sharper, more well-defined flock boundaries. Values of 3&ndash;5
+            produce a visibly tighter outline.</td>
+        </tr>
+        <tr>
           <td>Max speed</td>
           <td>Top flight speed (default 15). Combined with max force, this controls the
             arc radius of turns — fast birds with moderate force make wide, graceful
@@ -625,6 +737,10 @@
       <li><strong>Starting in-state</strong> — rather than trying to form a murmuration from
         random initial conditions, we begin in the murmuration phase and let the algorithm
         maintain it. This mirrors reality: murmurations are observed, not assembled.</li>
+      <li><strong>Boundary-aware alignment</strong> — birds on the flock edge sense the
+        asymmetry of their neighbors and respond with stronger alignment, stiffening
+        the flock surface. A purely local mechanism that produces sharp, well-defined
+        boundaries.</li>
       <li><strong>Speed matters</strong> — fast birds with moderate steering caps produce
         wide, graceful arcs. Slow birds look like they're drifting in soup.</li>
     </ul>
