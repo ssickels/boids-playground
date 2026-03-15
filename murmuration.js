@@ -167,7 +167,12 @@ export function initScene(container, params) {
       vy[i] = (baseVy + (Math.random() - 0.5) * JITTER) * spd;
       vz[i] = (baseVz + (Math.random() - 0.5) * JITTER) * spd;
     }
-    if (instMesh) instMesh.count = count;
+    if (instMesh) {
+      instMesh.count = count;
+      for (let i = 0; i < n; i++) instMesh.setColorAt(i, _defaultColor);
+      if (instMesh.instanceColor) instMesh.instanceColor.needsUpdate = true;
+      prevHighlight = -1;
+    }
   }
 
   // ── Ground plane (fixed in world space — reveals flock movement) ────
@@ -204,10 +209,20 @@ export function initScene(container, params) {
   scene.add(instMesh);
 
   const _mat4 = new THREE.Matrix4();
+  const _defaultColor   = new THREE.Color(0xcccccc);
+  const _highlightColor = new THREE.Color(0xf5d84a);
+  let prevHighlight = -1;
+
+  const _scaleMat = new THREE.Matrix4();
+  const HIGHLIGHT_SCALE = 3;
 
   function updateInstances() {
     for (let i = 0; i < count; i++) {
       _mat4.makeTranslation(px[i], py[i], pz[i]);
+      if (i === trackedBoid && cameraMode === 'orbit') {
+        _scaleMat.makeScale(HIGHLIGHT_SCALE, HIGHLIGHT_SCALE, HIGHLIGHT_SCALE);
+        _mat4.multiply(_scaleMat);
+      }
       instMesh.setMatrixAt(i, _mat4);
     }
     instMesh.instanceMatrix.needsUpdate = true;
@@ -418,6 +433,19 @@ export function initScene(container, params) {
     }
   }
 
+  // ── Camera mode ──────────────────────────────────────────────────
+  let cameraMode = 'orbit';   // 'orbit' | 'boidseye'
+  let trackedBoid = 0;
+
+  function pickNewBoid() {
+    trackedBoid = Math.floor(Math.random() * count);
+  }
+
+  function setCameraMode(mode) {
+    cameraMode = mode;
+    if (mode === 'boidseye') pickNewBoid();
+  }
+
   // ── Animate ────────────────────────────────────────────────────────
   const clock = new THREE.Clock();
   let elapsed = 0;
@@ -445,15 +473,45 @@ export function initScene(container, params) {
     // write instance matrices
     updateInstances();
 
-    // camera orbit — snaps to centroid (already smooth as average of n birds)
-    const orbitR = 20 + Math.cbrt(count) * 3;
-    const orbitSpeed = 0.03;
-    camera.position.x = centX + Math.sin(elapsed * orbitSpeed) * orbitR;
-    camera.position.z = centZ + Math.cos(elapsed * orbitSpeed) * orbitR;
-    camera.position.y = centY + Math.sin(elapsed * 0.05) * 8;
-    // Keep camera above the ground plane
-    if (camera.position.y < GROUND_Y + 5) camera.position.y = GROUND_Y + 5;
-    camera.lookAt(centX, centY, centZ);
+    // highlight tracked boid
+    if (prevHighlight >= 0 && prevHighlight < count && prevHighlight !== trackedBoid) {
+      instMesh.setColorAt(prevHighlight, _defaultColor);
+    }
+    if (trackedBoid < count) {
+      instMesh.setColorAt(trackedBoid, _highlightColor);
+      prevHighlight = trackedBoid;
+    }
+    if (instMesh.instanceColor) instMesh.instanceColor.needsUpdate = true;
+
+    // ── Camera ───────────────────────────────────────────────────────
+    if (cameraMode === 'boidseye') {
+      // Re-pick if tracked boid is out of range
+      if (trackedBoid >= count) pickNewBoid();
+
+      const bi = trackedBoid;
+      const bvx = vx[bi], bvy = vy[bi], bvz = vz[bi];
+      const spd = Math.sqrt(bvx * bvx + bvy * bvy + bvz * bvz);
+      const inv = spd > 1e-6 ? 1 / spd : 0;
+      const nx = bvx * inv, ny = bvy * inv, nz = bvz * inv;
+
+      // Chase cam: behind and above the boid
+      camera.position.x = px[bi] - nx * 1.5;
+      camera.position.y = py[bi] - ny * 1.5 + 0.3;
+      camera.position.z = pz[bi] - nz * 1.5;
+
+      // Look ahead
+      camera.lookAt(px[bi] + nx * 5, py[bi] + ny * 5, pz[bi] + nz * 5);
+    } else {
+      // Orbit — snaps to centroid (already smooth as average of n birds)
+      const orbitR = 20 + Math.cbrt(count) * 3;
+      const orbitSpeed = 0.03;
+      camera.position.x = centX + Math.sin(elapsed * orbitSpeed) * orbitR;
+      camera.position.z = centZ + Math.cos(elapsed * orbitSpeed) * orbitR;
+      camera.position.y = centY + Math.sin(elapsed * 0.05) * 8;
+      // Keep camera above the ground plane
+      if (camera.position.y < GROUND_Y + 5) camera.position.y = GROUND_Y + 5;
+      camera.lookAt(centX, centY, centZ);
+    }
 
     renderer.render(scene, camera);
   }
@@ -461,5 +519,5 @@ export function initScene(container, params) {
   animate();
 
   // public API
-  return { reinit };
+  return { reinit, setCameraMode, pickNewBoid };
 }

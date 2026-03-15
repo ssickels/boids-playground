@@ -344,6 +344,51 @@
       padding: 2px 10px 4px;
       margin: 0 10px;
     }
+
+    /* ── CAMERA TOGGLE ──────────────────────────────────────────── */
+    .camera-toggle {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+    .camera-toggle-btn {
+      flex: 1;
+      padding: 4px 0;
+      background: rgba(136, 136, 204, 0.06);
+      border: 1px solid rgba(136, 136, 204, 0.18);
+      border-radius: 4px;
+      color: rgba(136, 136, 204, 0.65);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .camera-toggle-btn:hover {
+      background: rgba(136, 136, 204, 0.12);
+      color: #aaaaee;
+    }
+    .camera-toggle-btn.active {
+      background: rgba(136, 136, 204, 0.18);
+      color: #aaaaee;
+      border-color: rgba(136, 136, 204, 0.45);
+    }
+    #cam-new-boid {
+      display: none;
+      width: 100%;
+      padding: 4px 0;
+      background: rgba(136, 136, 204, 0.06);
+      border: 1px solid rgba(136, 136, 204, 0.18);
+      border-radius: 4px;
+      color: rgba(136, 136, 204, 0.65);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+    #cam-new-boid:hover {
+      background: rgba(136, 136, 204, 0.12);
+      color: #aaaaee;
+    }
   </style>
 </head>
 <body>
@@ -411,6 +456,24 @@
               min="0.25" max="4.0" step="0.05" value="1.0" />
             <span class="param-desc">Scales simulation time. Higher = faster movement.</span>
           </div>
+        </div>
+      </div>
+
+      <div class="param-divider"></div>
+
+      <!-- ── Camera ──────────────────────────────────────────────── -->
+      <div class="param-section">
+        <div class="param-section-header">
+          <span class="param-section-label">Camera</span>
+          <span class="param-section-arrow">▾</span>
+        </div>
+        <div class="param-section-body">
+          <div class="camera-toggle">
+            <button class="camera-toggle-btn active" id="cam-orbit">Orbit</button>
+            <button class="camera-toggle-btn" id="cam-boidseye">Boid's eye</button>
+          </div>
+          <button id="cam-new-boid">New boid</button>
+          <span class="param-desc">First-person chase cam from a random bird's perspective.</span>
         </div>
       </div>
 
@@ -915,6 +978,29 @@
       hdr.addEventListener('click', () => {
         hdr.parentElement.classList.toggle('collapsed');
       });
+    });
+
+    // ── Camera mode toggle ─────────────────────────────────────────
+    const camOrbitBtn   = document.getElementById('cam-orbit');
+    const camBoidseyeBtn = document.getElementById('cam-boidseye');
+    const camNewBoidBtn = document.getElementById('cam-new-boid');
+
+    function setCamUI(mode) {
+      camOrbitBtn.classList.toggle('active', mode === 'orbit');
+      camBoidseyeBtn.classList.toggle('active', mode === 'boidseye');
+      camNewBoidBtn.style.display = mode === 'boidseye' ? 'block' : 'none';
+    }
+
+    camOrbitBtn.addEventListener('click', () => {
+      api.setCameraMode('orbit');
+      setCamUI('orbit');
+    });
+    camBoidseyeBtn.addEventListener('click', () => {
+      api.setCameraMode('boidseye');
+      setCamUI('boidseye');
+    });
+    camNewBoidBtn.addEventListener('click', () => {
+      api.pickNewBoid();
     });
   </script>
 </body>
