@@ -212,6 +212,16 @@
       align-items: center;
       gap: 6px;
     }
+    #param-hints-btn {
+      background: none; border: none; cursor: pointer;
+      color: rgba(245, 216, 74, 0.45);
+      font-size: 10px; line-height: 1;
+      padding: 0 2px;
+      letter-spacing: 0.03em;
+      font-family: inherit;
+      transition: color 0.15s;
+    }
+    #param-hints-btn:hover { color: #f5d84a; }
     #param-desc-btn {
       background: none; border: none; cursor: pointer;
       color: rgba(136, 136, 204, 0.40);
@@ -268,6 +278,9 @@
     .param-section.collapsed .param-section-arrow { transform: rotate(-90deg); }
     .param-section-body { padding: 0 10px 6px; }
     .param-section.collapsed .param-section-body { display: none; }
+
+    /* hide color-mode-specific sliders until that mode is active */
+    [data-color-mode] { display: none; }
 
     /* individual row */
     .param-row {
@@ -582,6 +595,7 @@
     <div id="param-panel-header">
       <span id="param-panel-title">Murmuration</span>
       <div class="panel-header-btns">
+        <button id="param-hints-btn" title="Show hints">hints</button>
         <button id="param-desc-btn" title="Toggle descriptions">?</button>
         <button id="param-collapse-btn" title="Collapse panel">▾</button>
       </div>
@@ -778,34 +792,34 @@
               min="0" max="2.0" step="0.05" value="0" />
             <span class="param-desc">How much birds slow down when neighbors enter their personal space. 0 = off (existing behavior). Higher = stronger braking that cascades through dense flocks.</span>
           </div>
-          <div class="param-row">
-            <span class="param-label" title="Speed-change sensitivity for velocity coloring">dV threshold</span>
-            <span class="param-value" id="val-dvt">0.30</span>
-            <input class="param-slider" type="range" id="sl-dvt"
-              min="0.01" max="4.0" step="0.01" value="0.3" />
-            <span class="param-desc">Speed change per frame that maps to full red/green in velocity color mode. Lower = more sensitive.</span>
-          </div>
           <div class="camera-toggle" style="margin-top:4px">
             <button class="camera-toggle-btn active" id="color-none">None</button>
             <button class="camera-toggle-btn" id="color-density">Density</button>
             <button class="camera-toggle-btn" id="color-velocity">Velocity</button>
           </div>
           <span class="param-desc">None: uniform color. Density: red=crowded, blue=sparse. Velocity: red=braking, green=accelerating, blue=steady.</span>
-          <div class="param-row" style="margin-top:6px">
+          <div class="param-row" data-color-mode="velocity" style="margin-top:6px">
+            <span class="param-label" title="Speed-change sensitivity for velocity coloring">dV threshold</span>
+            <span class="param-value" id="val-dvt">0.30</span>
+            <input class="param-slider" type="range" id="sl-dvt"
+              min="0.01" max="4.0" step="0.01" value="0.3" />
+            <span class="param-desc">Speed change per frame that maps to full red/green in velocity color mode. Lower = more sensitive.</span>
+          </div>
+          <div class="param-row" data-color-mode="density" style="margin-top:6px">
             <span class="param-label" title="Radius for counting nearby birds">Search radius</span>
             <span class="param-value" id="val-dr">5.0</span>
             <input class="param-slider" type="range" id="sl-dr"
               min="1" max="10" step="0.5" value="5.0" />
             <span class="param-desc">Radius within which neighbors are counted for density coloring.</span>
           </div>
-          <div class="param-row">
+          <div class="param-row" data-color-mode="density">
             <span class="param-label" title="Neighbor count mapped to blue (sparse)">Sparse count</span>
             <span class="param-value" id="val-dlo">3</span>
             <input class="param-slider" type="range" id="sl-dlo"
               min="0" max="20" step="1" value="3" />
             <span class="param-desc">Neighbor count that maps to full blue. Birds with this many or fewer nearby neighbors are sparse.</span>
           </div>
-          <div class="param-row">
+          <div class="param-row" data-color-mode="density">
             <span class="param-label" title="Neighbor count mapped to red (dense)">Dense count</span>
             <span class="param-value" id="val-dhi">25</span>
             <input class="param-slider" type="range" id="sl-dhi"
@@ -944,10 +958,14 @@
     }
 
     // ── Guide arrows ──────────────────────────────────────────────
-    let arrowsShown = false;
+    let activeArrows = [];
+    let arrowTimer = 0;
+
     function showGuideArrows() {
-      if (arrowsShown) return;
-      arrowsShown = true;
+      // Clear any active arrows first
+      clearTimeout(arrowTimer);
+      activeArrows.forEach(a => a.remove());
+      activeArrows = [];
 
       const makeArrow = (target, text, nudgeUp = 6) => {
         const rect = target.getBoundingClientRect();
@@ -961,7 +979,6 @@
         return el;
       };
 
-      const arrows = [];
       const helpBtn = document.getElementById('param-desc-btn');
       const presetBtn = document.querySelector('.preset-btn');
       const boidseyeBtn = document.getElementById('cam-boidseye');
@@ -969,16 +986,19 @@
       const aliSlider = document.getElementById('sl-ali');
       const cohSlider = document.getElementById('sl-coh');
 
-      if (helpBtn)     arrows.push(makeArrow(helpBtn, 'Descriptions'));
-      if (presetBtn)   arrows.push(makeArrow(presetBtn, 'Try a preset'));
-      if (boidseyeBtn) arrows.push(makeArrow(boidseyeBtn, 'Fly with a bird \u2014 or choose a split view'));
-      if (sepSlider)   arrows.push(makeArrow(sepSlider, 'Separation', 14));
-      if (aliSlider)   arrows.push(makeArrow(aliSlider, 'Alignment', 14));
-      if (cohSlider)   arrows.push(makeArrow(cohSlider, 'Cohesion', 14));
+      if (helpBtn)     activeArrows.push(makeArrow(helpBtn, 'Descriptions'));
+      if (presetBtn)   activeArrows.push(makeArrow(presetBtn, 'Try a preset'));
+      if (boidseyeBtn) activeArrows.push(makeArrow(boidseyeBtn, 'Fly with a bird \u2014 or choose a split view'));
+      if (sepSlider)   activeArrows.push(makeArrow(sepSlider, 'Separation', 14));
+      if (aliSlider)   activeArrows.push(makeArrow(aliSlider, 'Alignment', 14));
+      if (cohSlider)   activeArrows.push(makeArrow(cohSlider, 'Cohesion', 14));
 
-      setTimeout(() => {
-        arrows.forEach(a => a.classList.add('fade-out'));
-        setTimeout(() => { arrows.forEach(a => a.remove()); }, 500);
+      arrowTimer = setTimeout(() => {
+        activeArrows.forEach(a => a.classList.add('fade-out'));
+        setTimeout(() => {
+          activeArrows.forEach(a => a.remove());
+          activeArrows = [];
+        }, 500);
       }, 6000);
     }
 
@@ -1278,12 +1298,18 @@
     const panel = document.getElementById('param-panel');
     const collapseBtn = document.getElementById('param-collapse-btn');
     document.getElementById('param-panel-header').addEventListener('click', (e) => {
-      if (e.target.id === 'param-desc-btn') return;
+      if (e.target.id === 'param-desc-btn' || e.target.id === 'param-hints-btn') return;
       panel.classList.toggle('collapsed');
       const collapsed = panel.classList.contains('collapsed');
       collapseBtn.textContent = collapsed ? '▸' : '▾';
       api.setPanelOpen(!collapsed);
       updateDividerPosition();
+    });
+
+    // ── Hints replay ─────────────────────────────────────────────
+    document.getElementById('param-hints-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      showGuideArrows();
     });
 
     // ── Description toggle ────────────────────────────────────────
@@ -1370,6 +1396,10 @@
         legendLo.textContent = 'Sparse';
         legendHi.textContent = 'Dense';
       }
+      // Show/hide sliders relevant to the active color mode
+      document.querySelectorAll('[data-color-mode]').forEach(el => {
+        el.style.display = el.dataset.colorMode === mode ? '' : 'none';
+      });
     }
 
     function applyColorMode(mode) {

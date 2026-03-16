@@ -272,6 +272,16 @@
     #param-panel.show-desc .param-desc { display: block; }
 
     /* description toggle button */
+    #param-hints-btn {
+      background: none; border: none; cursor: pointer;
+      color: rgba(245, 216, 74, 0.45);
+      font-size: 10px; line-height: 1;
+      padding: 0 2px;
+      letter-spacing: 0.03em;
+      font-family: inherit;
+      transition: color 0.15s;
+    }
+    #param-hints-btn:hover { color: #f5d84a; }
     #param-desc-btn {
       background: none; border: none; cursor: pointer;
       color: rgba(125, 212, 232, 0.40);
@@ -518,6 +528,7 @@
   <div id="param-panel-header">
     <span id="param-panel-title">Boids Parameters</span>
     <div style="display:flex;gap:4px;align-items:center">
+      <button id="param-hints-btn" title="Show hints">hints</button>
       <button id="param-desc-btn" title="Toggle descriptions">?</button>
       <button id="param-collapse-btn" title="Collapse panel">&#8722;</button>
     </div>
@@ -763,6 +774,12 @@ document.getElementById('param-panel-header').addEventListener('click', () => {
   collapseBtn.title = isCollapsed ? 'Expand panel' : 'Collapse panel';
 });
 
+// ── HINTS REPLAY ─────────────────────────────────────────────────────────────
+document.getElementById('param-hints-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  showGuideArrows();
+});
+
 // ── DESCRIPTION TOGGLE ────────────────────────────────────────────────────────
 document.getElementById('param-desc-btn').addEventListener('click', e => {
   e.stopPropagation();
@@ -777,6 +794,48 @@ document.querySelectorAll('.param-section-header').forEach(header => {
     header.closest('.param-section').classList.toggle('collapsed');
   });
 });
+
+// ── GUIDE ARROWS ─────────────────────────────────────────────────────────────
+let activeArrows = [];
+let arrowTimer = 0;
+
+function showGuideArrows() {
+  clearTimeout(arrowTimer);
+  activeArrows.forEach(a => a.remove());
+  activeArrows = [];
+
+  const makeArrow = (target, text) => {
+    const rect = target.getBoundingClientRect();
+    const el = document.createElement('div');
+    el.className = 'guide-arrow';
+    el.innerHTML = `<span>${text}</span> <span class="arrow-char">&#9654;</span>`;
+    el.style.top  = rect.top + rect.height / 2 - 10 + 'px';
+    el.style.right = (window.innerWidth - rect.left + 8) + 'px';
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('visible'));
+    return el;
+  };
+
+  if (arrowsMode) {
+    const helpBtn   = document.getElementById('param-desc-btn');
+    const fishLabel = document.querySelector('#cb-SHOW_FISH')?.closest('label');
+    if (helpBtn)   activeArrows.push(makeArrow(helpBtn, 'Descriptions'));
+    if (fishLabel) activeArrows.push(makeArrow(fishLabel, 'Show fish'));
+  } else {
+    const vizLabel = document.querySelector('#cb-SHOW_VIZ')?.closest('label');
+    const helpBtn  = document.getElementById('param-desc-btn');
+    if (vizLabel) activeArrows.push(makeArrow(vizLabel, 'Try this'));
+    if (helpBtn)  activeArrows.push(makeArrow(helpBtn, 'Descriptions'));
+  }
+
+  arrowTimer = setTimeout(() => {
+    activeArrows.forEach(a => a.classList.add('fade-out'));
+    setTimeout(() => {
+      activeArrows.forEach(a => a.remove());
+      activeArrows = [];
+    }, 500);
+  }, 6000);
+}
 
 // ── ONBOARDING OVERLAY ──────────────────────────────────────────────────────
 const overlayKey = arrowsMode ? 'boidsArrowsOverlayDismissed' : 'boidsOverlayDismissed';
@@ -835,45 +894,6 @@ if (!localStorage.getItem(overlayKey)) {
     }
     overlay.classList.add('fade-out');
     setTimeout(() => overlay.remove(), 500);
-
-    // Position arrows next to the two target controls
-    const showGuideArrows = () => {
-      const makeArrow = (target, text) => {
-        const rect = target.getBoundingClientRect();
-        const el = document.createElement('div');
-        el.className = 'guide-arrow';
-        el.innerHTML = `<span>${text}</span> <span class="arrow-char">&#9654;</span>`;
-        el.style.top  = rect.top + rect.height / 2 - 10 + 'px';
-        el.style.right = (window.innerWidth - rect.left + 8) + 'px';
-        document.body.appendChild(el);
-        requestAnimationFrame(() => el.classList.add('visible'));
-        return el;
-      };
-
-      if (arrowsMode) {
-        const helpBtn   = document.getElementById('param-desc-btn');
-        const fishLabel = document.querySelector('#cb-SHOW_FISH')?.closest('label');
-        if (!helpBtn || !fishLabel) return;
-        const a1 = makeArrow(helpBtn, 'Descriptions');
-        const a2 = makeArrow(fishLabel, 'Show fish');
-        setTimeout(() => {
-          a1.classList.add('fade-out');
-          a2.classList.add('fade-out');
-          setTimeout(() => { a1.remove(); a2.remove(); }, 500);
-        }, 6000);
-      } else {
-        const vizLabel = document.querySelector('#cb-SHOW_VIZ')?.closest('label');
-        const helpBtn  = document.getElementById('param-desc-btn');
-        if (!vizLabel || !helpBtn) return;
-        const a1 = makeArrow(vizLabel, 'Try this');
-        const a2 = makeArrow(helpBtn, 'Descriptions');
-        setTimeout(() => {
-          a1.classList.add('fade-out');
-          a2.classList.add('fade-out');
-          setTimeout(() => { a1.remove(); a2.remove(); }, 500);
-        }, 6000);
-      }
-    };
 
     setTimeout(showGuideArrows, 600);
   });
