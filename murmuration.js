@@ -244,6 +244,17 @@ export function initScene(container, params) {
   const _highlightColor = new THREE.Color(0xf5d84a);
   let prevHighlight = -1;
 
+  // ── Wireframe overlay for tracked boid in boid's-eye view ─────────
+  // Slightly larger than the 0.15 boid so the boid's depth hides back edges
+  const wireGeo = new THREE.IcosahedronGeometry(0.19, 0);
+  const wireMat = new THREE.MeshBasicMaterial({
+    color: 0xf5d84a, wireframe: true, wireframeLinewidth: 2, depthTest: true
+  });
+  const wireMesh = new THREE.Mesh(wireGeo, wireMat);
+  wireMesh.visible = false;
+  wireMesh.renderOrder = 999;
+  scene.add(wireMesh);
+
   const _densityColor = new THREE.Color();
 
   function updateDensityColors() {
@@ -296,7 +307,7 @@ export function initScene(container, params) {
     }
   }
 
-  let colorMode = 'density'; // 'density' | 'velocity'
+  let colorMode = 'none'; // 'none' | 'density' | 'velocity'
   function setColorMode(mode) { colorMode = mode; }
 
   const _scaleMat = new THREE.Matrix4();
@@ -607,9 +618,17 @@ export function initScene(container, params) {
       }
     }
 
-    // highlight tracked boid (on top of density colors)
+    // highlight tracked boid
     if (trackedBoid < count) {
-      instMesh.setColorAt(trackedBoid, _highlightColor);
+      if (cameraMode === 'boidseye' && colorMode !== 'none') {
+        // boid's-eye with coloring: keep density/velocity color, show wireframe
+        wireMesh.position.set(px[trackedBoid], py[trackedBoid], pz[trackedBoid]);
+        wireMesh.visible = true;
+      } else {
+        // orbit, or boid's-eye with no coloring: solid yellow
+        instMesh.setColorAt(trackedBoid, _highlightColor);
+        wireMesh.visible = false;
+      }
       prevHighlight = trackedBoid;
     }
     if (instMesh.instanceColor) instMesh.instanceColor.needsUpdate = true;

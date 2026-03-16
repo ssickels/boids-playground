@@ -385,6 +385,81 @@
     </div>
   </section>
 
+  <!-- ── Controls Reference ──────────────────────────────────────── -->
+  <section>
+    <h2>The Controls</h2>
+    <p>
+      The Density Waves panel in the simulation groups six controls specific
+      to wave mechanics and visualization. The first two affect the
+      simulation itself; the rest are purely visual.
+    </p>
+
+    <div class="concept-card">
+      <h3>Speed braking (W_SPEED_SEP)</h3>
+      <p>
+        How aggressively a bird slows down when a neighbor penetrates its
+        personal space bubble. At 0 the mechanism is off entirely and the
+        simulation behaves as classic boids. At 1.0, a fully penetrating
+        neighbor cuts the bird's speed to near zero. This is the parameter
+        that enables density waves &mdash; without it, birds change
+        direction but not speed, and no compression cascade can form.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>dV threshold</h3>
+      <p>
+        Sensitivity of <strong>velocity coloring</strong>. This is the
+        speed change per frame that maps to fully saturated red (braking)
+        or green (accelerating). Lower values reveal subtle speed
+        variations; higher values filter out noise and only highlight
+        dramatic events. This control has no effect on the simulation
+        &mdash; it only changes how speed changes are rendered.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Search radius</h3>
+      <p>
+        The radius (in world units) used to count neighbors for
+        <strong>density coloring</strong>. A larger radius smooths the
+        density map by averaging over more space; a smaller radius
+        reveals finer-grained structure. This is independent of the
+        topological neighbor counts used for steering &mdash; it exists
+        only for the visualization.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Sparse count / Dense count</h3>
+      <p>
+        The color scale endpoints for <strong>density coloring</strong>.
+        A bird with the "sparse count" of neighbors (or fewer) within the
+        search radius is colored full
+        <strong style="color:#5588ff">blue</strong>; a bird with the
+        "dense count" (or more) is colored full
+        <strong style="color:#e04040">red</strong>. Values in between
+        are mapped smoothly through yellow and white. Adjusting these lets
+        you tune the color range to the flock's actual density
+        distribution &mdash; useful because different presets and bird
+        counts produce very different neighbor counts.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Color mode toggle (None / Density / Velocity)</h3>
+      <p>
+        Switches between uniform gray (no diagnostic coloring),
+        density coloring (neighbor count &rarr; color), and velocity
+        coloring (speed change &rarr; color). The legend bar at the
+        bottom right updates to show the active mapping. Presets can
+        include a preferred color mode &mdash; the Dense flock presets
+        default to velocity coloring since that's where wave dynamics
+        are most visible.
+      </p>
+    </div>
+  </section>
+
   <!-- ── Connections ───────────────────────────────────────────────── -->
   <section>
     <h2>Connections to Other Fields</h2>
@@ -469,6 +544,80 @@
     </p>
 
     <a href="murmuration.html" class="playground-link">Open the Murmuration Experiment &rarr;</a>
+  </section>
+
+  <!-- ── Computational Caveats ──────────────────────────────────────── -->
+  <section>
+    <h2>Computational Caveats</h2>
+    <p>
+      Running thousands of birds at interactive frame rates requires
+      approximations. A few are worth knowing about because they can produce
+      visible artifacts.
+    </p>
+
+    <div class="concept-card">
+      <h3>Spatial hash discretization</h3>
+      <p>
+        Neighbor lookups use a spatial hash grid that divides the world into
+        cubic cells. Each bird checks the 3&times;3&times;3 block of cells
+        around it. This is fast, but introduces a hard boundary: two birds
+        that are close in space but straddle a cell boundary at the edge of
+        the 3&times;3&times;3 block may see different neighbor sets. The
+        steering forces and density counts for those birds will differ
+        slightly, even though their local environments are nearly identical.
+      </p>
+      <p>
+        This can create faint grid-scale structures &mdash; density or
+        velocity patterns whose spacing roughly matches the hash cell size.
+        If the ground plane grid happens to align with the hash grid, the
+        structures may be especially noticeable.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>In-place position updates</h3>
+      <p>
+        For performance, bird positions are updated sequentially within a
+        single array. A bird processed early in the frame has already moved
+        by the time a later bird reads its position as a neighbor. This
+        creates a subtle ordering dependency: the "view" of the flock is
+        inconsistent within a single frame, mixing pre-move and post-move
+        positions.
+      </p>
+      <p>
+        The density and velocity visualizations avoid this by computing
+        their metrics in a separate pass <em>before</em> any positions are
+        updated. But the steering forces themselves still operate on the
+        in-place data, so small wave-like artifacts from processing order
+        can still appear in the motion.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Smoothing tradeoffs</h3>
+      <p>
+        The density visualization uses exponential smoothing to prevent
+        frame-to-frame flicker. This introduces a tradeoff: heavy smoothing
+        eliminates noise but causes colors to lag behind the flock's actual
+        state &mdash; birds that leave a dense region will carry their
+        "crowded" color for many frames. Light smoothing tracks reality more
+        closely but allows high-frequency noise to show through as flashing.
+      </p>
+      <p>
+        The current implementation uses <em>asymmetric</em> smoothing:
+        density drops are tracked quickly (a bird leaving a crowd changes
+        color promptly) while density rises are smoothed more heavily
+        (preventing momentary spikes from causing flashes). This is a
+        compromise, not a perfect solution.
+      </p>
+    </div>
+
+    <p>
+      None of these artifacts invalidate the wave behavior &mdash; the
+      compression cascades are real emergent dynamics. But they do add noise
+      on top of the signal, and it's worth keeping that in mind when
+      interpreting what you see.
+    </p>
   </section>
 
 </div>

@@ -497,7 +497,7 @@
       font-size: 10px;
       color: #b8b8dd;
       pointer-events: none;
-      display: flex;
+      display: none;
       align-items: center;
       gap: 6px;
     }
@@ -768,12 +768,12 @@
             <span class="param-label" title="Speed-change sensitivity for velocity coloring">dV threshold</span>
             <span class="param-value" id="val-dvt">0.30</span>
             <input class="param-slider" type="range" id="sl-dvt"
-              min="0.01" max="2.0" step="0.01" value="0.3" />
+              min="0.01" max="4.0" step="0.01" value="0.3" />
             <span class="param-desc">Speed change per frame that maps to full red/green in velocity color mode. Lower = more sensitive.</span>
           </div>
           <div class="camera-toggle" style="margin-top:4px">
-            <button class="camera-toggle-btn" id="color-none">None</button>
-            <button class="camera-toggle-btn active" id="color-density">Density</button>
+            <button class="camera-toggle-btn active" id="color-none">None</button>
+            <button class="camera-toggle-btn" id="color-density">Density</button>
             <button class="camera-toggle-btn" id="color-velocity">Velocity</button>
           </div>
           <span class="param-desc">None: uniform color. Density: red=crowded, blue=sparse. Velocity: red=braking, green=accelerating, blue=steady.</span>
@@ -849,6 +849,7 @@
         FRONT_BIAS: 1.8, EDGE_ALI: 3.3, MAX_SPEED: 15,
         MIN_SPEED_RATIO: 0.53, MAX_FORCE: 0.8, HOMING: 6.3,
         DENSITY_RADIUS: 5, DENSITY_LO: 3, DENSITY_HI: 45,
+        COLOR_MODE: 'velocity',
       }},
       { name: 'Dense flock (fast)', config: {
         COUNT: 3000, SIM_SPEED: 1, N_SEP: 7, N_ALI_COH: 14,
@@ -856,6 +857,7 @@
         FRONT_BIAS: 2.8, EDGE_ALI: 3.3, MAX_SPEED: 22.5,
         MIN_SPEED_RATIO: 0.53, MAX_FORCE: 0.8, HOMING: 6.3,
         DENSITY_RADIUS: 5, DENSITY_LO: 3, DENSITY_HI: 45,
+        COLOR_MODE: 'velocity',
       }},
     ];
 
@@ -993,6 +995,7 @@
         }
       }
       if (cfg.COUNT !== undefined) api.reinit(cfg.COUNT);
+      if (cfg.COLOR_MODE) applyColorMode(cfg.COLOR_MODE);
     }
 
     for (const [name, cfg] of Object.entries(sliders)) {
@@ -1092,6 +1095,7 @@
     function buildConfigObj() {
       const cfg = {};
       for (const [, s] of Object.entries(sliders)) cfg[s.key] = params[s.key];
+      cfg.COLOR_MODE = currentColorMode;
       return cfg;
     }
 
@@ -1298,6 +1302,7 @@
     });
 
     // ── Color mode toggle ────────────────────────────────────────────
+    let currentColorMode = 'none';
     const colorDensityBtn  = document.getElementById('color-density');
     const colorVelocityBtn = document.getElementById('color-velocity');
 
@@ -1328,18 +1333,15 @@
       }
     }
 
-    colorNoneBtn.addEventListener('click', () => {
-      api.setColorMode('none');
-      setColorUI('none');
-    });
-    colorDensityBtn.addEventListener('click', () => {
-      api.setColorMode('density');
-      setColorUI('density');
-    });
-    colorVelocityBtn.addEventListener('click', () => {
-      api.setColorMode('velocity');
-      setColorUI('velocity');
-    });
+    function applyColorMode(mode) {
+      currentColorMode = mode;
+      api.setColorMode(mode);
+      setColorUI(mode);
+    }
+
+    colorNoneBtn.addEventListener('click', () => applyColorMode('none'));
+    colorDensityBtn.addEventListener('click', () => applyColorMode('density'));
+    colorVelocityBtn.addEventListener('click', () => applyColorMode('velocity'));
   </script>
 </body>
 </html>
