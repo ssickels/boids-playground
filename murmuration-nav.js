@@ -7,6 +7,7 @@
   <div id="nav-tabs">
     <a href="/murmuration.html" class="nav-tab" data-path="murmuration.html">Playground</a>
     <a href="/murmuration-about.html" class="nav-tab" data-path="murmuration-about">How It Works</a>
+    <a href="/murmuration-waves.html" class="nav-tab" data-path="murmuration-waves">Density Waves</a>
     <a href="/murmuration-intro.html" class="nav-tab" data-path="murmuration-intro">About</a>
   </div>
   <div id="nav-panel" aria-hidden="true">
