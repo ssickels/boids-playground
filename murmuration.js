@@ -25,6 +25,11 @@ export const DEFAULTS = {
   EDGE_ALI: 0, // extra alignment for boundary birds; 0 = off (current behavior)
   // WIND: true,  — removed from UI; see wind section below
   HOMING: 0.75,
+  DENSITY_RADIUS: 5.0,  // search radius for neighbor count
+  DENSITY_LO: 3,         // count mapped to blue (sparse)
+  DENSITY_HI: 25,        // count mapped to red (dense)
+  W_SPEED_SEP: 0,        // speed braking from personal space violations; 0 = off
+  DV_THRESHOLD: 0.3,     // speed-change threshold for velocity coloring
 };
 
 // ── Spatial hash ─────────────────────────────────────────────────────
@@ -49,6 +54,27 @@ class SpatialHash {
   _candIdx = new Int32Array(512);
   _candD2  = new Float32Array(512);
   _nCand   = 0; // exposed so callers can iterate all candidates for metric checks
+
+  countInRadius(selfIdx, x, y, z, r2, px, py, pz) {
+    const cx = Math.floor(x / HASH_CELL), cy = Math.floor(y / HASH_CELL), cz = Math.floor(z / HASH_CELL);
+    let n = 0;
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dz = -1; dz <= 1; dz++) {
+          const bucket = this.map.get(this._key(cx + dx, cy + dy, cz + dz));
+          if (bucket) {
+            for (let j = 0; j < bucket.length; j++) {
+              const idx = bucket[j];
+              if (idx === selfIdx) continue;
+              const ex = px[idx] - x, ey = py[idx] - y, ez = pz[idx] - z;
+              if (ex * ex + ey * ey + ez * ez < r2) n++;
+            }
+          }
+        }
+      }
+    }
+    return n;
+  }
 
   findNearest(selfIdx, x, y, z, N, px, py, pz, out) {
     const cx = Math.floor(x / HASH_CELL), cy = Math.floor(y / HASH_CELL), cz = Math.floor(z / HASH_CELL);
@@ -137,10 +163,14 @@ export function initScene(container, params) {
   let vx = new Float32Array(MAX_BIRDS);
   let vy = new Float32Array(MAX_BIRDS);
   let vz = new Float32Array(MAX_BIRDS);
+  let avgND = new Float32Array(MAX_BIRDS); // per-bird density count (smoothed)
+  let prevSpd = new Float32Array(MAX_BIRDS); // per-bird speed from last frame
   let count = 0;
 
   function reinit(n) {
     count = n;
+    avgND.fill(0);
+    prevSpd.fill(0);
     // Spawn in a tight sphere so the neighbor graph starts connected.
     // Radius scales with cube root of count to keep density roughly constant.
     const spawnR = Math.cbrt(n) * 0.6;
@@ -214,6 +244,61 @@ export function initScene(container, params) {
   const _highlightColor = new THREE.Color(0xf5d84a);
   let prevHighlight = -1;
 
+  const _densityColor = new THREE.Color();
+
+  function updateDensityColors() {
+    const lo = params.DENSITY_LO, hi = params.DENSITY_HI;
+    const range = hi - lo || 1;
+    for (let i = 0; i < count; i++) {
+      // t=0 → sparse (blue), t=1 → dense (red)
+      const t = Math.min(Math.max((avgND[i] - lo) / range, 0), 1);
+      let r, g, b;
+      if (t < 0.5) {
+        const u = t * 2;
+        r = 0.35 + u * 0.65;
+        g = 0.55 + u * 0.45;
+        b = 1.0 - u * 0.3;
+      } else {
+        const u = (t - 0.5) * 2;
+        r = 1.0;
+        g = 1.0 - u * 0.85;
+        b = 0.7 - u * 0.65;
+      }
+      _densityColor.setRGB(r, g, b);
+      instMesh.setColorAt(i, _densityColor);
+    }
+  }
+
+  const _velColor = new THREE.Color();
+
+  function updateVelocityColors() {
+    const thresh = params.DV_THRESHOLD || 0.3;
+    for (let i = 0; i < count; i++) {
+      const spd = Math.sqrt(vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i]);
+      const dv = spd - prevSpd[i];
+      prevSpd[i] = spd;
+      // t: -1 = braking, 0 = neutral, +1 = accelerating
+      const t = Math.max(-1, Math.min(1, dv / thresh));
+      let r, g, b;
+      if (t < 0) {
+        const u = -t;
+        r = 0.7 + u * 0.3;
+        g = 0.85 - u * 0.7;
+        b = 1.0 - u * 0.95;
+      } else {
+        const u = t;
+        r = 0.7 - u * 0.6;
+        g = 0.85 + u * 0.05;
+        b = 1.0 - u * 0.8;
+      }
+      _velColor.setRGB(r, g, b);
+      instMesh.setColorAt(i, _velColor);
+    }
+  }
+
+  let colorMode = 'density'; // 'density' | 'velocity'
+  function setColorMode(mode) { colorMode = mode; }
+
   const _scaleMat = new THREE.Matrix4();
   const HIGHLIGHT_SCALE = 3;
 
@@ -280,6 +365,19 @@ export function initScene(container, params) {
     hash.clear();
     for (let i = 0; i < count; i++) hash.insert(i, px[i], py[i], pz[i]);
 
+    // ── Density count pass (pre-update — all positions are consistent) ──
+    {
+      const dr2 = params.DENSITY_RADIUS * params.DENSITY_RADIUS;
+      for (let i = 0; i < count; i++) {
+        const dc = hash.countInRadius(i, px[i], py[i], pz[i], dr2, px, py, pz);
+        if (avgND[i] === 0) { avgND[i] = dc; }
+        else {
+          const k = dc < avgND[i] ? 0.3 : 0.1; // fast drop, slow rise
+          avgND[i] = avgND[i] * (1 - k) + dc * k;
+        }
+      }
+    }
+
     // Query the larger of the two neighbor counts; separation uses a subset
     const Nmax = Math.max(params.N_SEP, params.N_ALI_COH);
     const Nsep = params.N_SEP;
@@ -328,6 +426,7 @@ export function initScene(container, params) {
       // metric radius — collision avoidance that scales with actual density,
       // producing more uniform flock density with a sharper boundary.
       const psR = params.PERSONAL_SPACE;
+      let speedBrake = 0;
       if (psR > 0) {
         const psR2 = psR * psR;
         let psX = 0, psY = 0, psZ = 0, psCnt = 0;
@@ -342,6 +441,9 @@ export function initScene(container, params) {
             const inv = 1 / d;
             psX += dx * inv; psY += dy * inv; psZ += dz * inv;
             psCnt++;
+            // Track deepest penetration for speed braking
+            const penetration = (psR - d) / psR;
+            if (penetration > speedBrake) speedBrake = penetration;
           }
         }
         if (psCnt > 0) {
@@ -432,6 +534,14 @@ export function initScene(container, params) {
       if (spd > mSpd)                   { const s = mSpd / spd; vx[i] *= s; vy[i] *= s; vz[i] *= s; }
       else if (spd < minSpd && spd > 1e-6) { const s = minSpd / spd; vx[i] *= s; vy[i] *= s; vz[i] *= s; }
 
+      // ── Speed braking from personal space violations ──────────────
+      // Applied after speed clamp so braking can push below min speed,
+      // enabling wave propagation through the flock.
+      if (speedBrake > 0 && params.W_SPEED_SEP > 0) {
+        const scale = Math.max(0.01, 1 - params.W_SPEED_SEP * speedBrake);
+        vx[i] *= scale; vy[i] *= scale; vz[i] *= scale;
+      }
+
       px[i] += vx[i] * dt; py[i] += vy[i] * dt; pz[i] += vz[i] * dt;
 
       // Hard floor — safety net, should rarely trigger now
@@ -482,10 +592,22 @@ export function initScene(container, params) {
     // write instance matrices
     updateInstances();
 
-    // highlight tracked boid
-    if (prevHighlight >= 0 && prevHighlight < count && prevHighlight !== trackedBoid) {
-      instMesh.setColorAt(prevHighlight, _defaultColor);
+    // per-bird coloring
+    if (colorMode === 'velocity') {
+      updateVelocityColors(); // also updates prevSpd
+    } else if (colorMode === 'density') {
+      updateDensityColors();
+    } else {
+      for (let i = 0; i < count; i++) instMesh.setColorAt(i, _defaultColor);
     }
+    // keep prevSpd current even when not displaying velocity colors
+    if (colorMode !== 'velocity') {
+      for (let i = 0; i < count; i++) {
+        prevSpd[i] = Math.sqrt(vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i]);
+      }
+    }
+
+    // highlight tracked boid (on top of density colors)
     if (trackedBoid < count) {
       instMesh.setColorAt(trackedBoid, _highlightColor);
       prevHighlight = trackedBoid;
@@ -528,5 +650,5 @@ export function initScene(container, params) {
   animate();
 
   // public API
-  return { reinit, setCameraMode, pickNewBoid };
+  return { reinit, setCameraMode, pickNewBoid, setColorMode };
 }

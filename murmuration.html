@@ -487,6 +487,37 @@
       background: rgba(136, 136, 204, 0.12);
       color: #aaaaee;
     }
+    /* ── DENSITY LEGEND ──────────────────────────────────────────── */
+    #density-legend {
+      position: fixed;
+      bottom: 14px;
+      right: 12px;
+      z-index: 200;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 10px;
+      color: #b8b8dd;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #density-legend .legend-label {
+      color: rgba(136, 136, 204, 0.6);
+      letter-spacing: 0.03em;
+    }
+    #density-legend .legend-bar {
+      width: 120px;
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(to right,
+        rgb(89, 140, 255),
+        rgb(166, 198, 255) 25%,
+        rgb(255, 255, 179) 50%,
+        rgb(255, 178, 102) 75%,
+        rgb(255, 38, 13)
+      );
+      border: 1px solid rgba(136, 136, 204, 0.2);
+    }
   </style>
 </head>
 <body>
@@ -526,6 +557,13 @@
 
   <div id="scene-container"></div>
 
+  <!-- ── COLOR LEGEND ──────────────────────────────────────────────── -->
+  <div id="density-legend">
+    <span class="legend-label" id="legend-lo">Sparse</span>
+    <div class="legend-bar" id="legend-bar"></div>
+    <span class="legend-label" id="legend-hi">Dense</span>
+  </div>
+
   <!-- ── SLIDER PANEL ────────────────────────────────────────────── -->
   <div id="param-panel">
     <div id="param-panel-header">
@@ -546,6 +584,14 @@
         <div class="preset-item">
           <button class="preset-btn" data-preset="1">Scatter and rejoin</button>
           <div class="preset-desc">Strong separation blows the flock apart; aggressive homing pulls it back together. Watch cycles of fragmentation and reform.</div>
+        </div>
+        <div class="preset-item">
+          <button class="preset-btn" data-preset="2">Dense flock</button>
+          <div class="preset-desc">Uniform density with wide personal space and strong edge alignment. Good baseline for wave experiments.</div>
+        </div>
+        <div class="preset-item">
+          <button class="preset-btn" data-preset="3">Dense flock (fast)</button>
+          <div class="preset-desc">Same dense configuration at higher speed with stronger front bias. Faster dynamics for wave propagation testing.</div>
         </div>
       </div>
       <div id="user-presets-container"></div>
@@ -704,6 +750,59 @@
 
       <div class="param-divider"></div>
 
+      <!-- ── Density Waves ──────────────────────────────────────── -->
+      <div class="param-section">
+        <div class="param-section-header">
+          <span class="param-section-label">Density Waves</span>
+          <span class="param-section-arrow">▾</span>
+        </div>
+        <div class="param-section-body">
+          <div class="param-row">
+            <span class="param-label" title="Speed reduction from personal space violations">Speed braking</span>
+            <span class="param-value" id="val-wspdsep">0.00</span>
+            <input class="param-slider" type="range" id="sl-wspdsep"
+              min="0" max="2.0" step="0.05" value="0" />
+            <span class="param-desc">How much birds slow down when neighbors enter their personal space. 0 = off (existing behavior). Higher = stronger braking that cascades through dense flocks.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Speed-change sensitivity for velocity coloring">dV threshold</span>
+            <span class="param-value" id="val-dvt">0.30</span>
+            <input class="param-slider" type="range" id="sl-dvt"
+              min="0.01" max="2.0" step="0.01" value="0.3" />
+            <span class="param-desc">Speed change per frame that maps to full red/green in velocity color mode. Lower = more sensitive.</span>
+          </div>
+          <div class="camera-toggle" style="margin-top:4px">
+            <button class="camera-toggle-btn" id="color-none">None</button>
+            <button class="camera-toggle-btn active" id="color-density">Density</button>
+            <button class="camera-toggle-btn" id="color-velocity">Velocity</button>
+          </div>
+          <span class="param-desc">None: uniform color. Density: red=crowded, blue=sparse. Velocity: red=braking, green=accelerating, blue=steady.</span>
+          <div class="param-row" style="margin-top:6px">
+            <span class="param-label" title="Radius for counting nearby birds">Search radius</span>
+            <span class="param-value" id="val-dr">5.0</span>
+            <input class="param-slider" type="range" id="sl-dr"
+              min="1" max="10" step="0.5" value="5.0" />
+            <span class="param-desc">Radius within which neighbors are counted for density coloring.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Neighbor count mapped to blue (sparse)">Sparse count</span>
+            <span class="param-value" id="val-dlo">3</span>
+            <input class="param-slider" type="range" id="sl-dlo"
+              min="0" max="20" step="1" value="3" />
+            <span class="param-desc">Neighbor count that maps to full blue. Birds with this many or fewer nearby neighbors are sparse.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Neighbor count mapped to red (dense)">Dense count</span>
+            <span class="param-value" id="val-dhi">25</span>
+            <input class="param-slider" type="range" id="sl-dhi"
+              min="5" max="80" step="1" value="25" />
+            <span class="param-desc">Neighbor count that maps to full red. Birds with this many or more nearby neighbors are dense.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="param-divider"></div>
+
       <button id="param-reset">Reset to defaults</button>
       <button id="param-save" title="Save the current slider values as a named preset">Save as preset</button>
       <div class="param-desc btn-desc">Saves your current settings as a preset you can switch back to. Stored in your browser.</div>
@@ -743,6 +842,20 @@
         W_SEP: 7.5, PERSONAL_SPACE: 2, W_ALI: 4, W_COH: 3,
         FRONT_BIAS: 1, EDGE_ALI: 0, MAX_SPEED: 23,
         MIN_SPEED_RATIO: 0.4, MAX_FORCE: 1, HOMING: 8.5,
+      }},
+      { name: 'Dense flock', config: {
+        COUNT: 3000, SIM_SPEED: 1, N_SEP: 7, N_ALI_COH: 14,
+        W_SEP: 3.7, PERSONAL_SPACE: 5, W_ALI: 4.9, W_COH: 1.4,
+        FRONT_BIAS: 1.8, EDGE_ALI: 3.3, MAX_SPEED: 15,
+        MIN_SPEED_RATIO: 0.53, MAX_FORCE: 0.8, HOMING: 6.3,
+        DENSITY_RADIUS: 5, DENSITY_LO: 3, DENSITY_HI: 45,
+      }},
+      { name: 'Dense flock (fast)', config: {
+        COUNT: 3000, SIM_SPEED: 1, N_SEP: 7, N_ALI_COH: 14,
+        W_SEP: 3.7, PERSONAL_SPACE: 5, W_ALI: 4.9, W_COH: 1.4,
+        FRONT_BIAS: 2.8, EDGE_ALI: 3.3, MAX_SPEED: 22.5,
+        MIN_SPEED_RATIO: 0.53, MAX_FORCE: 0.8, HOMING: 6.3,
+        DENSITY_RADIUS: 5, DENSITY_LO: 3, DENSITY_HI: 45,
       }},
     ];
 
@@ -863,6 +976,11 @@
       minspd:    { el: 'sl-minspd',    val: 'val-minspd',    key: 'MIN_SPEED_RATIO', fmt: v => Math.round(Number(v) * 100) + '%' },
       maxfrc:    { el: 'sl-maxfrc',    val: 'val-maxfrc',    key: 'MAX_FORCE', fmt: v => Number(v).toFixed(2) },
       homing:    { el: 'sl-homing',    val: 'val-homing',    key: 'HOMING',    fmt: v => Number(v).toFixed(2) },
+      wspdsep:   { el: 'sl-wspdsep',   val: 'val-wspdsep',   key: 'W_SPEED_SEP',       fmt: v => Number(v).toFixed(2) },
+      dvt:       { el: 'sl-dvt',       val: 'val-dvt',       key: 'DV_THRESHOLD',      fmt: v => Number(v).toFixed(2) },
+      dr:        { el: 'sl-dr',        val: 'val-dr',        key: 'DENSITY_RADIUS',    fmt: v => Number(v).toFixed(1) },
+      dlo:       { el: 'sl-dlo',       val: 'val-dlo',       key: 'DENSITY_LO',       fmt: v => String(Math.round(v)) },
+      dhi:       { el: 'sl-dhi',       val: 'val-dhi',       key: 'DENSITY_HI',       fmt: v => String(Math.round(v)) },
     };
 
     function applyConfig(cfg) {
@@ -1177,6 +1295,50 @@
     });
     camNewBoidBtn.addEventListener('click', () => {
       api.pickNewBoid();
+    });
+
+    // ── Color mode toggle ────────────────────────────────────────────
+    const colorDensityBtn  = document.getElementById('color-density');
+    const colorVelocityBtn = document.getElementById('color-velocity');
+
+    const colorNoneBtn = document.getElementById('color-none');
+    const legendEl  = document.getElementById('density-legend');
+    const legendBar = document.getElementById('legend-bar');
+    const legendLo  = document.getElementById('legend-lo');
+    const legendHi  = document.getElementById('legend-hi');
+    const densityGrad = 'linear-gradient(to right, rgb(89,140,255), rgb(166,198,255) 25%, rgb(255,255,179) 50%, rgb(255,178,102) 75%, rgb(255,38,13))';
+    const velocityGrad = 'linear-gradient(to right, rgb(255,38,13), rgb(178,217,255) 50%, rgb(26,230,51))';
+
+    function setColorUI(mode) {
+      colorNoneBtn.classList.toggle('active', mode === 'none');
+      colorDensityBtn.classList.toggle('active', mode === 'density');
+      colorVelocityBtn.classList.toggle('active', mode === 'velocity');
+      if (mode === 'none') {
+        legendEl.style.display = 'none';
+      } else if (mode === 'velocity') {
+        legendEl.style.display = 'flex';
+        legendBar.style.background = velocityGrad;
+        legendLo.textContent = 'Braking';
+        legendHi.textContent = 'Accel';
+      } else {
+        legendEl.style.display = 'flex';
+        legendBar.style.background = densityGrad;
+        legendLo.textContent = 'Sparse';
+        legendHi.textContent = 'Dense';
+      }
+    }
+
+    colorNoneBtn.addEventListener('click', () => {
+      api.setColorMode('none');
+      setColorUI('none');
+    });
+    colorDensityBtn.addEventListener('click', () => {
+      api.setColorMode('density');
+      setColorUI('density');
+    });
+    colorVelocityBtn.addEventListener('click', () => {
+      api.setColorMode('velocity');
+      setColorUI('velocity');
     });
   </script>
 </body>
