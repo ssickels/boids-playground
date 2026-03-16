@@ -27,6 +27,7 @@
       <a href="/murmuration-intro.html">About</a>
       <a href="/about.html" class="nav-panel-top-link" style="padding-left:28px">About This Site</a>
     </div>
+    <a href="/contact.html" class="nav-panel-contact">Contact</a>
   </div>
 </nav>`;
 
@@ -116,6 +117,16 @@
 .nav-panel-top-link {
   padding-left: 18px !important;
 }
+.nav-panel-contact {
+  color: #7dd4e8;
+  text-decoration: none;
+  padding: 7px 18px;
+  display: block;
+  border-top: 1px solid rgba(100, 210, 230, 0.12);
+  margin-top: 4px;
+  transition: background 0.12s;
+}
+.nav-panel-contact:hover { background: rgba(100, 210, 230, 0.08); }
 `;
 
   const style = document.createElement('style');

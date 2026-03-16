@@ -199,9 +199,4 @@
     }
   });
 
-  // Hide Contact link on playground page
-  if (path === '/playground.html' || path.endsWith('/playground.html')) {
-    var cl = document.querySelector('.nav-panel-contact');
-    if (cl) cl.style.display = 'none';
-  }
 })();
