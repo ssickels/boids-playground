@@ -177,6 +177,9 @@
       top: 46px;
       right: 12px;
       width: 240px;
+      max-height: calc(100vh - 56px);
+      display: flex;
+      flex-direction: column;
       background: rgba(14, 14, 50, 0.82);
       backdrop-filter: blur(6px);
       border: 1px solid rgba(136, 136, 204, 0.18);
@@ -195,6 +198,7 @@
       cursor: pointer;
       border-bottom: 1px solid rgba(136, 136, 204, 0.14);
       user-select: none;
+      flex-shrink: 0;
     }
     #param-panel-header:hover { background: rgba(136, 136, 204, 0.05); }
     #param-panel-title {
@@ -227,7 +231,8 @@
     #param-collapse-btn:hover { color: #8888cc; }
     #param-panel-body {
       padding: 6px 0 4px;
-      max-height: calc(100vh - 90px);
+      flex: 1;
+      min-height: 0;
       overflow-y: auto;
     }
     #param-panel-body::-webkit-scrollbar { width: 3px; }
@@ -470,6 +475,19 @@
     #cam-boidseye { color: rgba(245, 216, 74, 0.5); }
     #cam-boidseye:hover { color: rgba(245, 216, 74, 0.75); }
     #cam-boidseye.active { color: #f5d84a; }
+    #cam-split { color: rgba(74, 210, 190, 0.5); }
+    #cam-split:hover { color: rgba(74, 210, 190, 0.75); }
+    #cam-split.active { color: #4ad2be; }
+    #split-divider {
+      display: none;
+      position: fixed;
+      top: 0;
+      width: 2px;
+      height: 100vh;
+      background: rgba(74, 210, 190, 0.3);
+      z-index: 150;
+      pointer-events: none;
+    }
     #cam-new-boid {
       display: none;
       width: 100%;
@@ -487,26 +505,27 @@
       background: rgba(136, 136, 204, 0.12);
       color: #aaaaee;
     }
-    /* ── DENSITY LEGEND ──────────────────────────────────────────── */
+    /* ── DENSITY LEGEND (panel footer, outside scroll) ─────────── */
     #density-legend {
-      position: fixed;
-      bottom: 14px;
-      right: 12px;
-      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border-top: 1px solid rgba(136, 136, 204, 0.14);
       font-family: system-ui, -apple-system, sans-serif;
       font-size: 10px;
       color: #b8b8dd;
-      pointer-events: none;
-      display: none;
-      align-items: center;
-      gap: 6px;
+      flex-shrink: 0;
     }
+    #param-panel.collapsed #density-legend { display: none !important; }
     #density-legend .legend-label {
       color: rgba(136, 136, 204, 0.6);
       letter-spacing: 0.03em;
     }
     #density-legend .legend-bar {
-      width: 120px;
+      flex: 1;
+      max-width: 120px;
       height: 8px;
       border-radius: 4px;
       background: linear-gradient(to right,
@@ -556,13 +575,7 @@
   </div>
 
   <div id="scene-container"></div>
-
-  <!-- ── COLOR LEGEND ──────────────────────────────────────────────── -->
-  <div id="density-legend">
-    <span class="legend-label" id="legend-lo">Sparse</span>
-    <div class="legend-bar" id="legend-bar"></div>
-    <span class="legend-label" id="legend-hi">Dense</span>
-  </div>
+  <div id="split-divider"></div>
 
   <!-- ── SLIDER PANEL ────────────────────────────────────────────── -->
   <div id="param-panel">
@@ -634,9 +647,10 @@
           <div class="camera-toggle">
             <button class="camera-toggle-btn active" id="cam-orbit">Orbit</button>
             <button class="camera-toggle-btn" id="cam-boidseye">Boid's eye</button>
+            <button class="camera-toggle-btn" id="cam-split">Split</button>
           </div>
           <button id="cam-new-boid">New boid</button>
-          <span class="param-desc">First-person chase cam from a random bird's perspective.</span>
+          <span class="param-desc">Orbit: follow the flock. Boid's eye: chase cam behind a random bird. Split: both side-by-side.</span>
         </div>
       </div>
 
@@ -812,6 +826,12 @@
       <div class="param-desc btn-desc">Copies the current slider values to your clipboard as JSON — handy for pasting into a message or note.</div>
       <input type="file" id="preset-file-input" accept=".json,.txt" style="display:none" />
     </div>
+    <!-- ── COLOR LEGEND (panel footer — outside scroll) ──────────── -->
+    <div id="density-legend">
+      <span class="legend-label" id="legend-lo">Sparse</span>
+      <div class="legend-bar" id="legend-bar"></div>
+      <span class="legend-label" id="legend-hi">Dense</span>
+    </div>
   </div>
 
   <script type="importmap">
@@ -951,7 +971,7 @@
 
       if (helpBtn)     arrows.push(makeArrow(helpBtn, 'Descriptions'));
       if (presetBtn)   arrows.push(makeArrow(presetBtn, 'Try a preset'));
-      if (boidseyeBtn) arrows.push(makeArrow(boidseyeBtn, 'Fly with a bird'));
+      if (boidseyeBtn) arrows.push(makeArrow(boidseyeBtn, 'Fly with a bird \u2014 or choose a split view'));
       if (sepSlider)   arrows.push(makeArrow(sepSlider, 'Separation', 14));
       if (aliSlider)   arrows.push(makeArrow(aliSlider, 'Alignment', 14));
       if (cohSlider)   arrows.push(makeArrow(cohSlider, 'Cohesion', 14));
@@ -1260,7 +1280,10 @@
     document.getElementById('param-panel-header').addEventListener('click', (e) => {
       if (e.target.id === 'param-desc-btn') return;
       panel.classList.toggle('collapsed');
-      collapseBtn.textContent = panel.classList.contains('collapsed') ? '▸' : '▾';
+      const collapsed = panel.classList.contains('collapsed');
+      collapseBtn.textContent = collapsed ? '▸' : '▾';
+      api.setPanelOpen(!collapsed);
+      updateDividerPosition();
     });
 
     // ── Description toggle ────────────────────────────────────────
@@ -1279,14 +1302,25 @@
     });
 
     // ── Camera mode toggle ─────────────────────────────────────────
-    const camOrbitBtn   = document.getElementById('cam-orbit');
+    const camOrbitBtn    = document.getElementById('cam-orbit');
     const camBoidseyeBtn = document.getElementById('cam-boidseye');
-    const camNewBoidBtn = document.getElementById('cam-new-boid');
+    const camSplitBtn    = document.getElementById('cam-split');
+    const camNewBoidBtn  = document.getElementById('cam-new-boid');
+    const splitDivider   = document.getElementById('split-divider');
+
+    function updateDividerPosition() {
+      const panelW = panel.classList.contains('collapsed') ? 0 : 252;
+      const leftW = Math.floor((window.innerWidth - panelW) / 2);
+      splitDivider.style.left = leftW + 'px';
+    }
 
     function setCamUI(mode) {
       camOrbitBtn.classList.toggle('active', mode === 'orbit');
       camBoidseyeBtn.classList.toggle('active', mode === 'boidseye');
-      camNewBoidBtn.style.display = mode === 'boidseye' ? 'block' : 'none';
+      camSplitBtn.classList.toggle('active', mode === 'split');
+      camNewBoidBtn.style.display = (mode === 'boidseye' || mode === 'split') ? 'block' : 'none';
+      splitDivider.style.display = mode === 'split' ? 'block' : 'none';
+      if (mode === 'split') updateDividerPosition();
     }
 
     camOrbitBtn.addEventListener('click', () => {
@@ -1297,9 +1331,14 @@
       api.setCameraMode('boidseye');
       setCamUI('boidseye');
     });
+    camSplitBtn.addEventListener('click', () => {
+      api.setCameraMode('split');
+      setCamUI('split');
+    });
     camNewBoidBtn.addEventListener('click', () => {
       api.pickNewBoid();
     });
+    window.addEventListener('resize', () => updateDividerPosition());
 
     // ── Color mode toggle ────────────────────────────────────────────
     let currentColorMode = 'none';
