@@ -38,6 +38,7 @@
       <div class="nav-panel-heading">Boids / Murmurations</div>
       <a href="https://stevessite.com/murmuration.html">Playground</a>
       <a href="https://stevessite.com/murmuration-about.html">How It Works</a>
+      <a href="https://stevessite.com/murmuration-waves.html">Density Waves</a>
       <a href="https://stevessite.com/murmuration-intro.html">About</a>
       <a href="https://github.com/ssickels/boids-playgrounds" target="_blank" class="nav-panel-github">GitHub ↗</a>
     </div>

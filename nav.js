@@ -32,6 +32,7 @@
       <div class="nav-panel-heading">Boids / Murmurations</div>
       <a href="https://stevessite.com/murmuration.html">Playground</a>
       <a href="https://stevessite.com/murmuration-about.html">How It Works</a>
+      <a href="https://stevessite.com/murmuration-waves.html">Density Waves</a>
       <a href="https://stevessite.com/murmuration-intro.html">About</a>
       <a href="https://stevessite.com/about.html" class="nav-panel-top-link">About This Site</a>
     </div>
