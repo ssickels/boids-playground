@@ -14,8 +14,10 @@
     <a href="https://stevessite.com" class="nav-panel-home">&#8962; Home</a>
     <div class="nav-panel-section">
       <div class="nav-panel-heading">Investment Simulator</div>
-      <a href="https://investment-dashboard-aapf.onrender.com">Simulator</a>
-      <a href="https://investment-dashboard-aapf.onrender.com/guide">User Guide</a>
+      <a href="https://investment-dashboard-aapf.onrender.com">Comparing Strategies</a>
+      <a href="https://investment-dashboard-aapf.onrender.com/guide">Strategies User Guide</a>
+      <a href="https://investment-dashboard-aapf.onrender.com/rebalancing">Rebalancing Impact</a>
+      <a href="https://investment-dashboard-aapf.onrender.com/rebalancing-guide">Rebalancing User Guide</a>
       <a href="https://investment-dashboard-aapf.onrender.com/reading-charts">What the Charts Show</a>
       <a href="https://investment-dashboard-aapf.onrender.com/methodology">Methodology</a>
       <a href="https://github.com/ssickels/investment-dashboard" target="_blank" class="nav-panel-github">GitHub ↗</a>
