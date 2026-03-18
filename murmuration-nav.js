@@ -7,14 +7,17 @@
   <div id="nav-tabs">
     <a href="/murmuration.html" class="nav-tab" data-path="murmuration.html">Playground</a>
     <a href="/murmuration-about.html" class="nav-tab" data-path="murmuration-about">How It Works</a>
+    <a href="/murmuration-waves.html" class="nav-tab" data-path="murmuration-waves">Density Waves</a>
     <a href="/murmuration-intro.html" class="nav-tab" data-path="murmuration-intro">About</a>
   </div>
   <div id="nav-panel" aria-hidden="true">
     <a href="https://stevessite.com" class="nav-panel-home">&#8962; Home</a>
     <div class="nav-panel-section">
       <div class="nav-panel-heading">Investment Simulator</div>
-      <a href="https://investment-dashboard-aapf.onrender.com">Simulator</a>
-      <a href="https://investment-dashboard-aapf.onrender.com/guide">User Guide</a>
+      <a href="https://investment-dashboard-aapf.onrender.com">Comparing Strategies</a>
+      <a href="https://investment-dashboard-aapf.onrender.com/guide">Strategies User Guide</a>
+      <a href="https://investment-dashboard-aapf.onrender.com/rebalancing">Rebalancing Impact</a>
+      <a href="https://investment-dashboard-aapf.onrender.com/rebalancing-guide">Rebalancing User Guide</a>
       <a href="https://investment-dashboard-aapf.onrender.com/reading-charts">What the Charts Show</a>
       <a href="https://investment-dashboard-aapf.onrender.com/methodology">Methodology</a>
       <a href="https://github.com/ssickels/investment-dashboard" target="_blank" class="nav-panel-github">GitHub ↗</a>
@@ -35,6 +38,7 @@
       <div class="nav-panel-heading">Boids / Murmurations</div>
       <a href="https://stevessite.com/murmuration.html">Playground</a>
       <a href="https://stevessite.com/murmuration-about.html">How It Works</a>
+      <a href="https://stevessite.com/murmuration-waves.html">Density Waves</a>
       <a href="https://stevessite.com/murmuration-intro.html">About</a>
       <a href="https://github.com/ssickels/boids-playgrounds" target="_blank" class="nav-panel-github">GitHub ↗</a>
     </div>

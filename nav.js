@@ -8,25 +8,35 @@
     <a href="/" class="nav-panel-home">&#8962; Home</a>
     <div class="nav-panel-section">
       <div class="nav-panel-heading">Investment Simulator</div>
-      <a href="https://investment-dashboard-aapf.onrender.com">Simulator</a>
-      <a href="https://investment-dashboard-aapf.onrender.com/guide">User Guide</a>
+      <a href="https://investment-dashboard-aapf.onrender.com">Comparing Strategies</a>
+      <a href="https://investment-dashboard-aapf.onrender.com/guide">Strategies User Guide</a>
+      <a href="https://investment-dashboard-aapf.onrender.com/rebalancing">Rebalancing Impact</a>
+      <a href="https://investment-dashboard-aapf.onrender.com/rebalancing-guide">Rebalancing User Guide</a>
+      <a href="https://investment-dashboard-aapf.onrender.com/reading-charts">What the Charts Show</a>
       <a href="https://investment-dashboard-aapf.onrender.com/methodology">Methodology</a>
+      <a href="https://github.com/ssickels/investment-dashboard" target="_blank" class="nav-panel-github">GitHub ↗</a>
     </div>
     <div class="nav-panel-section">
       <div class="nav-panel-heading">US Economic Dashboard</div>
-      <a href="/dashboard-two/">Dashboard</a>
+      <a href="https://stevessite.com/dashboard-two/">Dashboard</a>
     </div>
     <div class="nav-panel-section">
       <div class="nav-panel-heading">Boids / Fish</div>
-      <a href="/playground.html">Playground</a>
+      <a href="https://stevessite.com/playground.html">Playground</a>
+      <a href="https://stevessite.com/boids-explain.html">How It Works</a>
+      <a href="https://stevessite.com/boids-about.html">About</a>
+      <a href="https://stevessite.com/boids-impl.html">Dev Notes</a>
+      <a href="https://github.com/ssickels/boids-playground" target="_blank" class="nav-panel-github">GitHub ↗</a>
     </div>
     <div class="nav-panel-section">
       <div class="nav-panel-heading">Boids / Murmurations</div>
-      <a href="/murmuration.html">Playground</a>
-      <a href="/murmuration-about.html">How It Works</a>
-      <a href="/murmuration-intro.html">About</a>
-      <a href="/about.html" class="nav-panel-top-link" style="padding-left:28px">About This Site</a>
+      <a href="https://stevessite.com/murmuration.html">Playground</a>
+      <a href="https://stevessite.com/murmuration-about.html">How It Works</a>
+      <a href="https://stevessite.com/murmuration-waves.html">Density Waves</a>
+      <a href="https://stevessite.com/murmuration-intro.html">About</a>
+      <a href="https://stevessite.com/about.html" class="nav-panel-top-link">About This Site</a>
     </div>
+    <a href="https://stevessite.com/contact.html" class="nav-panel-contact">Contact</a>
   </div>
 </nav>`;
 
@@ -116,6 +126,23 @@
 .nav-panel-top-link {
   padding-left: 18px !important;
 }
+.nav-panel-github {
+  color: rgba(100, 210, 230, 0.4) !important;
+  font-size: 11.5px;
+}
+.nav-panel-github:hover {
+  color: rgba(100, 210, 230, 0.75) !important;
+}
+.nav-panel-contact {
+  color: #7dd4e8;
+  text-decoration: none;
+  padding: 7px 18px;
+  display: block;
+  border-top: 1px solid rgba(100, 210, 230, 0.12);
+  margin-top: 4px;
+  transition: background 0.12s;
+}
+.nav-panel-contact:hover { background: rgba(100, 210, 230, 0.08); }
 `;
 
   const style = document.createElement('style');

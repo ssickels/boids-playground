@@ -716,6 +716,13 @@
       </tbody>
     </table>
 
+    <div class="see-also" style="margin-top: 20px;">
+      The <strong>Density Waves</strong> panel adds six more controls for
+      speed braking, velocity/density coloring, and visualization tuning.
+      These are documented on the
+      <a href="murmuration-waves.html">Density Waves</a> page.
+    </div>
+
     <a href="murmuration.html" class="playground-link">Open the Murmuration Experiment →</a>
   </section>
 
@@ -746,11 +753,19 @@
     </ul>
     <p>
       That said, real murmurations exhibit behaviors this simulation doesn't fully capture:
-      the dramatic shape-shifting, sudden splits and recombinations, and cascading turn
-      waves that propagate faster than the birds fly. Those phenomena likely arise from
-      predator avoidance (a hawk diving into the flock triggers a panic wave) and possibly
-      from information transfer mechanisms beyond simple velocity matching. That's a
-      frontier for future work.
+      the dramatic shape-shifting, sudden splits and recombinations, and cascading
+      compression waves that propagate faster than the birds fly. We've begun exploring
+      one piece of this puzzle &mdash; <em class="term">density waves</em> driven by
+      speed braking &mdash; which you can read about on the
+      <a href="murmuration-waves.html">Density Waves</a> page. Speed braking is not
+      part of the original boids algorithm; it adds velocity variation beyond what the
+      core separation/alignment/cohesion rules produce. Increasing it makes density
+      waves more pronounced, arguably closer to real murmuration behavior where birds
+      visibly slow and accelerate in response to neighbors. The
+      <strong>Dense flock, velocity view</strong> preset is a good starting point for
+      exploring this. The remaining phenomena likely involve predator avoidance (a hawk
+      diving into the flock triggers a panic wave) and possibly information transfer
+      mechanisms beyond simple velocity matching. Those remain frontiers for future work.
     </p>
   </section>
 

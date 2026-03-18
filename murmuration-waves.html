@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Density Waves — Steve's Site</title>
+  <meta property="og:title" content="Density Waves in Murmuration" />
+  <meta property="og:description" content="Exploring compression waves in simulated flocks — how braking cascades through a murmuration the way traffic jams propagate backward through cars." />
+  <meta property="og:image" content="https://stevessite.com/murmuration_preview.jpg" />
+  <meta property="og:url" content="https://stevessite.com/murmuration-waves.html" />
+  <meta property="og:type" content="website" />
+  <link rel="stylesheet" href="/theme.css" />
+  <link rel="stylesheet" href="/murmuration-theme.css" />
+  <style>
+    html, body { height: auto; overflow: auto; }
+
+    .page-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+      padding-top: 70px;
+    }
+
+    .page-hero {
+      margin-bottom: 40px;
+    }
+    .page-hero h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      color: var(--color-primary);
+      margin-bottom: 10px;
+    }
+    .page-hero p {
+      color: var(--color-text-dim);
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+
+    section {
+      margin-bottom: 44px;
+    }
+    section h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    section p, section li {
+      color: var(--color-text);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    section p:last-child { margin-bottom: 0; }
+
+    .concept-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 14px;
+    }
+    .concept-card:last-child { margin-bottom: 0; }
+    .concept-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--color-primary-hi);
+      margin-bottom: 6px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: var(--color-text);
+      line-height: 1.6;
+    }
+    .concept-card p:last-child { margin-bottom: 0; }
+
+    .math {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--color-primary);
+      background: rgba(125, 212, 232, 0.06);
+      border-left: 3px solid rgba(125, 212, 232, 0.25);
+      padding: 10px 14px;
+      margin: 12px 0;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+
+    .see-also {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: rgba(125, 212, 232, 0.06);
+      border-left: 3px solid rgba(125, 212, 232, 0.3);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.88rem;
+      color: var(--color-text-dim);
+      line-height: 1.6;
+    }
+    .see-also a {
+      color: var(--color-primary);
+    }
+
+    .playground-link {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 9px 20px;
+      background: rgba(125, 212, 232, 0.08);
+      border: 1px solid rgba(125, 212, 232, 0.28);
+      border-radius: var(--radius-sm);
+      color: var(--color-primary);
+      font-size: 0.9rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .playground-link:hover {
+      background: rgba(125, 212, 232, 0.16);
+      color: var(--color-primary-hi);
+    }
+
+    em.term {
+      color: var(--color-primary-hi);
+      font-style: normal;
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="page-hero">
+    <h1>Density Waves in Flocks</h1>
+    <p>Exploring how compression waves propagate through a murmuration &mdash;
+      the same physics that creates phantom traffic jams, adapted to birds.</p>
+  </div>
+
+  <!-- ── The Phenomenon ──────────────────────────────────────────────── -->
+  <section>
+    <h2>The Phenomenon</h2>
+    <p>
+      Watch a real starling murmuration long enough and you'll see something
+      that doesn't fit the standard boids model: <em class="term">waves</em>.
+      Bands of compression and expansion ripple through the flock, sometimes
+      faster than the birds themselves are flying. The flock darkens in one
+      region as birds compress together, then lightens as they spread apart
+      &mdash; and the pattern travels. It looks less like a school of fish and
+      more like a fluid with pressure waves running through it.
+    </p>
+    <p>
+      The classic boids rules &mdash; separation, alignment, cohesion &mdash;
+      produce beautiful coordinated motion but not this behavior. Those rules
+      change a bird's <em>direction</em>. They don't change its
+      <em>speed</em>. And speed variation is what density waves are made of.
+    </p>
+  </section>
+
+  <!-- ── Traffic Analogy ────────────────────────────────────────────── -->
+  <section>
+    <h2>The Traffic Jam Analogy</h2>
+    <p>
+      The clearest everyday example of a density wave is a
+      <em class="term">phantom traffic jam</em> &mdash; the kind that has no
+      accident, no construction, no obvious cause. You're cruising at highway
+      speed, the car ahead brakes slightly, you brake a little harder (because
+      your reaction takes time and you want a safety margin), the driver behind
+      you brakes harder still, and so on. The braking cascade propagates
+      backward through traffic at 15&ndash;20 km/h even though every car is
+      moving forward at 100 km/h.
+    </p>
+    <p>
+      The wave exists in the <em>speed differences</em> between successive
+      agents, not in the agents themselves. No single car is "the jam" &mdash;
+      each car brakes, then accelerates again as space opens up. The
+      compression zone drifts backward through the flow like a pulse.
+    </p>
+    <p>
+      This is the same physics as a <em class="term">sound wave</em> in air:
+      molecules don't travel from speaker to listener, but each molecule bumps
+      into its neighbor, which bumps into the next, propagating a compression
+      front at the speed of sound. Fluid dynamicists call these
+      <em class="term">longitudinal compression waves</em>.
+    </p>
+
+    <div class="concept-card">
+      <h3>What makes them self-sustaining?</h3>
+      <p>
+        In both traffic and fluids, the wave either damps out or sustains
+        itself depending on whether agents <em>over-correct</em>. If each
+        driver brakes exactly the right amount and accelerates smoothly, the
+        disturbance dies. But if drivers over-brake (applying more braking than
+        strictly necessary) and then over-accelerate (gunning it when space
+        opens), the oscillation feeds itself. Each correction overshoots,
+        creating a new disturbance for the next agent. The wave doesn't just
+        propagate &mdash; it <em>regenerates</em>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Adapting to Boids ──────────────────────────────────────────── -->
+  <section>
+    <h2>Adapting This to Boids</h2>
+    <p>
+      The standard boids algorithm has no mechanism for speed variation.
+      Separation steers birds <em>away</em> from crowded neighbors but doesn't
+      slow them down. The minimum-speed clamp keeps every bird cruising at
+      roughly the same velocity magnitude. There's no equivalent of "hitting
+      the brakes."
+    </p>
+    <p>
+      Our extension adds exactly that: a <em class="term">speed-braking
+      response</em> to personal space violations. When a neighbor penetrates a
+      bird's personal space bubble, the bird doesn't just steer away &mdash;
+      it <em>slows down</em>, proportionally to how deep the penetration is.
+    </p>
+
+    <div class="concept-card">
+      <h3>The braking rule</h3>
+      <p>
+        For each bird in each frame, we find the neighbor most deeply inside
+        the personal space radius. The penetration fraction is:
+      </p>
+      <code class="math">
+        penetration = (personalSpace - distance) / personalSpace
+      </code>
+      <p>
+        At the bubble boundary, penetration is 0 (no braking). At distance
+        zero, penetration is 1 (maximum braking). The bird's speed is then
+        scaled down:
+      </p>
+      <code class="math">
+        speed *= max(0.01, 1 - W_SPEED_SEP * penetration)
+      </code>
+      <p>
+        <code>W_SPEED_SEP</code> controls braking intensity. At 0, the
+        mechanism is off entirely and the simulation behaves exactly as before.
+        At 1.0, a fully penetrating neighbor cuts the bird's speed to near
+        zero. Values in between produce proportional braking.
+      </p>
+      <p>
+        Crucially, this braking is applied <em>after</em> the normal
+        minimum-speed clamp. This means braking can push a bird below its
+        usual stall speed &mdash; a temporary, reactive slowdown that the bird
+        recovers from as space opens up. Without this, the min-speed clamp
+        would immediately undo the braking, preventing any cascade.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Why this is biologically plausible</h3>
+      <p>
+        When something comes too close, an animal's first reaction is to slow
+        down and assess. This is distinct from the steering response (veer
+        away) and operates on a faster timescale. A starling that suddenly
+        finds a neighbor uncomfortably close would plausibly reduce speed
+        before it has time to compute and execute a turn. The braking response
+        is a reflex; the steering response is a decision.
+      </p>
+      <p>
+        This is exactly what happens in traffic, too. You brake before you
+        change lanes. The speed reduction is immediate and local &mdash; each
+        bird reacting only to what's in its personal space.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Wave Propagation ─────────────────────────────────────────── -->
+  <section>
+    <h2>How Waves Propagate</h2>
+    <p>
+      Once birds can brake, the cascade mechanism works just like traffic:
+    </p>
+    <ul style="margin: 8px 0 16px 18px; line-height: 1.8;">
+      <li>Bird A slows down (personal space violation, or a random perturbation).</li>
+      <li>Bird B, flying behind A, closes the gap and enters A's personal space.</li>
+      <li>B brakes in response.</li>
+      <li>Bird C, behind B, now closes the gap with B.</li>
+      <li>The braking wave propagates <em>backward</em> through the flock,
+        against the direction of flight.</li>
+    </ul>
+    <p>
+      This is the classic traffic-jam wave: a compression front moving
+      rearward. But murmurations show something traffic usually doesn't &mdash;
+      waves that propagate <em>forward</em>, outrunning the flock. How?
+    </p>
+
+    <div class="concept-card">
+      <h3>The role of front bias</h3>
+      <p>
+        The murmuration simulation already has a
+        <em class="term">front bias</em> parameter: birds weight neighbors ahead
+        of them more heavily than neighbors behind when computing alignment and
+        cohesion. This was originally added to create naturalistic leading-edge
+        instability. But it has a critical secondary effect for wave
+        propagation.
+      </p>
+      <p>
+        A bird with high front bias is paying close attention to what's
+        happening ahead. If the bird in front slows down, our bird notices the
+        closing gap quickly and brakes in response. The information that
+        "something is slowing down up ahead" propagates <em>backward</em>
+        efficiently.
+      </p>
+      <p>
+        But the front bias isn't absolute &mdash; birds also attend to
+        neighbors behind them and to the side, just with less weight. This
+        means a bird can also react to compression happening <em>behind</em>
+        it. If birds to its rear are bunching up, the rearward neighbors
+        start entering its personal space too. The bird brakes even though the
+        disturbance originated behind it, and the wave propagates
+        <em>forward</em>.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Bidirectional propagation</h3>
+      <p>
+        Real starlings almost certainly have some awareness of birds behind
+        them &mdash; through peripheral vision, sound, or the pressure of air
+        displaced by nearby wingbeats. They don't only react to what's ahead.
+        This omnidirectional awareness is what allows murmuration waves to
+        travel in any direction through the flock, not just rearward as in
+        one-dimensional traffic.
+      </p>
+      <p>
+        In the simulation, the personal space bubble is spherical &mdash; it
+        detects penetration from any direction. Combined with the alignment
+        front bias (which determines how strongly a bird matches its neighbors'
+        speed changes), this creates a medium through which compression waves
+        can propagate forward, backward, and laterally. The flock becomes an
+        acoustic medium, with density waves analogous to sound waves in air.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Visualization ──────────────────────────────────────────────── -->
+  <section>
+    <h2>Seeing the Waves</h2>
+    <p>
+      Density waves are invisible when all birds are the same color. The
+      simulation provides two visualization modes to make them visible:
+    </p>
+
+    <div class="concept-card">
+      <h3>Density coloring</h3>
+      <p>
+        Each bird is colored by how many neighbors it has within a configurable
+        radius: <strong style="color:#e04040">red</strong> for crowded regions,
+        <strong style="color:#5588ff">blue</strong> for sparse ones, with a
+        smooth gradient through yellow and white in between. This shows where
+        birds are compressed together and where they've spread apart &mdash;
+        the spatial structure of a density wave.
+      </p>
+      <p>
+        The density is computed in a separate pass before any positions are
+        updated, ensuring a consistent snapshot across all birds each frame.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Velocity coloring</h3>
+      <p>
+        Each bird is colored by how its speed is <em>changing</em> from one
+        frame to the next: <strong style="color:#e04040">red</strong> for
+        braking (speed decreasing),
+        <strong style="color:#20cc40">green</strong> for accelerating (speed
+        increasing), and <strong style="color:#88bbff">light blue</strong> for
+        steady flight. This shows the <em>dynamics</em> of a wave &mdash;
+        where the compression front is (birds braking) and where the expansion
+        is (birds recovering speed).
+      </p>
+      <p>
+        The dV threshold slider controls sensitivity. Lower values reveal
+        subtle speed changes; higher values only highlight dramatic braking and
+        acceleration events.
+      </p>
+    </div>
+
+    <p>
+      <strong>Tip:</strong> Boid's eye view is especially effective for seeing
+      velocity changes from a bird's perspective &mdash; you'll see neighbors
+      ahead flash red as they brake, then green as they recover. Increasing
+      Speed braking magnifies the effect.
+    </p>
+
+    <div class="see-also">
+      Switch between coloring modes with the <strong>None / Density /
+      Velocity</strong> toggle in the Density Waves panel. The legend bar at
+      the bottom right of the simulation updates to show the active mapping.
+    </div>
+  </section>
+
+  <!-- ── Controls Reference ──────────────────────────────────────── -->
+  <section>
+    <h2>The Controls</h2>
+    <p>
+      The Density Waves panel in the simulation groups six controls specific
+      to wave mechanics and visualization. The first two affect the
+      simulation itself; the rest are purely visual.
+    </p>
+
+    <div class="concept-card">
+      <h3>Speed braking (W_SPEED_SEP)</h3>
+      <p>
+        How aggressively a bird slows down when a neighbor penetrates its
+        personal space bubble. At 0 the mechanism is off entirely and the
+        simulation behaves as classic boids. At 1.0, a fully penetrating
+        neighbor cuts the bird's speed to near zero. This is the parameter
+        that enables density waves &mdash; without it, birds change
+        direction but not speed, and no compression cascade can form.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>dV threshold</h3>
+      <p>
+        Sensitivity of <strong>velocity coloring</strong>. This is the
+        speed change per frame that maps to fully saturated red (braking)
+        or green (accelerating). Lower values reveal subtle speed
+        variations; higher values filter out noise and only highlight
+        dramatic events. This control has no effect on the simulation
+        &mdash; it only changes how speed changes are rendered.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Search radius</h3>
+      <p>
+        The radius (in world units) used to count neighbors for
+        <strong>density coloring</strong>. A larger radius smooths the
+        density map by averaging over more space; a smaller radius
+        reveals finer-grained structure. This is independent of the
+        topological neighbor counts used for steering &mdash; it exists
+        only for the visualization.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Sparse count / Dense count</h3>
+      <p>
+        The color scale endpoints for <strong>density coloring</strong>.
+        A bird with the "sparse count" of neighbors (or fewer) within the
+        search radius is colored full
+        <strong style="color:#5588ff">blue</strong>; a bird with the
+        "dense count" (or more) is colored full
+        <strong style="color:#e04040">red</strong>. Values in between
+        are mapped smoothly through yellow and white. Adjusting these lets
+        you tune the color range to the flock's actual density
+        distribution &mdash; useful because different presets and bird
+        counts produce very different neighbor counts.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Color mode toggle (None / Density / Velocity)</h3>
+      <p>
+        Switches between uniform gray (no diagnostic coloring),
+        density coloring (neighbor count &rarr; color), and velocity
+        coloring (speed change &rarr; color). The legend bar at the
+        bottom right updates to show the active mapping. Presets can
+        include a preferred color mode &mdash; the <strong>Dense flock,
+        velocity view</strong> preset defaults to velocity coloring since
+        that's where wave dynamics are most visible.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Connections ───────────────────────────────────────────────── -->
+  <section>
+    <h2>Connections to Other Fields</h2>
+    <p>
+      The braking-cascade mechanism connects murmuration dynamics to several
+      well-studied phenomena:
+    </p>
+
+    <div class="concept-card">
+      <h3>Traffic flow theory</h3>
+      <p>
+        Phantom jams emerge from the same mechanism: agents react to
+        neighbors with a slight over-correction, and the error compounds
+        through the chain. The Nagel&ndash;Schreckenberg model (1992) and its
+        descendants show that even a one-dimensional line of cars produces
+        spontaneous stop-and-go waves when reaction includes randomness or
+        over-braking. Our 3D flock is a higher-dimensional version of the
+        same dynamics.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Compressible fluid dynamics</h3>
+      <p>
+        A flock with speed-braking behaves like a compressible gas. Dense
+        regions have higher "pressure" (personal space violations cause
+        braking), and that pressure propagates outward as waves. The speed
+        of wave propagation depends on how quickly the braking response
+        cascades &mdash; analogous to how the speed of sound in a gas depends
+        on the stiffness of intermolecular interactions.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Active matter physics</h3>
+      <p>
+        Flocks are a canonical example of <em class="term">active matter</em>
+        &mdash; collections of self-propelled agents that consume energy and
+        are driven out of equilibrium. The density waves we observe belong to
+        the same family as Toner&ndash;Tu waves in active fluids, where
+        orientational order (alignment) couples to density fluctuations. The
+        difference is that our agents have explicit behavioral rules rather
+        than continuous-field equations, making the connection between
+        individual decisions and collective phenomena visible and tunable.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Experimenting ──────────────────────────────────────────────── -->
+  <section>
+    <h2>Experimenting</h2>
+    <p>
+      The Density Waves panel in the simulation exposes the key parameters.
+      Here's a starting recipe for producing visible waves:
+    </p>
+    <ul style="margin: 8px 0 16px 18px; line-height: 1.8;">
+      <li>Load the <strong>Dense flock, velocity view</strong> preset to get a
+        tightly packed formation with velocity coloring already active.</li>
+      <li>Slowly increase <strong>Speed braking</strong> from 0. Even small
+        values (0.1&ndash;0.3) should produce visible color variation as birds
+        at the compression front brake and birds in the gaps accelerate.</li>
+      <li>Adjust the <strong>dV threshold</strong> to tune sensitivity &mdash;
+        lower values reveal subtler waves.</li>
+      <li>Try switching between <strong>Density</strong> and
+        <strong>Velocity</strong> coloring to see both the spatial structure
+        and the dynamics of the same wave.</li>
+    </ul>
+    <p>
+      The <strong>personal space</strong> radius controls how far apart birds
+      try to stay. In a dense flock, many birds are within each other's
+      personal space, creating persistent low-level braking even without
+      external perturbation. Increasing personal space with speed braking
+      active amplifies the effect.
+    </p>
+    <p>
+      This is experimental work in progress. The speed-braking mechanism is
+      the foundation &mdash; future extensions may include overshoot
+      parameters (to control whether waves damp out or self-sustain) and
+      deliberate perturbation injection (to seed waves for controlled
+      experiments).
+    </p>
+
+    <a href="murmuration.html" class="playground-link">Open the Murmuration Experiment &rarr;</a>
+  </section>
+
+  <!-- ── Computational Caveats ──────────────────────────────────────── -->
+  <section>
+    <h2>Computational Caveats</h2>
+    <p>
+      Running thousands of birds at interactive frame rates requires
+      approximations. A few are worth knowing about because they can produce
+      visible artifacts.
+    </p>
+
+    <div class="concept-card">
+      <h3>Spatial hash discretization</h3>
+      <p>
+        Neighbor lookups use a spatial hash grid that divides the world into
+        cubic cells. Each bird checks the 3&times;3&times;3 block of cells
+        around it. This is fast, but introduces a hard boundary: two birds
+        that are close in space but straddle a cell boundary at the edge of
+        the 3&times;3&times;3 block may see different neighbor sets. The
+        steering forces and density counts for those birds will differ
+        slightly, even though their local environments are nearly identical.
+      </p>
+      <p>
+        This can create faint grid-scale structures &mdash; density or
+        velocity patterns whose spacing roughly matches the hash cell size.
+        If the ground plane grid happens to align with the hash grid, the
+        structures may be especially noticeable.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>In-place position updates</h3>
+      <p>
+        For performance, bird positions are updated sequentially within a
+        single array. A bird processed early in the frame has already moved
+        by the time a later bird reads its position as a neighbor. This
+        creates a subtle ordering dependency: the "view" of the flock is
+        inconsistent within a single frame, mixing pre-move and post-move
+        positions.
+      </p>
+      <p>
+        The density and velocity visualizations avoid this by computing
+        their metrics in a separate pass <em>before</em> any positions are
+        updated. But the steering forces themselves still operate on the
+        in-place data, so small wave-like artifacts from processing order
+        can still appear in the motion.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Smoothing tradeoffs</h3>
+      <p>
+        The density visualization uses exponential smoothing to prevent
+        frame-to-frame flicker. This introduces a tradeoff: heavy smoothing
+        eliminates noise but causes colors to lag behind the flock's actual
+        state &mdash; birds that leave a dense region will carry their
+        "crowded" color for many frames. Light smoothing tracks reality more
+        closely but allows high-frequency noise to show through as flashing.
+      </p>
+      <p>
+        The current implementation uses <em>asymmetric</em> smoothing:
+        density drops are tracked quickly (a bird leaving a crowd changes
+        color promptly) while density rises are smoothed more heavily
+        (preventing momentary spikes from causing flashes). This is a
+        compromise, not a perfect solution.
+      </p>
+    </div>
+
+    <p>
+      None of these artifacts invalidate the wave behavior &mdash; the
+      compression cascades are real emergent dynamics. But they do add noise
+      on top of the signal, and it's worth keeping that in mind when
+      interpreting what you see.
+    </p>
+  </section>
+
+</div>
+
+<script src="/murmuration-nav.js"></script>
+</body>
+</html>
