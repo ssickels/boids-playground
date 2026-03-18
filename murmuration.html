@@ -605,20 +605,16 @@
       <!-- ── Presets ───────────────────────────────────────────── -->
       <div class="preset-list">
         <div class="preset-item">
-          <button class="preset-btn" data-preset="0">Internal waves</button>
-          <div class="preset-desc">High front bias and edge alignment with wide personal space. Visible wave-like patterns propagate through the flock.</div>
-        </div>
-        <div class="preset-item">
-          <button class="preset-btn" data-preset="1">Scatter and rejoin</button>
+          <button class="preset-btn" data-preset="0">Scatter and rejoin</button>
           <div class="preset-desc">Strong separation blows the flock apart; aggressive homing pulls it back together. Watch cycles of fragmentation and reform.</div>
         </div>
         <div class="preset-item">
-          <button class="preset-btn" data-preset="2">Dense flock</button>
-          <div class="preset-desc">Uniform density with wide personal space and strong edge alignment. Good baseline for wave experiments.</div>
+          <button class="preset-btn" data-preset="1">Internal waves</button>
+          <div class="preset-desc">High front bias and edge alignment with wide personal space. Visible wave-like patterns propagate through the flock.</div>
         </div>
         <div class="preset-item">
-          <button class="preset-btn" data-preset="3">Dense flock (fast)</button>
-          <div class="preset-desc">Same dense configuration at higher speed with stronger front bias. Faster dynamics for wave propagation testing.</div>
+          <button class="preset-btn" data-preset="2">Dense flock, velocity view</button>
+          <div class="preset-desc">Tight formation at high speed with velocity coloring. A good starting point for density wave experiments &mdash; try slowly increasing Speed braking.</div>
         </div>
       </div>
       <div id="user-presets-container"></div>
@@ -660,11 +656,11 @@
         <div class="param-section-body">
           <div class="camera-toggle">
             <button class="camera-toggle-btn active" id="cam-orbit">Orbit</button>
-            <button class="camera-toggle-btn" id="cam-boidseye">Boid's eye</button>
+            <button class="camera-toggle-btn" id="cam-boidseye" title="Try with Velocity coloring to see braking and acceleration from a bird's perspective">Boid's eye</button>
             <button class="camera-toggle-btn" id="cam-split">Split</button>
           </div>
           <button id="cam-new-boid">New boid</button>
-          <span class="param-desc">Orbit: follow the flock. Boid's eye: chase cam behind a random bird. Split: both side-by-side.</span>
+          <span class="param-desc">Orbit: follow the flock. Boid's eye: chase cam behind a random bird. Split: both side-by-side. Try Boid's eye with Velocity coloring (in the Density Waves section near the bottom) to see how birds slow down (red) and speed up (green) in response to neighbors. Increasing Speed braking magnifies these reactions.</span>
         </div>
       </div>
 
@@ -779,8 +775,8 @@
       <div class="param-divider"></div>
 
       <!-- ── Density Waves ──────────────────────────────────────── -->
-      <div class="param-section">
-        <div class="param-section-header">
+      <div class="param-section collapsed">
+        <div class="param-section-header" id="density-section-header">
           <span class="param-section-label">Density Waves</span>
           <span class="param-section-arrow">▾</span>
         </div>
@@ -800,9 +796,9 @@
           <span class="param-desc">None: uniform color. Density: red=crowded, blue=sparse. Velocity: red=braking, green=accelerating, blue=steady.</span>
           <div class="param-row" data-color-mode="velocity" style="margin-top:6px">
             <span class="param-label" title="Speed-change sensitivity for velocity coloring">dV threshold</span>
-            <span class="param-value" id="val-dvt">0.30</span>
+            <span class="param-value" id="val-dvt">0.75</span>
             <input class="param-slider" type="range" id="sl-dvt"
-              min="0.01" max="4.0" step="0.01" value="0.3" />
+              min="0.01" max="4.0" step="0.01" value="0.75" />
             <span class="param-desc">Speed change per frame that maps to full red/green in velocity color mode. Lower = more sensitive.</span>
           </div>
           <div class="param-row" data-color-mode="density" style="margin-top:6px">
@@ -865,34 +861,32 @@
 
     // ── Presets ────────────────────────────────────────────────
     const PRESETS = [
-      { name: 'Internal waves', config: {
-        COUNT: 3000, SIM_SPEED: 1.6, N_SEP: 9, N_ALI_COH: 18,
-        W_SEP: 7.8, PERSONAL_SPACE: 4.7, W_ALI: 4, W_COH: 4.7,
-        FRONT_BIAS: 4, EDGE_ALI: 2.5, MAX_SPEED: 15,
-        MIN_SPEED_RATIO: 0.08, MAX_FORCE: 1, HOMING: 7.5,
-      }},
       { name: 'Scatter and rejoin', config: {
         COUNT: 3000, SIM_SPEED: 1.25, N_SEP: 7, N_ALI_COH: 14,
         W_SEP: 7.5, PERSONAL_SPACE: 2, W_ALI: 4, W_COH: 3,
         FRONT_BIAS: 1, EDGE_ALI: 0, MAX_SPEED: 23,
         MIN_SPEED_RATIO: 0.4, MAX_FORCE: 1, HOMING: 8.5,
-      }},
-      { name: 'Dense flock', config: {
-        COUNT: 3000, SIM_SPEED: 1, N_SEP: 7, N_ALI_COH: 14,
-        W_SEP: 3.7, PERSONAL_SPACE: 5, W_ALI: 4.9, W_COH: 1.4,
-        FRONT_BIAS: 1.8, EDGE_ALI: 3.3, MAX_SPEED: 15,
-        MIN_SPEED_RATIO: 0.53, MAX_FORCE: 0.8, HOMING: 6.3,
-        DENSITY_RADIUS: 5, DENSITY_LO: 3, DENSITY_HI: 45,
-        COLOR_MODE: 'velocity',
-      }},
-      { name: 'Dense flock (fast)', config: {
+        W_SPEED_SEP: 0, DV_THRESHOLD: 0.75,
+      }, hints: [
+        { target: 'sl-homing', text: 'Higher homing values help outlier birds rejoin the flock' },
+      ]},
+      { name: 'Internal waves', config: {
+        COUNT: 3000, SIM_SPEED: 1.6, N_SEP: 9, N_ALI_COH: 18,
+        W_SEP: 7.8, PERSONAL_SPACE: 4.7, W_ALI: 4, W_COH: 4.7,
+        FRONT_BIAS: 4, EDGE_ALI: 2.5, MAX_SPEED: 15,
+        MIN_SPEED_RATIO: 0.08, MAX_FORCE: 1, HOMING: 7.5,
+        W_SPEED_SEP: 0, DV_THRESHOLD: 0.75,
+      }, hints: []},
+      { name: 'Dense flock, velocity view', config: {
         COUNT: 3000, SIM_SPEED: 1, N_SEP: 7, N_ALI_COH: 14,
         W_SEP: 3.7, PERSONAL_SPACE: 5, W_ALI: 4.9, W_COH: 1.4,
         FRONT_BIAS: 2.8, EDGE_ALI: 3.3, MAX_SPEED: 22.5,
         MIN_SPEED_RATIO: 0.53, MAX_FORCE: 0.8, HOMING: 6.3,
         DENSITY_RADIUS: 5, DENSITY_LO: 3, DENSITY_HI: 45,
-        COLOR_MODE: 'velocity',
-      }},
+        COLOR_MODE: 'velocity', DV_THRESHOLD: 0.75,
+      }, hints: [
+        { target: 'sl-wspdsep', text: 'Try slowly increasing Speed braking to see its effects' },
+      ]},
     ];
 
     // ── Init scene ────────────────────────────────────────────────
@@ -957,49 +951,116 @@
       });
     }
 
+    // ── Shared arrow helper ────────────────────────────────────────
+    function makeArrow(target, text, nudgeUp = 6, extraClass = '') {
+      const rect = target.getBoundingClientRect();
+      const el = document.createElement('div');
+      el.className = 'guide-arrow' + (extraClass ? ' ' + extraClass : '');
+      el.innerHTML = `<span>${text}</span> <span class="arrow-char">&#9654;</span>`;
+      el.style.top  = rect.top + rect.height / 2 - 10 - nudgeUp + 'px';
+      el.style.right = (window.innerWidth - rect.left + 8) + 'px';
+      document.body.appendChild(el);
+      requestAnimationFrame(() => el.classList.add('visible'));
+      return el;
+    }
+
+    // ── Preset hint arrows ──────────────────────────────────────────
+    let presetHintTimeout = null;
+
+    function showPresetHints(hints) {
+      clearPresetHints();
+      if (!hints || !hints.length) return;
+      hints.forEach(h => {
+        const target = document.getElementById(h.target);
+        if (target) makeArrow(target, h.text, 6, 'preset-hint-arrow');
+      });
+      presetHintTimeout = setTimeout(clearPresetHints, 3000);
+    }
+
+    function clearPresetHints() {
+      if (presetHintTimeout) { clearTimeout(presetHintTimeout); presetHintTimeout = null; }
+      document.querySelectorAll('.preset-hint-arrow').forEach(a => {
+        a.classList.add('fade-out');
+        setTimeout(() => a.remove(), 500);
+      });
+    }
+
     // ── Guide arrows ──────────────────────────────────────────────
-    let activeArrows = [];
-    let arrowTimer = 0;
+    let guideTimeouts = [];
 
     function showGuideArrows() {
-      // Clear any active arrows first
-      clearTimeout(arrowTimer);
-      activeArrows.forEach(a => a.remove());
-      activeArrows = [];
+      guideTimeouts.forEach(t => clearTimeout(t));
+      guideTimeouts = [];
+      document.querySelectorAll('.guide-arrow').forEach(a => a.remove());
 
-      const makeArrow = (target, text, nudgeUp = 6) => {
-        const rect = target.getBoundingClientRect();
-        const el = document.createElement('div');
-        el.className = 'guide-arrow';
-        el.innerHTML = `<span>${text}</span> <span class="arrow-char">&#9654;</span>`;
-        el.style.top  = rect.top + rect.height / 2 - 10 - nudgeUp + 'px';
-        el.style.right = (window.innerWidth - rect.left + 8) + 'px';
-        document.body.appendChild(el);
-        requestAnimationFrame(() => el.classList.add('visible'));
-        return el;
-      };
+      const helpBtn       = document.getElementById('param-desc-btn');
+      const presetBtn     = document.querySelector('.preset-btn');
+      const boidseyeBtn   = document.getElementById('cam-boidseye');
+      const sepSlider     = document.getElementById('sl-sep');
+      const aliSlider     = document.getElementById('sl-ali');
+      const cohSlider     = document.getElementById('sl-coh');
+      const densityHeader = document.getElementById('density-section-header');
 
-      const helpBtn = document.getElementById('param-desc-btn');
-      const presetBtn = document.querySelector('.preset-btn');
-      const boidseyeBtn = document.getElementById('cam-boidseye');
-      const sepSlider = document.getElementById('sl-sep');
-      const aliSlider = document.getElementById('sl-ali');
-      const cohSlider = document.getElementById('sl-coh');
+      function fadeAndRemove(arrows) {
+        arrows.forEach(a => a.classList.add('fade-out'));
+        guideTimeouts.push(setTimeout(() => arrows.forEach(a => a.remove()), 500));
+      }
 
-      if (helpBtn)     activeArrows.push(makeArrow(helpBtn, 'Descriptions'));
-      if (presetBtn)   activeArrows.push(makeArrow(presetBtn, 'Try a preset'));
-      if (boidseyeBtn) activeArrows.push(makeArrow(boidseyeBtn, 'Fly with a bird \u2014 or choose a split view'));
-      if (sepSlider)   activeArrows.push(makeArrow(sepSlider, 'Separation', 14));
-      if (aliSlider)   activeArrows.push(makeArrow(aliSlider, 'Alignment', 14));
-      if (cohSlider)   activeArrows.push(makeArrow(cohSlider, 'Cohesion', 14));
+      function showThenFade(arrows, visibleMs) {
+        guideTimeouts.push(setTimeout(() => fadeAndRemove(arrows), visibleMs));
+      }
 
-      arrowTimer = setTimeout(() => {
-        activeArrows.forEach(a => a.classList.add('fade-out'));
-        setTimeout(() => {
-          activeArrows.forEach(a => a.remove());
-          activeArrows = [];
-        }, 500);
-      }, 6000);
+      function at(delay, fn) {
+        guideTimeouts.push(setTimeout(fn, delay));
+      }
+
+      const STEP = 3000;
+      const VISIBLE = 2500; // visible portion of each step (fade fills remaining 500ms)
+      let t = 0;
+
+      // Step 1: Descriptions
+      at(t, () => { if (helpBtn) showThenFade([makeArrow(helpBtn, 'Descriptions')], VISIBLE); });
+      t += STEP;
+
+      // Step 2: Try a preset
+      at(t, () => { if (presetBtn) showThenFade([makeArrow(presetBtn, 'Try a preset')], VISIBLE); });
+      t += STEP;
+
+      // Step 3: Fly with a bird
+      at(t, () => { if (boidseyeBtn) showThenFade([makeArrow(boidseyeBtn, 'Fly with a bird \u2014 or choose a split view')], VISIBLE); });
+      t += STEP;
+
+      // Step 4: Separation / Alignment / Cohesion (group)
+      at(t, () => {
+        const group = [];
+        if (sepSlider) group.push(makeArrow(sepSlider, 'Separation', 14));
+        if (aliSlider) group.push(makeArrow(aliSlider, 'Alignment', 14));
+        if (cohSlider) group.push(makeArrow(cohSlider, 'Cohesion', 14));
+        if (group.length) showThenFade(group, VISIBLE);
+      });
+      t += STEP;
+
+      // Step 5: Explore density waves
+      at(t, () => { if (densityHeader) showThenFade([makeArrow(densityHeader, 'Explore density waves — behaviors and velocity colors')], VISIBLE); });
+      t += STEP;
+
+      // Step 6: All together for 2 seconds
+      at(t, () => {
+        const all = [];
+        if (helpBtn)       all.push(makeArrow(helpBtn, 'Descriptions'));
+        if (presetBtn)     all.push(makeArrow(presetBtn, 'Try a preset'));
+        if (boidseyeBtn)   all.push(makeArrow(boidseyeBtn, 'Fly with a bird \u2014 or choose a split view'));
+        if (sepSlider)     all.push(makeArrow(sepSlider, 'Separation', 14));
+        if (aliSlider)     all.push(makeArrow(aliSlider, 'Alignment', 14));
+        if (cohSlider)     all.push(makeArrow(cohSlider, 'Cohesion', 14));
+        if (densityHeader) all.push(makeArrow(densityHeader, 'Explore density waves — behaviors and velocity colors'));
+        showThenFade(all, 4000);
+      });
+      t += 4500; // 4s visible + 0.5s fade gap
+
+      // Step 7: Point to hints button
+      const hintsBtn = document.getElementById('param-hints-btn');
+      at(t, () => { if (hintsBtn) showThenFade([makeArrow(hintsBtn, 'Re-show these hints')], 2000); });
     }
 
     // ── Slider wiring ─────────────────────────────────────────────
@@ -1036,6 +1097,18 @@
       }
       if (cfg.COUNT !== undefined) api.reinit(cfg.COUNT);
       if (cfg.COLOR_MODE) applyColorMode(cfg.COLOR_MODE);
+
+      // Expand density section if preset has non-default density settings
+      const densitySection = document.getElementById('density-section-header')?.parentElement;
+      if (densitySection) {
+        const hasNonDefault =
+          (cfg.W_SPEED_SEP   !== undefined && cfg.W_SPEED_SEP   !== DEFAULTS.W_SPEED_SEP) ||
+          (cfg.DENSITY_RADIUS !== undefined && cfg.DENSITY_RADIUS !== DEFAULTS.DENSITY_RADIUS) ||
+          (cfg.DENSITY_LO    !== undefined && cfg.DENSITY_LO    !== DEFAULTS.DENSITY_LO) ||
+          (cfg.DENSITY_HI    !== undefined && cfg.DENSITY_HI    !== DEFAULTS.DENSITY_HI) ||
+          (cfg.COLOR_MODE    !== undefined && cfg.COLOR_MODE    !== 'none');
+        if (hasNonDefault) densitySection.classList.remove('collapsed');
+      }
     }
 
     for (const [name, cfg] of Object.entries(sliders)) {
@@ -1066,6 +1139,7 @@
     // ── Presets ────────────────────────────────────────────────────
     function clearActivePreset() {
       document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      clearPresetHints();
     }
 
     document.querySelectorAll('.preset-btn').forEach(btn => {
@@ -1076,6 +1150,7 @@
         applyConfig(preset.config);
         clearActivePreset();
         btn.classList.add('active');
+        showPresetHints(preset.hints);
       });
     });
 

@@ -29,7 +29,7 @@ export const DEFAULTS = {
   DENSITY_LO: 3,         // count mapped to blue (sparse)
   DENSITY_HI: 25,        // count mapped to red (dense)
   W_SPEED_SEP: 0,        // speed braking from personal space violations; 0 = off
-  DV_THRESHOLD: 0.3,     // speed-change threshold for velocity coloring
+  DV_THRESHOLD: 0.75,    // speed-change threshold for velocity coloring
 };
 
 // ── Spatial hash ─────────────────────────────────────────────────────

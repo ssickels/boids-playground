@@ -757,12 +757,15 @@
       compression waves that propagate faster than the birds fly. We've begun exploring
       one piece of this puzzle &mdash; <em class="term">density waves</em> driven by
       speed braking &mdash; which you can read about on the
-      <a href="murmuration-waves.html">Density Waves</a> page. That extension adds
-      speed variation to the classic boids rules, producing compression cascades
-      analogous to phantom traffic jams. The remaining phenomena likely involve predator
-      avoidance (a hawk diving into the flock triggers a panic wave) and possibly
-      information transfer mechanisms beyond simple velocity matching. Those remain
-      frontiers for future work.
+      <a href="murmuration-waves.html">Density Waves</a> page. Speed braking is not
+      part of the original boids algorithm; it adds velocity variation beyond what the
+      core separation/alignment/cohesion rules produce. Increasing it makes density
+      waves more pronounced, arguably closer to real murmuration behavior where birds
+      visibly slow and accelerate in response to neighbors. The
+      <strong>Dense flock, velocity view</strong> preset is a good starting point for
+      exploring this. The remaining phenomena likely involve predator avoidance (a hawk
+      diving into the flock triggers a panic wave) and possibly information transfer
+      mechanisms beyond simple velocity matching. Those remain frontiers for future work.
     </p>
   </section>
 
