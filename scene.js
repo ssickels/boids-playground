@@ -789,12 +789,12 @@ function animate(ts) {
   for (const b of boids) {
     const canShow = showFish && !!b.mesh.userData.ready;
     b.mesh.visible = canShow;
-    b.marker.visible = !canShow;
+    b.marker.visible = !showFish;
     b.marker.position.copy(b.pos);
     b.marker.quaternion.copy(b.ownQ);
   }
   if (tf.mesh) tf.mesh.visible = showFish;
-  tf.marker.visible = (!showFish || !tf.mesh) && tf.active;
+  tf.marker.visible = !showFish && tf.active;
   if (tf.marker.visible) {
     tf.marker.position.copy(tf.pos);
     tf.marker.quaternion.copy(tf.ownQ);
