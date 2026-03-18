@@ -36,11 +36,12 @@ A school of Blue Tang fish exhibits emergent flocking behavior while an Orangest
 
 ![Preview of the Boids Playground](https://stevessite.com/murmuration_preview.jpg)
 
-A murmuration of 3,000+ starlings sweeping across a twilight sky. Extends the classic boids algorithm with topological neighbors (nearest-N instead of fixed radius), split neighbor counts, adaptive centroid homing, front-bias hemisphere weighting, and a velocity-aware ground plane. The simulation grew out of the fish schooling playground but shares no code with it.
+A murmuration of 3,000+ starlings sweeping across a twilight sky. Extends the classic boids algorithm with topological neighbors (nearest-N instead of fixed radius), split neighbor counts, adaptive centroid homing, front-bias hemisphere weighting, and a velocity-aware ground plane. A density-waves extension adds speed braking (birds slow when neighbors crowd their personal space), producing compression cascades analogous to phantom traffic jams. Two diagnostic color modes — density (neighbor count) and velocity (speed change per frame) — make these waves visible in real time. The simulation grew out of the fish schooling playground but shares no code with it.
 
 | Page | Description |
 |---|---|
 | [Playground](https://stevessite.com/murmuration.html) | Interactive simulation with slider panel |
+| [Density Waves](https://stevessite.com/murmuration-waves.html) | How speed braking creates compression waves, with connections to traffic flow and active matter |
 | [How It Works](https://stevessite.com/murmuration-about.html) | Algorithm deep dive: all seven forces, spatial hashing, initial conditions |
 | [About](https://stevessite.com/murmuration-intro.html) | What this is, why so many sliders, key parameters |
 
@@ -48,8 +49,9 @@ A murmuration of 3,000+ starlings sweeping across a twilight sky. Extends the cl
 
 | File | Purpose |
 |---|---|
-| `murmuration.js` | Simulation engine — spatial hash, boid forces, Three.js instanced rendering |
-| `murmuration.html` | Playground page — slider panel, presets, splash screen |
+| `murmuration.js` | Simulation engine — spatial hash, boid forces, density/velocity coloring, Three.js instanced rendering |
+| `murmuration.html` | Playground page — slider panel, presets, density waves controls, splash screen |
+| `murmuration-waves.html` | Density Waves — speed braking mechanics, visualization modes, connections to traffic flow |
 | `murmuration-about.html` | How It Works — detailed explanation of extensions to the boids algorithm |
 | `murmuration-intro.html` | About page — casual first-person overview |
 | `murmuration-nav.js` | Navigation bar with murmuration-section tabs |
