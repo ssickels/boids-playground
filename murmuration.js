@@ -30,6 +30,11 @@ export const DEFAULTS = {
   DENSITY_HI: 25,        // count mapped to red (dense)
   W_SPEED_SEP: 0,        // speed braking from personal space violations; 0 = off
   DV_THRESHOLD: 0.75,    // speed-change threshold for velocity coloring
+  PRED_ENABLED:  false,
+  PRED_FREQ:     20,     // seconds between attacks
+  PRED_DURATION: 10,     // seconds per attack
+  PRED_SPEED:    25,     // hawk max speed
+  PRED_FORCE:    5.0,    // hawk steering force / agility
 };
 
 // ── Spatial hash ─────────────────────────────────────────────────────
@@ -191,6 +196,15 @@ export function initScene(container, params) {
   let prevSpd = new Float32Array(MAX_BIRDS); // per-bird speed from last frame
   let count = 0;
 
+  // ── Predator state ────────────────────────────────────────────────
+  const pred = {
+    active: false,
+    timer: 5, // initial delay before first attack
+    elapsed: 0,
+    x: 0, y: 0, z: 0,
+    vx: 0, vy: 0, vz: 0,
+  };
+
   function reinit(n) {
     count = n;
     avgND.fill(0);
@@ -222,6 +236,11 @@ export function initScene(container, params) {
       vy[i] = (baseVy + (Math.random() - 0.5) * JITTER) * spd;
       vz[i] = (baseVz + (Math.random() - 0.5) * JITTER) * spd;
     }
+    // reset predator
+    pred.active = false;
+    pred.timer = 3 + Math.random() * 2;
+    if (predMesh) predMesh.visible = false;
+
     if (instMesh) {
       instMesh.count = count;
       for (let i = 0; i < n; i++) instMesh.setColorAt(i, _defaultColor);
@@ -279,6 +298,106 @@ export function initScene(container, params) {
   wireMesh.visible = false;
   wireMesh.renderOrder = 999;
   scene.add(wireMesh);
+
+  // ── Predator mesh ──────────────────────────────────────────────────
+  const predGeo = new THREE.ConeGeometry(0.5, 1.5, 8);
+  predGeo.rotateX(Math.PI / 2); // point along +Z
+  const predMat = new THREE.MeshBasicMaterial({ color: 0xff2200 });
+  const predMesh = new THREE.Mesh(predGeo, predMat);
+  predMesh.visible = false;
+  scene.add(predMesh);
+  const _predLookTarget = new THREE.Vector3();
+
+  // ── Predator functions ────────────────────────────────────────────
+  function spawnPredator() {
+    // Spawn on sphere biased upward, aimed at centroid
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(Math.random() * 0.6); // bias toward upper hemisphere
+    const r = 130;
+    pred.x = centX + r * Math.sin(phi) * Math.cos(theta);
+    pred.y = centY + r * Math.cos(phi); // biased upward
+    pred.z = centZ + r * Math.sin(phi) * Math.sin(theta);
+    // Initial velocity aimed at centroid
+    const dx = centX - pred.x, dy = centY - pred.y, dz = centZ - pred.z;
+    const d = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+    const spd = params.PRED_SPEED;
+    pred.vx = dx / d * spd; pred.vy = dy / d * spd; pred.vz = dz / d * spd;
+    pred.active = true;
+    pred.elapsed = 0;
+    predMesh.visible = true;
+  }
+
+  function despawnPredator() {
+    pred.active = false;
+    predMesh.visible = false;
+    // Randomize ±20% of PRED_FREQ
+    pred.timer = params.PRED_FREQ * (0.8 + Math.random() * 0.4);
+  }
+
+  function updatePredator(dt) {
+    if (!params.PRED_ENABLED) {
+      if (pred.active) despawnPredator();
+      return;
+    }
+    if (!pred.active) {
+      pred.timer -= dt;
+      if (pred.timer <= 0) spawnPredator();
+      return;
+    }
+    pred.elapsed += dt;
+    const mSpd = params.PRED_SPEED;
+    const minSpd = mSpd * 0.5;
+
+    if (pred.elapsed < params.PRED_DURATION) {
+      // Chase phase: steer toward densest bird
+      let targetX = centX, targetY = centY, targetZ = centZ;
+      let bestND = -1;
+      for (let i = 0; i < count; i++) {
+        if (avgND[i] > bestND) { bestND = avgND[i]; targetX = px[i]; targetY = py[i]; targetZ = pz[i]; }
+      }
+      const dx = targetX - pred.x, dy = targetY - pred.y, dz = targetZ - pred.z;
+      const mag = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (mag > 1e-6) {
+        const s = mSpd / mag;
+        const desVx = dx * s, desVy = dy * s, desVz = dz * s;
+        let sx = desVx - pred.vx, sy = desVy - pred.vy, sz = desVz - pred.vz;
+        const fm = Math.sqrt(sx * sx + sy * sy + sz * sz);
+        if (fm > params.PRED_FORCE) {
+          const c = params.PRED_FORCE / fm;
+          sx *= c; sy *= c; sz *= c;
+        }
+        pred.vx += sx * dt; pred.vy += sy * dt; pred.vz += sz * dt;
+      }
+    }
+    // else: exit phase — fly straight (no steering), until far enough to despawn
+
+    // Clamp speed
+    let spd = Math.sqrt(pred.vx * pred.vx + pred.vy * pred.vy + pred.vz * pred.vz);
+    if (spd > mSpd) { const s = mSpd / spd; pred.vx *= s; pred.vy *= s; pred.vz *= s; spd = mSpd; }
+    else if (spd < minSpd && spd > 1e-6) { const s = minSpd / spd; pred.vx *= s; pred.vy *= s; pred.vz *= s; }
+
+    // Integrate position
+    pred.x += pred.vx * dt; pred.y += pred.vy * dt; pred.z += pred.vz * dt;
+
+    // Hard floor — same constraint as boids
+    if (pred.y < GROUND_Y) {
+      pred.y = GROUND_Y;
+      if (pred.vy < 0) pred.vy = 0;
+    }
+
+    // Despawn check (exit phase only)
+    if (pred.elapsed >= params.PRED_DURATION) {
+      const dx = pred.x - centX, dy = pred.y - centY, dz = pred.z - centZ;
+      if (dx * dx + dy * dy + dz * dz > 200 * 200) despawnPredator();
+    }
+
+    // Update mesh
+    if (pred.active) {
+      predMesh.position.set(pred.x, pred.y, pred.z);
+      _predLookTarget.set(pred.x + pred.vx, pred.y + pred.vy, pred.z + pred.vz);
+      predMesh.lookAt(_predLookTarget);
+    }
+  }
 
   const _densityColor = new THREE.Color();
 
@@ -412,6 +531,13 @@ export function initScene(container, params) {
     // rebuild hash
     hash.clear();
     for (let i = 0; i < count; i++) hash.insert(i, px[i], py[i], pz[i]);
+
+    // Inject predator as virtual boid at index `count`
+    if (pred.active && count < MAX_BIRDS) {
+      px[count] = pred.x; py[count] = pred.y; pz[count] = pred.z;
+      vx[count] = pred.vx; vy[count] = pred.vy; vz[count] = pred.vz;
+      hash.insert(count, pred.x, pred.y, pred.z);
+    }
 
     // ── Density count pass (pre-update — all positions are consistent) ──
     {
@@ -671,6 +797,9 @@ export function initScene(container, params) {
     // flock centroid (O(n), used by seek-center force)
     updateCentroid();
 
+    // predator (must run after centroid, before boids)
+    updatePredator(dt);
+
     // wind drift (disabled)
     // updateWind(dt);
 
@@ -785,5 +914,5 @@ export function initScene(container, params) {
   animate();
 
   // public API
-  return { reinit, setCameraMode, pickNewBoid, setColorMode, setPanelOpen };
+  return { reinit, setCameraMode, pickNewBoid, setColorMode, setPanelOpen, pred };
 }

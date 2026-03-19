@@ -616,6 +616,10 @@
           <button class="preset-btn" data-preset="2">Dense flock, velocity view</button>
           <div class="preset-desc">Tight formation at high speed with velocity coloring. A good starting point for density wave experiments &mdash; try slowly increasing Speed braking.</div>
         </div>
+        <div class="preset-item">
+          <button class="preset-btn" data-preset="3">Hawk attack</button>
+          <div class="preset-desc">A hawk dives at the flock. Boids scatter through normal rules &mdash; no explicit flee force. Speed braking enabled so you can see the panic wave propagate.</div>
+        </div>
       </div>
       <div id="user-presets-container"></div>
 
@@ -656,7 +660,7 @@
         <div class="param-section-body">
           <div class="camera-toggle">
             <button class="camera-toggle-btn active" id="cam-orbit">Orbit</button>
-            <button class="camera-toggle-btn" id="cam-boidseye" title="Try with Velocity coloring to see braking and acceleration from a bird's perspective">Boid's eye</button>
+            <button class="camera-toggle-btn" id="cam-boidseye" title="Try with Velocity coloring (in the Density Waves section) to see braking and acceleration from a bird's perspective">Boid's eye</button>
             <button class="camera-toggle-btn" id="cam-split">Split</button>
           </div>
           <button id="cam-new-boid">New boid</button>
@@ -827,6 +831,50 @@
 
       <div class="param-divider"></div>
 
+      <!-- ── Predator ──────────────────────────────────────────── -->
+      <div class="param-section collapsed">
+        <div class="param-section-header" id="predator-section-header">
+          <span class="param-section-label">Predator</span>
+          <span class="param-section-arrow">▾</span>
+        </div>
+        <div class="param-section-body">
+          <div class="camera-toggle" style="margin-bottom:6px">
+            <button class="camera-toggle-btn" id="pred-toggle" style="flex:none;width:100%">Hawk: Off</button>
+          </div>
+          <span class="param-desc">A hawk chases the flock centroid. Boids react through their normal local rules — no explicit flee force. Watch for flock splitting, wake effects, and speed braking cascades.</span>
+          <div class="param-row" style="margin-top:6px">
+            <span class="param-label" title="Seconds between hawk attacks">Frequency</span>
+            <span class="param-value" id="val-predfreq">20</span>
+            <input class="param-slider" type="range" id="sl-predfreq"
+              min="5" max="60" step="1" value="20" />
+            <span class="param-desc">Seconds between hawk attacks. Lower = more frequent.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="How long each attack lasts">Duration</span>
+            <span class="param-value" id="val-preddur">10</span>
+            <input class="param-slider" type="range" id="sl-preddur"
+              min="3" max="30" step="1" value="10" />
+            <span class="param-desc">How many seconds the hawk actively chases before flying away.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Hawk flight speed">Hawk speed</span>
+            <span class="param-value" id="val-predspd">25</span>
+            <input class="param-slider" type="range" id="sl-predspd"
+              min="10" max="50" step="1" value="25" />
+            <span class="param-desc">Maximum hawk speed. Higher = faster dives, more violent disruption.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Hawk steering force — how tight it turns">Agility</span>
+            <span class="param-value" id="val-predfrc">5.0</span>
+            <input class="param-slider" type="range" id="sl-predfrc"
+              min="1" max="15" step="0.5" value="5.0" />
+            <span class="param-desc">Hawk turning force. Low = wide sweeping passes. High = tight pursuit.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="param-divider"></div>
+
       <button id="param-reset">Reset to defaults</button>
       <button id="param-save" title="Save the current slider values as a named preset">Save as preset</button>
       <div class="param-desc btn-desc">Saves your current settings as a preset you can switch back to. Stored in your browser.</div>
@@ -886,6 +934,18 @@
         COLOR_MODE: 'velocity', DV_THRESHOLD: 0.75,
       }, hints: [
         { target: 'sl-wspdsep', text: 'Try slowly increasing Speed braking to see its effects' },
+      ]},
+      { name: 'Hawk attack', config: {
+        COUNT: 3000, SIM_SPEED: 1, N_SEP: 7, N_ALI_COH: 14,
+        W_SEP: 3.0, PERSONAL_SPACE: 2.0, W_ALI: 4.0, W_COH: 3.0,
+        FRONT_BIAS: 1.0, EDGE_ALI: 0, MAX_SPEED: 15,
+        MIN_SPEED_RATIO: 0.53, MAX_FORCE: 0.5, HOMING: 0.75,
+        W_SPEED_SEP: 0.8, DV_THRESHOLD: 0.75,
+        COLOR_MODE: 'velocity',
+        PRED_ENABLED: true, PRED_FREQ: 12, PRED_DURATION: 10,
+        PRED_SPEED: 25, PRED_FORCE: 5.0,
+      }, hints: [
+        { target: 'sl-predfrc', text: 'Try lowering Agility for wide sweeping passes' },
       ]},
     ];
 
@@ -1084,6 +1144,10 @@
       dr:        { el: 'sl-dr',        val: 'val-dr',        key: 'DENSITY_RADIUS',    fmt: v => Number(v).toFixed(1) },
       dlo:       { el: 'sl-dlo',       val: 'val-dlo',       key: 'DENSITY_LO',       fmt: v => String(Math.round(v)) },
       dhi:       { el: 'sl-dhi',       val: 'val-dhi',       key: 'DENSITY_HI',       fmt: v => String(Math.round(v)) },
+      predfreq:  { el: 'sl-predfreq',  val: 'val-predfreq',  key: 'PRED_FREQ',        fmt: v => String(Math.round(v)) },
+      preddur:   { el: 'sl-preddur',   val: 'val-preddur',   key: 'PRED_DURATION',    fmt: v => String(Math.round(v)) },
+      predspd:   { el: 'sl-predspd',   val: 'val-predspd',   key: 'PRED_SPEED',       fmt: v => String(Math.round(v)) },
+      predfrc:   { el: 'sl-predfrc',   val: 'val-predfrc',   key: 'PRED_FORCE',       fmt: v => Number(v).toFixed(1) },
     };
 
     function applyConfig(cfg) {
@@ -1097,6 +1161,14 @@
       }
       if (cfg.COUNT !== undefined) api.reinit(cfg.COUNT);
       if (cfg.COLOR_MODE) applyColorMode(cfg.COLOR_MODE);
+      // Predator toggle
+      if (cfg.PRED_ENABLED !== undefined) {
+        params.PRED_ENABLED = cfg.PRED_ENABLED;
+        updatePredToggleUI();
+      }
+      // Expand predator section if enabled
+      const predSection = document.getElementById('predator-section-header')?.parentElement;
+      if (predSection && cfg.PRED_ENABLED) predSection.classList.remove('collapsed');
 
       // Expand density section if preset has non-default density settings
       const densitySection = document.getElementById('density-section-header')?.parentElement;
@@ -1211,6 +1283,7 @@
       const cfg = {};
       for (const [, s] of Object.entries(sliders)) cfg[s.key] = params[s.key];
       cfg.COLOR_MODE = currentColorMode;
+      cfg.PRED_ENABLED = params.PRED_ENABLED;
       return cfg;
     }
 
@@ -1486,6 +1559,21 @@
     colorNoneBtn.addEventListener('click', () => applyColorMode('none'));
     colorDensityBtn.addEventListener('click', () => applyColorMode('density'));
     colorVelocityBtn.addEventListener('click', () => applyColorMode('velocity'));
+
+    // ── Predator toggle ──────────────────────────────────────────────
+    const predToggleBtn = document.getElementById('pred-toggle');
+
+    function updatePredToggleUI() {
+      const on = params.PRED_ENABLED;
+      predToggleBtn.textContent = on ? 'Hawk: On' : 'Hawk: Off';
+      predToggleBtn.classList.toggle('active', on);
+    }
+
+    predToggleBtn.addEventListener('click', () => {
+      params.PRED_ENABLED = !params.PRED_ENABLED;
+      updatePredToggleUI();
+      clearActivePreset();
+    });
   </script>
 </body>
 </html>
