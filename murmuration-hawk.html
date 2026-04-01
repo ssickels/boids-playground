@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hawk Attack — Steve's Site</title>
+  <meta property="og:title" content="Hawk Attack in Murmuration" />
+  <meta property="og:description" content="How a simulated hawk predator drives escape behavior, flock splitting, and wave-like avoidance cascades in the murmuration experiment." />
+  <meta property="og:image" content="https://stevessite.com/murmuration_preview.jpg" />
+  <meta property="og:url" content="https://stevessite.com/murmuration-hawk.html" />
+  <meta property="og:type" content="website" />
+  <link rel="stylesheet" href="/theme.css" />
+  <link rel="stylesheet" href="/murmuration-theme.css" />
+  <style>
+    html, body { height: auto; overflow: auto; }
+
+    .page-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+      padding-top: 70px;
+    }
+
+    .page-hero {
+      margin-bottom: 40px;
+    }
+    .page-hero h1 {
+      font-size: 2rem;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      color: var(--color-primary);
+      margin-bottom: 10px;
+    }
+    .page-hero p {
+      color: var(--color-text-dim);
+      font-size: 0.95rem;
+      margin-bottom: 0;
+    }
+
+    section {
+      margin-bottom: 44px;
+    }
+    section h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    section p, section li {
+      color: var(--color-text);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    section p:last-child { margin-bottom: 0; }
+
+    .concept-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 14px;
+    }
+    .concept-card:last-child { margin-bottom: 0; }
+    .concept-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--color-primary-hi);
+      margin-bottom: 6px;
+    }
+    .concept-card p {
+      font-size: 0.9rem;
+      color: var(--color-text);
+      line-height: 1.6;
+    }
+    .concept-card p:last-child { margin-bottom: 0; }
+
+    .math {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--color-primary);
+      background: rgba(125, 212, 232, 0.06);
+      border-left: 3px solid rgba(125, 212, 232, 0.25);
+      padding: 10px 14px;
+      margin: 12px 0;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+
+    .see-also {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: rgba(125, 212, 232, 0.06);
+      border-left: 3px solid rgba(125, 212, 232, 0.3);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.88rem;
+      color: var(--color-text-dim);
+      line-height: 1.6;
+    }
+    .see-also a {
+      color: var(--color-primary);
+    }
+
+    .playground-link {
+      display: inline-block;
+      margin-top: 28px;
+      padding: 9px 20px;
+      background: rgba(125, 212, 232, 0.08);
+      border: 1px solid rgba(125, 212, 232, 0.28);
+      border-radius: var(--radius-sm);
+      color: var(--color-primary);
+      font-size: 0.9rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .playground-link:hover {
+      background: rgba(125, 212, 232, 0.16);
+      color: var(--color-primary-hi);
+    }
+
+    em.term {
+      color: var(--color-primary-hi);
+      font-style: normal;
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <div class="page-hero">
+    <h1>Hawk Attack</h1>
+    <p>Predator-prey dynamics in the murmuration &mdash;
+      how a single hawk drives escape behavior, flock splitting, and wave-like avoidance cascades.</p>
+  </div>
+
+  <!-- ── The Setup ──────────────────────────────────────────────────── -->
+  <section>
+    <h2>Why a Hawk?</h2>
+    <p>
+      Real starling murmurations aren't just aerobatic displays &mdash; they're
+      partly an <em class="term">anti-predator defense</em>. Peregrine falcons
+      and sparrowhawks hunt at dusk, precisely when murmurations form. The dense,
+      shifting cloud of thousands of birds makes it difficult for a raptor to
+      isolate and track a single target. The dramatic shape-shifting, sudden
+      splits, and cascading waves that make murmurations so visually stunning are
+      at least partly driven by birds reacting to a predator's approach.
+    </p>
+    <p>
+      The hawk model in this simulation tests how escape behavior interacts with
+      the base flocking rules. A single predator is enough to produce flock
+      splitting, panic waves, and reformation dynamics that don't appear from
+      the boids rules alone.
+    </p>
+  </section>
+
+  <!-- ── How the Hawk Works ─────────────────────────────────────────── -->
+  <section>
+    <h2>How the Hawk Works</h2>
+    <p>
+      The hawk is a single agent that operates outside the normal boids rules.
+      It has its own steering logic, speed limits, and targeting strategy.
+    </p>
+
+    <div class="concept-card">
+      <h3>Target selection</h3>
+      <p>
+        Each frame, the hawk steers toward the <em class="term">densest bird</em>
+        in the flock &mdash; the bird with the highest smoothed neighbor count
+        from the density-counting pass. This models a real raptor's strategy of
+        aiming for the thickest part of the flock, where confusion is highest
+        and a lucky strike is most likely.
+      </p>
+      <p>
+        Because the density counts are smoothed over time (fast drop, slow rise),
+        the hawk's target doesn't flicker between random birds. It locks onto a
+        dense region and pursues it, switching only when the density landscape
+        shifts meaningfully.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Steering and speed</h3>
+      <p>
+        The hawk uses the same steer-toward formula as the boids: compute the
+        desired velocity toward the target, subtract the current velocity, and
+        clamp the resulting force to a maximum. The hawk's force cap
+        (<em class="term">Agility</em>) controls how tightly it can turn &mdash;
+        lower agility means wider, sweeping passes; higher agility means the
+        hawk can track a dodging flock more closely.
+      </p>
+      <code class="math">
+        desired = normalize(target - hawkPos) * hawkSpeed<br>
+        steer   = clamp(desired - hawkVelocity, PRED_FORCE)
+      </code>
+      <p>
+        Hawk speed is set as a percentage of the flock's max speed. At 100%
+        the hawk matches the birds; above 100% it can overtake them; below
+        100% the flock can outrun it. A minimum speed of 50% of hawk speed
+        prevents the hawk from stalling.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Spawning and re-entry</h3>
+      <p>
+        When enabled, the hawk spawns on a sphere around the flock centroid
+        (biased toward the upper hemisphere) and aims inward. If the hawk
+        drifts more than 250 units from the flock center &mdash; missing a
+        pass and sailing out into empty space &mdash; it teleports back to the
+        entry sphere for another approach. This keeps the hawk perpetually
+        engaged with the flock without scripted flight paths.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Escape Behavior ────────────────────────────────────────────── -->
+  <section>
+    <h2>Escape Behavior</h2>
+    <p>
+      Birds don't just passively avoid the hawk through normal separation.
+      When the hawk gets close, birds enter a distinct
+      <em class="term">escape state</em> with different physics.
+    </p>
+
+    <div class="concept-card">
+      <h3>The escape radius</h3>
+      <p>
+        A spherical zone around the hawk defines the
+        <em class="term">escape trigger</em>. Any bird inside this radius
+        immediately enters full escape mode &mdash; its escape factor jumps to
+        1.0. Birds outside the radius gradually blend back to normal flocking
+        over a configurable time (the blend-back parameter).
+      </p>
+      <code class="math">
+        inside radius  &rarr; escFade = 1.0 (full panic)<br>
+        outside radius &rarr; escFade -= dt / blendTime (gradual recovery)
+      </code>
+    </div>
+
+    <div class="concept-card">
+      <h3>Escape steering</h3>
+      <p>
+        A bird in escape mode steers <em>directly away</em> from the hawk,
+        using a boosted speed target and increased maximum force. The escape
+        steering replaces the normal alignment and cohesion forces &mdash;
+        a panicking bird stops trying to match its neighbors' heading or pull
+        toward the group center. It just flees.
+      </p>
+      <p>
+        Crucially, boid-boid <em class="term">separation is also cancelled</em>
+        during escape. Panicking birds ignore each other entirely and flee
+        directly away from the hawk. This models the real behavior of prey
+        animals in a predator's strike zone: collision avoidance becomes
+        secondary to survival. It also produces more dramatic flock-splitting
+        because escaping birds don't push each other sideways &mdash; they all
+        radiate outward from the hawk.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Blend-back</h3>
+      <p>
+        When a bird leaves the escape radius, it doesn't snap back to normal
+        flocking. The escape factor decays linearly over the
+        <em class="term">blend-back time</em> (default 0.5 seconds of
+        sim-time). During this transition, the bird's forces are interpolated
+        between full escape and normal flocking:
+      </p>
+      <code class="math">
+        force = normalForces + (escapeForces - normalForces) * escFade
+      </code>
+      <p>
+        Short blend times produce sharp transitions &mdash; birds snap back to
+        formation quickly. Longer blend times create a lingering disarray as
+        birds gradually rejoin the flock. The blend also affects the boosted
+        escape speed, which tapers smoothly back to the normal max speed.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Escape Radius Visualization ──────────────────────────────── -->
+  <section>
+    <h2>The Escape Radius Visualization</h2>
+    <p>
+      The escape radius is invisible by default, but the simulation provides
+      two ways to see it:
+    </p>
+
+    <div class="concept-card">
+      <h3>Red wireframe sphere and red bird coloring</h3>
+      <p>
+        Toggling <strong>Show escape radius</strong> displays both a faint red
+        wireframe sphere centered on the hawk (sized to the current escape
+        radius) and colors birds currently inside the radius
+        <strong style="color:#ff1e0d">bright red</strong>, overriding any
+        density or velocity coloring. This makes the trigger zone directly
+        visible &mdash; the wireframe shows the boundary while the red birds
+        show exactly who is panicking. A moving red stain on the flock surface
+        follows the hawk's path, and birds outside the radius retain their
+        normal color (gray, density, or velocity).
+      </p>
+    </div>
+  </section>
+
+  <!-- ── The Controls ──────────────────────────────────────────────── -->
+  <section>
+    <h2>The Controls</h2>
+    <p>
+      The Predator panel in the simulation groups all hawk-related parameters.
+      Enable the hawk with the toggle, then adjust its behavior in real time.
+    </p>
+
+    <div class="concept-card">
+      <h3>Hawk toggle</h3>
+      <p>
+        Enables or disables the hawk predator. When turned on, the hawk spawns
+        on a sphere around the flock and begins hunting. Turning it off removes
+        the hawk and lets escape fades decay to zero.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Hawk speed (PRED_SPEED_PCT)</h3>
+      <p>
+        The hawk's top speed as a percentage of the flock's max speed. At 100%
+        the hawk matches the birds; at 150% it can close gaps quickly. Very high
+        values make the hawk devastating &mdash; it punches through the flock
+        before birds can react. Lower values let the flock outmaneuver it.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Agility (PRED_FORCE)</h3>
+      <p>
+        The hawk's maximum steering force &mdash; how tightly it can turn. Low
+        agility (1&ndash;2) makes the hawk fly wide, sweeping arcs that push
+        the whole flock aside. High agility (5+) lets it track individual dense
+        regions and cut through the flock repeatedly.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Escape radius (ESCAPE_RADIUS)</h3>
+      <p>
+        The distance from the hawk at which birds enter panic mode. A small
+        radius (2&ndash;3) means only birds directly in the hawk's path react
+        &mdash; the flock barely notices. A large radius (8+) triggers mass
+        panic, splitting the flock dramatically as hundreds of birds flee at
+        once.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Escape speed (ESCAPE_SPEED_PCT)</h3>
+      <p>
+        The target speed of escaping birds, as a percentage of max speed.
+        Higher values mean birds flee faster, creating more dramatic speed
+        differentials between panicking and calm birds. This is especially
+        visible in velocity coloring mode, where escaping birds flash green
+        (accelerating) and birds ahead of the wave flash red (braking as
+        fleeing birds close in).
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Escape accel multiplier (ESCAPE_ACCEL_MULT)</h3>
+      <p>
+        Multiplied against the flock's normal MAX_FORCE during escape. A
+        multiplier of 2 means escaping birds can turn twice as sharply as
+        normal, letting them dodge more aggressively. Higher values produce
+        more explosive scatter patterns.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Blend-back (ESCAPE_BLEND)</h3>
+      <p>
+        How many seconds of sim-time it takes for a bird to transition from
+        full escape back to normal flocking after leaving the escape radius.
+        Short values (0.1&ndash;0.2s) create snappy recovery &mdash; the flock
+        reforms quickly behind the hawk. Long values (1&ndash;2s) leave a trail
+        of disorganized birds in the hawk's wake.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Show escape radius</h3>
+      <p>
+        Toggles the red wireframe sphere around the hawk. Useful for
+        understanding the relationship between the escape radius setting and
+        the actual area of effect. Try adjusting the escape radius slider
+        while this is visible to see the sphere grow and shrink.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Hawk camera modes</h3>
+      <p>
+        Two special camera modes are available when the hawk is active:
+      </p>
+      <p>
+        <strong>Hawk's eye</strong> places a chase camera behind the hawk,
+        giving a raptor's-eye view of the attack. You see the flock part and
+        scatter ahead as the hawk dives in.
+      </p>
+      <p>
+        <strong>Split</strong> shows the normal orbit view on the left half
+        of the screen and the hawk's eye view on the right. This lets you
+        watch both the flock-scale dynamics and the hawk's perspective
+        simultaneously. Turning the hawk off returns to the standard orbit
+        camera.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── What Emerges ──────────────────────────────────────────────── -->
+  <section>
+    <h2>What Emerges</h2>
+    <p>
+      The hawk doesn't just scatter birds &mdash; it creates structured,
+      repeatable dynamics that mirror real murmuration behavior:
+    </p>
+
+    <div class="concept-card">
+      <h3>Flock splitting</h3>
+      <p>
+        As the hawk passes through the flock, birds in its path flee outward
+        while birds beyond the escape radius continue flocking normally. This
+        creates a temporary <em class="term">split</em> &mdash; the flock
+        divides around the hawk's trajectory like water around a boat's prow.
+        With separation cancelled during escape, the split is clean: fleeing
+        birds radiate directly away rather than being deflected sideways by
+        each other.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Avoidance cascades</h3>
+      <p>
+        The panic doesn't stay local. Escaping birds, fleeing at boosted speed,
+        slam into calm birds ahead of them. Those calm birds react through
+        normal flocking forces &mdash; separation pushes them aside, and if
+        speed braking is active, they slow down. The disturbance propagates
+        outward from the hawk's path as a wave, reaching birds that never
+        came close to the hawk. This is the same cascade mechanism described
+        on the <a href="murmuration-waves.html">Density Waves</a> page,
+        but triggered by a predator rather than random fluctuations.
+      </p>
+    </div>
+
+    <div class="concept-card">
+      <h3>Reformation</h3>
+      <p>
+        After the hawk passes, the adaptive centroid pull draws scattered birds
+        back toward the flock center. Alignment and cohesion take over,
+        reweaving the disrupted region into the flock. The reformation speed
+        depends on homing strength and blend-back time &mdash; fast blend-back
+        means birds rejoin the flock quickly; strong homing pulls distant
+        stragglers back sooner.
+      </p>
+    </div>
+
+    <div class="see-also">
+      These dynamics &mdash; splitting, avoidance waves, reformation &mdash; are
+      exactly what field researchers observe in real starling murmurations under
+      hawk attack. The simulation produces them from purely local rules: each
+      bird reacts only to the hawk's proximity and its immediate neighbors.
+    </div>
+  </section>
+
+  <!-- ── Experimenting ──────────────────────────────────────────────── -->
+  <section>
+    <h2>Experimenting</h2>
+    <p>
+      Here's a recipe for exploring hawk behavior:
+    </p>
+    <ul style="margin: 8px 0 16px 18px; line-height: 1.8;">
+      <li>Load the <strong>Hawk attack</strong> preset for a tuned starting
+        point with the hawk already enabled.</li>
+      <li>Toggle <strong>Show escape radius</strong> to see the red wireframe
+        sphere &mdash; this makes the trigger zone explicit.</li>
+      <li>Try different <strong>escape radii</strong>: small (2&ndash;3) for
+        surgical strikes that barely disturb the flock, large (8+) for
+        dramatic mass panic.</li>
+      <li>Switch to <strong>velocity coloring</strong> (in the Density Waves
+        panel) to see escape-induced speed changes &mdash; escaping birds
+        flash green while birds ahead of the wave brake red.</li>
+      <li>Use <strong>Hawk's eye</strong> camera to ride behind the hawk and
+        watch the flock part ahead of you.</li>
+      <li>Try <strong>Split</strong> view to watch the attack from both
+        perspectives simultaneously.</li>
+      <li>Lower <strong>Agility</strong> for wide sweeping passes, or raise
+        it to see the hawk cut through the flock repeatedly.</li>
+    </ul>
+
+    <div class="see-also">
+      <strong>Tip:</strong> The hawk targets the densest bird in the flock.
+      Enable <strong>density coloring</strong> to see where the hawk is aiming
+      &mdash; it steers toward the reddest (most crowded) region.
+    </div>
+
+    <a href="murmuration.html" class="playground-link">Open the Murmuration Experiment &rarr;</a>
+  </section>
+
+  <!-- ── Cross-references ──────────────────────────────────────────── -->
+  <section>
+    <h2>Further Reading</h2>
+    <div class="see-also">
+      <strong><a href="murmuration-about.html">How It Works</a></strong>
+      covers the base flocking rules &mdash; separation, alignment, cohesion,
+      adaptive centroid pull &mdash; that govern bird behavior outside the
+      escape radius.
+    </div>
+    <div class="see-also" style="margin-top: 10px;">
+      <strong><a href="murmuration-waves.html">Density Waves</a></strong>
+      explains the speed-braking mechanism and compression waves. Hawk attacks
+      create a particularly dramatic trigger for these waves &mdash; escaping
+      birds slam into the calm flock ahead, seeding braking cascades that
+      propagate outward.
+    </div>
+  </section>
+
+</div>
+
+<script src="/murmuration-nav.js"></script>
+</body>
+</html>

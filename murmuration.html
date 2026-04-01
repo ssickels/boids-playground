@@ -212,7 +212,7 @@
       align-items: center;
       gap: 6px;
     }
-    #param-hints-btn {
+    #param-hints-btn, #hawk-hints-btn {
       background: none; border: none; cursor: pointer;
       color: rgba(245, 216, 74, 0.45);
       font-size: 10px; line-height: 1;
@@ -221,7 +221,8 @@
       font-family: inherit;
       transition: color 0.15s;
     }
-    #param-hints-btn:hover { color: #f5d84a; }
+    #param-hints-btn:hover, #hawk-hints-btn:hover { color: #f5d84a; }
+    #hawk-hints-btn { margin-left: auto; }
     #param-desc-btn {
       background: none; border: none; cursor: pointer;
       color: rgba(136, 136, 204, 0.40);
@@ -485,6 +486,11 @@
       color: #aaaaee;
       border-color: rgba(136, 136, 204, 0.45);
     }
+    .camera-toggle-btn:disabled {
+      opacity: 0.3;
+      cursor: default;
+      pointer-events: none;
+    }
     #cam-boidseye { color: rgba(245, 216, 74, 0.5); }
     #cam-boidseye:hover { color: rgba(245, 216, 74, 0.75); }
     #cam-boidseye.active { color: #f5d84a; }
@@ -618,7 +624,7 @@
         </div>
         <div class="preset-item">
           <button class="preset-btn" data-preset="3">Hawk attack</button>
-          <div class="preset-desc">A hawk dives at the flock. Boids scatter through normal rules &mdash; no explicit flee force. Speed braking enabled so you can see the panic wave propagate.</div>
+          <div class="preset-desc">A persistent hawk hunts the flock. Birds within the escape radius scatter with boosted speed. Speed braking enabled so you can see the panic wave propagate.</div>
         </div>
       </div>
       <div id="user-presets-container"></div>
@@ -660,11 +666,11 @@
         <div class="param-section-body">
           <div class="camera-toggle">
             <button class="camera-toggle-btn active" id="cam-orbit">Orbit</button>
-            <button class="camera-toggle-btn" id="cam-boidseye" title="Try with Velocity coloring (in the Density Waves section) to see braking and acceleration from a bird's perspective">Boid's eye</button>
+            <button class="camera-toggle-btn" id="cam-boidseye" title="Try with Velocity coloring to see braking and acceleration from a bird's perspective">Boid's eye</button>
             <button class="camera-toggle-btn" id="cam-split">Split</button>
           </div>
           <button id="cam-new-boid">New boid</button>
-          <span class="param-desc">Orbit: follow the flock. Boid's eye: chase cam behind a random bird. Split: both side-by-side. Try Boid's eye with Velocity coloring (in the Density Waves section near the bottom) to see how birds slow down (red) and speed up (green) in response to neighbors. Increasing Speed braking magnifies these reactions.</span>
+          <span class="param-desc">Orbit: follow the flock. Boid's eye: chase cam behind a random bird. Split: both side-by-side.</span>
         </div>
       </div>
 
@@ -778,20 +784,13 @@
 
       <div class="param-divider"></div>
 
-      <!-- ── Density Waves ──────────────────────────────────────── -->
+      <!-- ── Colors ──────────────────────────────────────────────── -->
       <div class="param-section collapsed">
-        <div class="param-section-header" id="density-section-header">
-          <span class="param-section-label">Density Waves</span>
+        <div class="param-section-header" id="colors-section-header">
+          <span class="param-section-label">Colors</span>
           <span class="param-section-arrow">▾</span>
         </div>
         <div class="param-section-body">
-          <div class="param-row">
-            <span class="param-label" title="Speed reduction from personal space violations">Speed braking</span>
-            <span class="param-value" id="val-wspdsep">0.00</span>
-            <input class="param-slider" type="range" id="sl-wspdsep"
-              min="0" max="2.0" step="0.05" value="0" />
-            <span class="param-desc">How much birds slow down when neighbors enter their personal space. 0 = off (existing behavior). Higher = stronger braking that cascades through dense flocks.</span>
-          </div>
           <div class="camera-toggle" style="margin-top:4px">
             <button class="camera-toggle-btn active" id="color-none">None</button>
             <button class="camera-toggle-btn" id="color-density">Density</button>
@@ -831,37 +830,24 @@
 
       <div class="param-divider"></div>
 
-      <!-- ── Predator ──────────────────────────────────────────── -->
+      <!-- ── Hawk / Predator ──────────────────────────────────── -->
       <div class="param-section collapsed">
         <div class="param-section-header" id="predator-section-header">
-          <span class="param-section-label">Predator</span>
+          <span class="param-section-label">Hawk / Predator</span>
+          <button id="hawk-hints-btn" title="Show hawk hints">Hawk Hints</button>
           <span class="param-section-arrow">▾</span>
         </div>
         <div class="param-section-body">
           <div class="camera-toggle" style="margin-bottom:6px">
             <button class="camera-toggle-btn" id="pred-toggle" style="flex:none;width:100%">Hawk: Off</button>
           </div>
-          <span class="param-desc">A hawk chases the flock centroid. Boids react through their normal local rules — no explicit flee force. Watch for flock splitting, wake effects, and speed braking cascades.</span>
+          <span class="param-desc">A persistent hawk chases the densest part of the flock. Birds within the escape radius scatter with boosted speed, then smoothly blend back to normal flocking.</span>
           <div class="param-row" style="margin-top:6px">
-            <span class="param-label" title="Seconds between hawk attacks">Frequency</span>
-            <span class="param-value" id="val-predfreq">20</span>
-            <input class="param-slider" type="range" id="sl-predfreq"
-              min="5" max="60" step="1" value="20" />
-            <span class="param-desc">Seconds between hawk attacks. Lower = more frequent.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="How long each attack lasts">Duration</span>
-            <span class="param-value" id="val-preddur">10</span>
-            <input class="param-slider" type="range" id="sl-preddur"
-              min="3" max="30" step="1" value="10" />
-            <span class="param-desc">How many seconds the hawk actively chases before flying away.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Hawk flight speed">Hawk speed</span>
-            <span class="param-value" id="val-predspd">25</span>
+            <span class="param-label" title="Hawk speed as percentage of boid max speed">Hawk speed %</span>
+            <span class="param-value" id="val-predspd">130%</span>
             <input class="param-slider" type="range" id="sl-predspd"
-              min="10" max="50" step="1" value="25" />
-            <span class="param-desc">Maximum hawk speed. Higher = faster dives, more violent disruption.</span>
+              min="100" max="200" step="1" value="130" />
+            <span class="param-desc">Hawk speed relative to boid max speed. 130% = hawk is 30% faster than birds.</span>
           </div>
           <div class="param-row">
             <span class="param-label" title="Hawk steering force — how tight it turns">Agility</span>
@@ -869,6 +855,63 @@
             <input class="param-slider" type="range" id="sl-predfrc"
               min="1" max="15" step="0.5" value="5.0" />
             <span class="param-desc">Hawk turning force. Low = wide sweeping passes. High = tight pursuit.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Distance from hawk that triggers escape">Escape radius</span>
+            <span class="param-value" id="val-escrad">8</span>
+            <input class="param-slider" type="range" id="sl-escrad"
+              min="0.5" max="8" step="0.5" value="8" />
+            <span class="param-desc">World-unit radius around the hawk that triggers escape behavior. Birds inside this zone panic and flee.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Escape speed as percentage of boid max speed">Escape speed %</span>
+            <span class="param-value" id="val-escspdpct">140%</span>
+            <input class="param-slider" type="range" id="sl-escspdpct"
+              min="100" max="200" step="5" value="140" />
+            <span class="param-desc">Target escape speed as % of max speed. Higher = faster panic sprints.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Force multiplier during escape">Escape accel</span>
+            <span class="param-value" id="val-escaccel">2.0</span>
+            <input class="param-slider" type="range" id="sl-escaccel"
+              min="1.0" max="5.0" step="0.5" value="2.0" />
+            <span class="param-desc">Multiplier on max force during escape. Higher = snappier turns when fleeing.</span>
+          </div>
+          <div class="param-row">
+            <span class="param-label" title="Seconds to blend back from escape to normal flocking">Blend-back</span>
+            <span class="param-value" id="val-escblend">0.5</span>
+            <input class="param-slider" type="range" id="sl-escblend"
+              min="0.1" max="2.0" step="0.1" value="0.5" />
+            <span class="param-desc">Seconds of sim-time to blend from escape back to normal flocking after leaving the escape radius.</span>
+          </div>
+          <div class="camera-toggle" style="margin-top:4px">
+            <button class="camera-toggle-btn" id="esc-sphere-toggle" style="flex:none;width:100%">Show escape radius: Off</button>
+          </div>
+          <span class="param-desc">Show a faint red wireframe sphere around the hawk indicating the escape trigger zone.</span>
+          <div class="camera-toggle pred-cam-toggle" style="margin-top:8px">
+            <button class="camera-toggle-btn" id="pred-cam-orbit" disabled>Orbit</button>
+            <button class="camera-toggle-btn" id="pred-cam-hawkeye" disabled>Hawk's eye</button>
+            <button class="camera-toggle-btn" id="pred-cam-split" disabled>Split</button>
+          </div>
+          <span class="param-desc">Hawk camera — enable hawk first. Hawk's eye: chase cam behind the hawk. Turning the hawk off returns to Orbit.</span>
+        </div>
+      </div>
+
+      <div class="param-divider"></div>
+
+      <!-- ── Density Waves ──────────────────────────────────────── -->
+      <div class="param-section collapsed">
+        <div class="param-section-header" id="density-section-header">
+          <span class="param-section-label">Density Waves</span>
+          <span class="param-section-arrow">▾</span>
+        </div>
+        <div class="param-section-body">
+          <div class="param-row">
+            <span class="param-label" title="Speed reduction from personal space violations">Speed braking</span>
+            <span class="param-value" id="val-wspdsep">0.00</span>
+            <input class="param-slider" type="range" id="sl-wspdsep"
+              min="0" max="2.0" step="0.05" value="0" />
+            <span class="param-desc">How much birds slow down when neighbors enter their personal space. 0 = off. Higher = stronger braking that cascades through dense flocks, creating density waves.</span>
           </div>
         </div>
       </div>
@@ -936,16 +979,19 @@
         { target: 'sl-wspdsep', text: 'Try slowly increasing Speed braking to see its effects' },
       ]},
       { name: 'Hawk attack', config: {
-        COUNT: 3000, SIM_SPEED: 1, N_SEP: 7, N_ALI_COH: 14,
-        W_SEP: 3.0, PERSONAL_SPACE: 2.0, W_ALI: 4.0, W_COH: 3.0,
-        FRONT_BIAS: 1.0, EDGE_ALI: 0, MAX_SPEED: 15,
-        MIN_SPEED_RATIO: 0.53, MAX_FORCE: 0.5, HOMING: 0.75,
-        W_SPEED_SEP: 0.8, DV_THRESHOLD: 0.75,
-        COLOR_MODE: 'velocity',
-        PRED_ENABLED: true, PRED_FREQ: 12, PRED_DURATION: 10,
-        PRED_SPEED: 25, PRED_FORCE: 5.0,
+        COUNT: 1800, SIM_SPEED: 1.20, N_SEP: 7, N_ALI_COH: 14,
+        W_SEP: 5.5, PERSONAL_SPACE: 5, W_ALI: 3.4, W_COH: 3.8,
+        FRONT_BIAS: 2.8, EDGE_ALI: 0.5, MAX_SPEED: 22.5,
+        MIN_SPEED_RATIO: 0.53, MAX_FORCE: 0.8, HOMING: 7.4,
+        W_SPEED_SEP: 0, DV_THRESHOLD: 0.97,
+        DENSITY_RADIUS: 5, DENSITY_LO: 3, DENSITY_HI: 45,
+        PRED_ENABLED: true, PRED_SPEED_PCT: 120, PRED_FORCE: 4.5,
+        ESCAPE_RADIUS: 2.5, ESCAPE_SPEED_PCT: 150,
+        ESCAPE_ACCEL_MULT: 2, ESCAPE_BLEND: 0.5,
       }, hints: [
         { target: 'sl-predfrc', text: 'Try lowering Agility for wide sweeping passes' },
+        { target: 'sl-escrad', text: 'Adjust escape radius to see larger or smaller panic zones' },
+        { target: 'esc-sphere-toggle', text: '\u2026 And click to show the escape radius to see it visualized' },
       ]},
     ];
 
@@ -1025,20 +1071,37 @@
     }
 
     // ── Preset hint arrows ──────────────────────────────────────────
-    let presetHintTimeout = null;
+    let presetHintTimeouts = [];
 
     function showPresetHints(hints) {
       clearPresetHints();
       if (!hints || !hints.length) return;
-      hints.forEach(h => {
-        const target = document.getElementById(h.target);
-        if (target) makeArrow(target, h.text, 6, 'preset-hint-arrow');
+      const HINT_VISIBLE = 2500;
+      const HINT_STEP = 3000;
+
+      function removeCurrentArrows() {
+        document.querySelectorAll('.preset-hint-arrow').forEach(a => {
+          a.classList.add('fade-out');
+          setTimeout(() => a.remove(), 500);
+        });
+      }
+
+      hints.forEach((h, idx) => {
+        const delay = idx * HINT_STEP;
+        presetHintTimeouts.push(setTimeout(() => {
+          removeCurrentArrows();
+          const target = document.getElementById(h.target);
+          if (target) makeArrow(target, h.text, 6, 'preset-hint-arrow');
+          if (idx === hints.length - 1) {
+            presetHintTimeouts.push(setTimeout(clearPresetHints, HINT_VISIBLE));
+          }
+        }, delay));
       });
-      presetHintTimeout = setTimeout(clearPresetHints, 3000);
     }
 
     function clearPresetHints() {
-      if (presetHintTimeout) { clearTimeout(presetHintTimeout); presetHintTimeout = null; }
+      presetHintTimeouts.forEach(t => clearTimeout(t));
+      presetHintTimeouts = [];
       document.querySelectorAll('.preset-hint-arrow').forEach(a => {
         a.classList.add('fade-out');
         setTimeout(() => a.remove(), 500);
@@ -1059,7 +1122,7 @@
       const sepSlider     = document.getElementById('sl-sep');
       const aliSlider     = document.getElementById('sl-ali');
       const cohSlider     = document.getElementById('sl-coh');
-      const densityHeader = document.getElementById('density-section-header');
+      const colorsHeader  = document.getElementById('colors-section-header');
 
       function fadeAndRemove(arrows) {
         arrows.forEach(a => a.classList.add('fade-out'));
@@ -1082,15 +1145,23 @@
       at(t, () => { if (helpBtn) showThenFade([makeArrow(helpBtn, 'Descriptions')], VISIBLE); });
       t += STEP;
 
-      // Step 2: Try a preset
-      at(t, () => { if (presetBtn) showThenFade([makeArrow(presetBtn, 'Try a preset')], VISIBLE); });
-      t += STEP;
+      // Step 2: Try a preset, then highlight Hawk Attack
+      const hawkBtn = document.querySelector('[data-preset="3"]');
+      at(t, () => {
+        const a1 = presetBtn ? [makeArrow(presetBtn, 'Try a preset')] : [];
+        if (a1.length) showThenFade(a1, VISIBLE);
+        // After first arrow fades, show the hawk arrow
+        guideTimeouts.push(setTimeout(() => {
+          if (hawkBtn) showThenFade([makeArrow(hawkBtn, '\u2026 Including a Hawk Attack')], VISIBLE);
+        }, STEP));
+      });
+      t += STEP * 2;
 
-      // Step 3: Fly with a bird
+      // Step 4: Fly with a bird
       at(t, () => { if (boidseyeBtn) showThenFade([makeArrow(boidseyeBtn, 'Fly with a bird \u2014 or choose a split view')], VISIBLE); });
       t += STEP;
 
-      // Step 4: Separation / Alignment / Cohesion (group)
+      // Step 5: Separation / Alignment / Cohesion (group)
       at(t, () => {
         const group = [];
         if (sepSlider) group.push(makeArrow(sepSlider, 'Separation', 14));
@@ -1100,25 +1171,26 @@
       });
       t += STEP;
 
-      // Step 5: Explore density waves
-      at(t, () => { if (densityHeader) showThenFade([makeArrow(densityHeader, 'Explore density waves — behaviors and velocity colors')], VISIBLE); });
+      // Step 6: Explore density waves
+      at(t, () => { if (colorsHeader) showThenFade([makeArrow(colorsHeader, 'Velocity and density color modes')], VISIBLE); });
       t += STEP;
 
-      // Step 6: All together for 2 seconds
+      // Step 7: All together
       at(t, () => {
         const all = [];
         if (helpBtn)       all.push(makeArrow(helpBtn, 'Descriptions'));
         if (presetBtn)     all.push(makeArrow(presetBtn, 'Try a preset'));
+        if (hawkBtn)       all.push(makeArrow(hawkBtn, '\u2026 Including a Hawk Attack'));
         if (boidseyeBtn)   all.push(makeArrow(boidseyeBtn, 'Fly with a bird \u2014 or choose a split view'));
         if (sepSlider)     all.push(makeArrow(sepSlider, 'Separation', 14));
         if (aliSlider)     all.push(makeArrow(aliSlider, 'Alignment', 14));
         if (cohSlider)     all.push(makeArrow(cohSlider, 'Cohesion', 14));
-        if (densityHeader) all.push(makeArrow(densityHeader, 'Explore density waves — behaviors and velocity colors'));
+        if (colorsHeader) all.push(makeArrow(colorsHeader, 'Velocity and density color modes'));
         showThenFade(all, 4000);
       });
       t += 4500; // 4s visible + 0.5s fade gap
 
-      // Step 7: Point to hints button
+      // Step 8: Point to hints button
       const hintsBtn = document.getElementById('param-hints-btn');
       at(t, () => { if (hintsBtn) showThenFade([makeArrow(hintsBtn, 'Re-show these hints')], 2000); });
     }
@@ -1144,13 +1216,25 @@
       dr:        { el: 'sl-dr',        val: 'val-dr',        key: 'DENSITY_RADIUS',    fmt: v => Number(v).toFixed(1) },
       dlo:       { el: 'sl-dlo',       val: 'val-dlo',       key: 'DENSITY_LO',       fmt: v => String(Math.round(v)) },
       dhi:       { el: 'sl-dhi',       val: 'val-dhi',       key: 'DENSITY_HI',       fmt: v => String(Math.round(v)) },
-      predfreq:  { el: 'sl-predfreq',  val: 'val-predfreq',  key: 'PRED_FREQ',        fmt: v => String(Math.round(v)) },
-      preddur:   { el: 'sl-preddur',   val: 'val-preddur',   key: 'PRED_DURATION',    fmt: v => String(Math.round(v)) },
-      predspd:   { el: 'sl-predspd',   val: 'val-predspd',   key: 'PRED_SPEED',       fmt: v => String(Math.round(v)) },
+      predspd:   { el: 'sl-predspd',   val: 'val-predspd',   key: 'PRED_SPEED_PCT',   fmt: v => String(Math.round(v)) + '%' },
       predfrc:   { el: 'sl-predfrc',   val: 'val-predfrc',   key: 'PRED_FORCE',       fmt: v => Number(v).toFixed(1) },
+      escrad:    { el: 'sl-escrad',    val: 'val-escrad',    key: 'ESCAPE_RADIUS',    fmt: v => Number(v).toFixed(1) },
+      escspdpct: { el: 'sl-escspdpct', val: 'val-escspdpct', key: 'ESCAPE_SPEED_PCT', fmt: v => String(Math.round(v)) + '%' },
+      escaccel:  { el: 'sl-escaccel',  val: 'val-escaccel',  key: 'ESCAPE_ACCEL_MULT',fmt: v => Number(v).toFixed(1) },
+      escblend:  { el: 'sl-escblend',  val: 'val-escblend',  key: 'ESCAPE_BLEND',     fmt: v => Number(v).toFixed(1) },
     };
 
     function applyConfig(cfg) {
+      // Strip removed params from old presets/configs
+      delete cfg.PRED_FREQ;
+      delete cfg.PRED_DURATION;
+      // Migrate old PRED_SPEED (absolute) to PRED_SPEED_PCT if present
+      if (cfg.PRED_SPEED !== undefined && cfg.PRED_SPEED_PCT === undefined) {
+        // Best-effort: old default was 25 with MAX_SPEED 15 → ~167%, cap at 200
+        const ms = cfg.MAX_SPEED || params.MAX_SPEED || 15;
+        cfg.PRED_SPEED_PCT = Math.min(200, Math.round(cfg.PRED_SPEED / ms * 100));
+        delete cfg.PRED_SPEED;
+      }
       Object.assign(params, cfg);
       for (const [name, s] of Object.entries(sliders)) {
         const slider = document.getElementById(s.el);
@@ -1165,21 +1249,27 @@
       if (cfg.PRED_ENABLED !== undefined) {
         params.PRED_ENABLED = cfg.PRED_ENABLED;
         updatePredToggleUI();
+        setPredCamEnabled(cfg.PRED_ENABLED);
+        if (!cfg.PRED_ENABLED && (currentCamMode === 'hawkeye' || currentCamMode === 'hawksplit')) {
+          applyCamMode('orbit');
+        }
       }
       // Expand predator section if enabled
       const predSection = document.getElementById('predator-section-header')?.parentElement;
       if (predSection && cfg.PRED_ENABLED) predSection.classList.remove('collapsed');
 
-      // Expand density section if preset has non-default density settings
+      // Expand colors section if preset uses non-default color mode
+      const colorsSection = document.getElementById('colors-section-header')?.parentElement;
+      if (colorsSection && cfg.COLOR_MODE && cfg.COLOR_MODE !== 'none') {
+        colorsSection.classList.remove('collapsed');
+      }
+
+      // Expand density section if preset has non-default speed braking
       const densitySection = document.getElementById('density-section-header')?.parentElement;
       if (densitySection) {
-        const hasNonDefault =
-          (cfg.W_SPEED_SEP   !== undefined && cfg.W_SPEED_SEP   !== DEFAULTS.W_SPEED_SEP) ||
-          (cfg.DENSITY_RADIUS !== undefined && cfg.DENSITY_RADIUS !== DEFAULTS.DENSITY_RADIUS) ||
-          (cfg.DENSITY_LO    !== undefined && cfg.DENSITY_LO    !== DEFAULTS.DENSITY_LO) ||
-          (cfg.DENSITY_HI    !== undefined && cfg.DENSITY_HI    !== DEFAULTS.DENSITY_HI) ||
-          (cfg.COLOR_MODE    !== undefined && cfg.COLOR_MODE    !== 'none');
-        if (hasNonDefault) densitySection.classList.remove('collapsed');
+        if (cfg.W_SPEED_SEP !== undefined && cfg.W_SPEED_SEP !== DEFAULTS.W_SPEED_SEP) {
+          densitySection.classList.remove('collapsed');
+        }
       }
     }
 
@@ -1460,6 +1550,18 @@
       showGuideArrows();
     });
 
+    const hawkHints = [
+      { target: 'sl-predfrc', text: 'Try lowering Agility for wide sweeping passes' },
+      { target: 'sl-escrad', text: 'Adjust escape radius to see larger or smaller panic zones' },
+      { target: 'esc-sphere-toggle', text: '\u2026 And click to show the escape radius to see it visualized' },
+    ];
+    document.getElementById('hawk-hints-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const predSection = document.getElementById('predator-section-header').parentElement;
+      if (predSection.classList.contains('collapsed')) predSection.classList.remove('collapsed');
+      showPresetHints(hawkHints);
+    });
+
     // ── Description toggle ────────────────────────────────────────
     const descBtn = document.getElementById('param-desc-btn');
     descBtn.addEventListener('click', (e) => {
@@ -1482,36 +1584,56 @@
     const camNewBoidBtn  = document.getElementById('cam-new-boid');
     const splitDivider   = document.getElementById('split-divider');
 
+    // Predator section camera buttons (disabled until hawk is on)
+    const predCamOrbitBtn   = document.getElementById('pred-cam-orbit');
+    const predCamHawkeyeBtn = document.getElementById('pred-cam-hawkeye');
+    const predCamSplitBtn   = document.getElementById('pred-cam-split');
+    const predCamBtns = [predCamOrbitBtn, predCamHawkeyeBtn, predCamSplitBtn];
+
     function updateDividerPosition() {
       const panelW = panel.classList.contains('collapsed') ? 0 : 252;
       const leftW = Math.floor((window.innerWidth - panelW) / 2);
       splitDivider.style.left = leftW + 'px';
     }
 
+    function setPredCamEnabled(enabled) {
+      predCamBtns.forEach(b => b.disabled = !enabled);
+    }
+
+    let currentCamMode = 'orbit';
+
     function setCamUI(mode) {
+      currentCamMode = mode;
+      const isSplit = mode === 'split' || mode === 'hawksplit';
+      // Main camera section — orbit is shared; boid's-eye split is 'split'
       camOrbitBtn.classList.toggle('active', mode === 'orbit');
       camBoidseyeBtn.classList.toggle('active', mode === 'boidseye');
       camSplitBtn.classList.toggle('active', mode === 'split');
       camNewBoidBtn.style.display = (mode === 'boidseye' || mode === 'split') ? 'block' : 'none';
-      splitDivider.style.display = mode === 'split' ? 'block' : 'none';
-      if (mode === 'split') updateDividerPosition();
+      splitDivider.style.display = isSplit ? 'block' : 'none';
+      if (isSplit) updateDividerPosition();
+      // Predator section — orbit is shared; hawk split is 'hawksplit'
+      predCamOrbitBtn.classList.toggle('active', mode === 'orbit');
+      predCamHawkeyeBtn.classList.toggle('active', mode === 'hawkeye');
+      predCamSplitBtn.classList.toggle('active', mode === 'hawksplit');
     }
 
-    camOrbitBtn.addEventListener('click', () => {
-      api.setCameraMode('orbit');
-      setCamUI('orbit');
-    });
-    camBoidseyeBtn.addEventListener('click', () => {
-      api.setCameraMode('boidseye');
-      setCamUI('boidseye');
-    });
-    camSplitBtn.addEventListener('click', () => {
-      api.setCameraMode('split');
-      setCamUI('split');
-    });
-    camNewBoidBtn.addEventListener('click', () => {
-      api.pickNewBoid();
-    });
+    function applyCamMode(mode) {
+      api.setCameraMode(mode);
+      setCamUI(mode);
+    }
+
+    // Main camera section clicks
+    camOrbitBtn.addEventListener('click', () => applyCamMode('orbit'));
+    camBoidseyeBtn.addEventListener('click', () => applyCamMode('boidseye'));
+    camSplitBtn.addEventListener('click', () => applyCamMode('split'));
+    camNewBoidBtn.addEventListener('click', () => api.pickNewBoid());
+
+    // Predator section camera clicks
+    predCamOrbitBtn.addEventListener('click', () => applyCamMode('orbit'));
+    predCamHawkeyeBtn.addEventListener('click', () => applyCamMode('hawkeye'));
+    predCamSplitBtn.addEventListener('click', () => applyCamMode('hawksplit'));
+
     window.addEventListener('resize', () => updateDividerPosition());
 
     // ── Color mode toggle ────────────────────────────────────────────
@@ -1572,7 +1694,23 @@
     predToggleBtn.addEventListener('click', () => {
       params.PRED_ENABLED = !params.PRED_ENABLED;
       updatePredToggleUI();
+      setPredCamEnabled(params.PRED_ENABLED);
+      // If hawk turned off while in a hawk camera mode → fall back to orbit
+      if (!params.PRED_ENABLED && (currentCamMode === 'hawkeye' || currentCamMode === 'hawksplit')) {
+        applyCamMode('orbit');
+      }
       clearActivePreset();
+    });
+
+    // ── Escape sphere toggle ──────────────────────────────────────────
+    const escSphereBtn = document.getElementById('esc-sphere-toggle');
+    let escSphereOn = false;
+
+    escSphereBtn.addEventListener('click', () => {
+      escSphereOn = !escSphereOn;
+      escSphereBtn.textContent = escSphereOn ? 'Show escape radius: On' : 'Show escape radius: Off';
+      escSphereBtn.classList.toggle('active', escSphereOn);
+      api.setEscSphereVisible(escSphereOn);
     });
   </script>
 </body>

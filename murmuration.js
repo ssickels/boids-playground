@@ -31,10 +31,13 @@ export const DEFAULTS = {
   W_SPEED_SEP: 0,        // speed braking from personal space violations; 0 = off
   DV_THRESHOLD: 0.75,    // speed-change threshold for velocity coloring
   PRED_ENABLED:  false,
-  PRED_FREQ:     20,     // seconds between attacks
-  PRED_DURATION: 10,     // seconds per attack
-  PRED_SPEED:    25,     // hawk max speed
+  PRED_SPEED_PCT: 130,   // hawk speed as % of MAX_SPEED
   PRED_FORCE:    5.0,    // hawk steering force / agility
+  ESCAPE_RADIUS:     8,    // world-unit radius around hawk that triggers escape
+  ESCAPE_SPEED_PCT:  140,  // target escape speed as % of MAX_SPEED
+  ESCAPE_ACCEL_MULT: 2.0,  // multiplier on MAX_FORCE during escape
+  ESCAPE_BLEND:      0.5,  // blend-back time (seconds) after exiting escape radius
+  CANCEL_SEP:        true, // boid-boid separation is cancelled during escape
 };
 
 // ── Spatial hash ─────────────────────────────────────────────────────
@@ -172,7 +175,7 @@ export function initScene(container, params) {
   }
 
   window.addEventListener('resize', () => {
-    if (cameraMode === 'split') {
+    if (cameraMode === 'split' || cameraMode === 'hawksplit') {
       const vp = getSplitViewports();
       camera.aspect = vp.leftW / vp.h;
       camera.updateProjectionMatrix();
@@ -199,16 +202,18 @@ export function initScene(container, params) {
   // ── Predator state ────────────────────────────────────────────────
   const pred = {
     active: false,
-    timer: 5, // initial delay before first attack
-    elapsed: 0,
     x: 0, y: 0, z: 0,
     vx: 0, vy: 0, vz: 0,
   };
+
+  // ── Per-bird escape fade ────────────────────────────────────────
+  let escFade = new Float32Array(MAX_BIRDS);
 
   function reinit(n) {
     count = n;
     avgND.fill(0);
     prevSpd.fill(0);
+    escFade.fill(0);
     // Spawn in a tight sphere so the neighbor graph starts connected.
     // Radius scales with cube root of count to keep density roughly constant.
     const spawnR = Math.cbrt(n) * 0.6;
@@ -238,8 +243,8 @@ export function initScene(container, params) {
     }
     // reset predator
     pred.active = false;
-    pred.timer = 3 + Math.random() * 2;
     if (predMesh) predMesh.visible = false;
+    if (escSphere) escSphere.visible = false;
 
     if (instMesh) {
       instMesh.count = count;
@@ -300,7 +305,7 @@ export function initScene(container, params) {
   scene.add(wireMesh);
 
   // ── Predator mesh ──────────────────────────────────────────────────
-  const predGeo = new THREE.ConeGeometry(0.5, 1.5, 8);
+  const predGeo = new THREE.ConeGeometry(0.18, 0.5, 8);
   predGeo.rotateX(Math.PI / 2); // point along +Z
   const predMat = new THREE.MeshBasicMaterial({ color: 0xff2200 });
   const predMesh = new THREE.Mesh(predGeo, predMat);
@@ -308,8 +313,20 @@ export function initScene(container, params) {
   scene.add(predMesh);
   const _predLookTarget = new THREE.Vector3();
 
+  // ── Escape radius sphere ─────────────────────────────────────────
+  const escSphereGeo = new THREE.SphereGeometry(1, 16, 12); // unit sphere, scaled per frame
+  const escSphereMat = new THREE.MeshBasicMaterial({
+    color: 0xff0000, wireframe: true, transparent: true, opacity: 0.15,
+  });
+  const escSphere = new THREE.Mesh(escSphereGeo, escSphereMat);
+  escSphere.visible = false;
+  scene.add(escSphere);
+
+  // ── Escape sphere visibility preference ──────────────────────────
+  let _escSphereWanted = false;
+
   // ── Predator functions ────────────────────────────────────────────
-  function spawnPredator() {
+  function activatePredator() {
     // Spawn on sphere biased upward, aimed at centroid
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(Math.random() * 0.6); // bias toward upper hemisphere
@@ -320,56 +337,49 @@ export function initScene(container, params) {
     // Initial velocity aimed at centroid
     const dx = centX - pred.x, dy = centY - pred.y, dz = centZ - pred.z;
     const d = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
-    const spd = params.PRED_SPEED;
+    const spd = params.MAX_SPEED * params.PRED_SPEED_PCT / 100;
     pred.vx = dx / d * spd; pred.vy = dy / d * spd; pred.vz = dz / d * spd;
     pred.active = true;
-    pred.elapsed = 0;
     predMesh.visible = true;
   }
 
-  function despawnPredator() {
+  function deactivatePredator() {
     pred.active = false;
     predMesh.visible = false;
-    // Randomize ±20% of PRED_FREQ
-    pred.timer = params.PRED_FREQ * (0.8 + Math.random() * 0.4);
+    if (escSphere) escSphere.visible = false;
   }
 
   function updatePredator(dt) {
     if (!params.PRED_ENABLED) {
-      if (pred.active) despawnPredator();
+      if (pred.active) deactivatePredator();
       return;
     }
     if (!pred.active) {
-      pred.timer -= dt;
-      if (pred.timer <= 0) spawnPredator();
+      activatePredator();
       return;
     }
-    pred.elapsed += dt;
-    const mSpd = params.PRED_SPEED;
+    const mSpd = params.MAX_SPEED * params.PRED_SPEED_PCT / 100;
     const minSpd = mSpd * 0.5;
 
-    if (pred.elapsed < params.PRED_DURATION) {
-      // Chase phase: steer toward densest bird
-      let targetX = centX, targetY = centY, targetZ = centZ;
-      let bestND = -1;
-      for (let i = 0; i < count; i++) {
-        if (avgND[i] > bestND) { bestND = avgND[i]; targetX = px[i]; targetY = py[i]; targetZ = pz[i]; }
-      }
-      const dx = targetX - pred.x, dy = targetY - pred.y, dz = targetZ - pred.z;
-      const mag = Math.sqrt(dx * dx + dy * dy + dz * dz);
-      if (mag > 1e-6) {
-        const s = mSpd / mag;
-        const desVx = dx * s, desVy = dy * s, desVz = dz * s;
-        let sx = desVx - pred.vx, sy = desVy - pred.vy, sz = desVz - pred.vz;
-        const fm = Math.sqrt(sx * sx + sy * sy + sz * sz);
-        if (fm > params.PRED_FORCE) {
-          const c = params.PRED_FORCE / fm;
-          sx *= c; sy *= c; sz *= c;
-        }
-        pred.vx += sx * dt; pred.vy += sy * dt; pred.vz += sz * dt;
-      }
+    // Always steer toward densest bird
+    let targetX = centX, targetY = centY, targetZ = centZ;
+    let bestND = -1;
+    for (let i = 0; i < count; i++) {
+      if (avgND[i] > bestND) { bestND = avgND[i]; targetX = px[i]; targetY = py[i]; targetZ = pz[i]; }
     }
-    // else: exit phase — fly straight (no steering), until far enough to despawn
+    const dx = targetX - pred.x, dy = targetY - pred.y, dz = targetZ - pred.z;
+    const mag = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (mag > 1e-6) {
+      const s = mSpd / mag;
+      const desVx = dx * s, desVy = dy * s, desVz = dz * s;
+      let sx = desVx - pred.vx, sy = desVy - pred.vy, sz = desVz - pred.vz;
+      const fm = Math.sqrt(sx * sx + sy * sy + sz * sz);
+      if (fm > params.PRED_FORCE) {
+        const c = params.PRED_FORCE / fm;
+        sx *= c; sy *= c; sz *= c;
+      }
+      pred.vx += sx * dt; pred.vy += sy * dt; pred.vz += sz * dt;
+    }
 
     // Clamp speed
     let spd = Math.sqrt(pred.vx * pred.vx + pred.vy * pred.vy + pred.vz * pred.vz);
@@ -385,21 +395,31 @@ export function initScene(container, params) {
       if (pred.vy < 0) pred.vy = 0;
     }
 
-    // Despawn check (exit phase only)
-    if (pred.elapsed >= params.PRED_DURATION) {
-      const dx = pred.x - centX, dy = pred.y - centY, dz = pred.z - centZ;
-      if (dx * dx + dy * dy + dz * dz > 200 * 200) despawnPredator();
+    // Re-entry guard: if hawk drifts too far from flock, teleport back to entry sphere
+    {
+      const rx = pred.x - centX, ry = pred.y - centY, rz = pred.z - centZ;
+      if (rx * rx + ry * ry + rz * rz > 250 * 250) {
+        activatePredator();
+        return;
+      }
     }
 
     // Update mesh
-    if (pred.active) {
-      predMesh.position.set(pred.x, pred.y, pred.z);
-      _predLookTarget.set(pred.x + pred.vx, pred.y + pred.vy, pred.z + pred.vz);
-      predMesh.lookAt(_predLookTarget);
+    predMesh.position.set(pred.x, pred.y, pred.z);
+    _predLookTarget.set(pred.x + pred.vx, pred.y + pred.vy, pred.z + pred.vz);
+    predMesh.lookAt(_predLookTarget);
+
+    // Update escape radius sphere
+    if (_escSphereWanted) {
+      escSphere.visible = true;
+      escSphere.position.set(pred.x, pred.y, pred.z);
+      const r = params.ESCAPE_RADIUS;
+      escSphere.scale.set(r, r, r);
     }
   }
 
   const _densityColor = new THREE.Color();
+  const _escapeColor  = new THREE.Color(1.0, 0.12, 0.05); // bright red for escape radius
 
   function updateDensityColors() {
     const lo = params.DENSITY_LO, hi = params.DENSITY_HI;
@@ -469,7 +489,7 @@ export function initScene(container, params) {
   }
 
   function updateInstances() {
-    const scaleTracked = cameraMode === 'orbit' || cameraMode === 'split';
+    const scaleTracked = cameraMode === 'orbit' || cameraMode === 'split' || cameraMode === 'hawksplit';
     for (let i = 0; i < count; i++) {
       _mat4.makeTranslation(px[i], py[i], pz[i]);
       if (i === trackedBoid && scaleTracked) {
@@ -532,11 +552,26 @@ export function initScene(container, params) {
     hash.clear();
     for (let i = 0; i < count; i++) hash.insert(i, px[i], py[i], pz[i]);
 
-    // Inject predator as virtual boid at index `count`
-    if (pred.active && count < MAX_BIRDS) {
-      px[count] = pred.x; py[count] = pred.y; pz[count] = pred.z;
-      vx[count] = pred.vx; vy[count] = pred.vy; vz[count] = pred.vz;
-      hash.insert(count, pred.x, pred.y, pred.z);
+    // ── Escape fade update (before flocking forces) ──────────────────
+    if (pred.active) {
+      const escR = params.ESCAPE_RADIUS;
+      const escR2 = escR * escR;
+      const blendTime = Math.max(0.01, params.ESCAPE_BLEND);
+      for (let i = 0; i < count; i++) {
+        const edx = px[i] - pred.x, edy = py[i] - pred.y, edz = pz[i] - pred.z;
+        const d2 = edx * edx + edy * edy + edz * edz;
+        if (d2 < escR2) {
+          escFade[i] = 1.0; // full panic
+        } else {
+          escFade[i] = Math.max(0, escFade[i] - dt / blendTime);
+        }
+      }
+    } else {
+      // Decay all escape fades when hawk inactive
+      const blendTime = Math.max(0.01, params.ESCAPE_BLEND);
+      for (let i = 0; i < count; i++) {
+        if (escFade[i] > 0) escFade[i] = Math.max(0, escFade[i] - dt / blendTime);
+      }
     }
 
     // ── Density count pass (pre-update — all positions are consistent) ──
@@ -562,43 +597,42 @@ export function initScene(container, params) {
       const nLen = hash.findNearest(i, px[i], py[i], pz[i], Nmax, px, py, pz, _neighbors);
       if (nLen === 0) continue;
 
-      let ax = 0, ay = 0, az = 0;
+      const ef = escFade[i]; // escape factor for this boid
 
       // ── Separation (uses closest N_SEP neighbors) ─────────────────
       // Also track avg neighbor distance as a density proxy for centroid pull
-      let sepX = 0, sepY = 0, sepZ = 0, sepCnt = 0;
+      let sepAx = 0, sepAy = 0, sepAz = 0;
       let avgDist = 0;
       let ncX = 0, ncY = 0, ncZ = 0; // neighbor centroid accumulator
       const sepLen = Math.min(Nsep, nLen);
-      for (let j = 0; j < nLen; j++) {
-        const ni = _neighbors[j];
-        ncX += px[ni]; ncY += py[ni]; ncZ += pz[ni];
-        const dx = px[i] - px[ni], dy = py[i] - py[ni], dz = pz[i] - pz[ni];
-        const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        avgDist += d;
-        if (j < sepLen && d > 0 && d < SEP_DIST) {
-          const inv = 1 / d;
-          sepX += dx * inv; sepY += dy * inv; sepZ += dz * inv;
-          sepCnt++;
+      {
+        let sepX = 0, sepY = 0, sepZ = 0, sepCnt = 0;
+        for (let j = 0; j < nLen; j++) {
+          const ni = _neighbors[j];
+          ncX += px[ni]; ncY += py[ni]; ncZ += pz[ni];
+          const dx = px[i] - px[ni], dy = py[i] - py[ni], dz = pz[i] - pz[ni];
+          const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+          avgDist += d;
+          if (j < sepLen && d > 0 && d < SEP_DIST) {
+            const inv = 1 / d;
+            sepX += dx * inv; sepY += dy * inv; sepZ += dz * inv;
+            sepCnt++;
+          }
+        }
+        avgDist /= nLen;
+        if (sepCnt > 0) {
+          sepX /= sepCnt; sepY /= sepCnt; sepZ /= sepCnt;
+          steerScalar(sepX, sepY, sepZ, vx[i], vy[i], vz[i], mSpd, mFrc);
+          sepAx = _steer[0] * params.W_SEP; sepAy = _steer[1] * params.W_SEP; sepAz = _steer[2] * params.W_SEP;
         }
       }
-      avgDist /= nLen;
       // Boundary detection: how far the neighbor centroid is offset from this bird
       ncX /= nLen; ncY /= nLen; ncZ /= nLen;
       const edX = ncX - px[i], edY = ncY - py[i], edZ = ncZ - pz[i];
       const edgeMag = Math.sqrt(edX * edX + edY * edY + edZ * edZ);
       const edgeSignal = avgDist > 0.01 ? Math.min(edgeMag / avgDist, 1) : 0;
-      if (sepCnt > 0) {
-        sepX /= sepCnt; sepY /= sepCnt; sepZ /= sepCnt;
-        steerScalar(sepX, sepY, sepZ, vx[i], vy[i], vz[i], mSpd, mFrc);
-        ax += _steer[0] * params.W_SEP; ay += _steer[1] * params.W_SEP; az += _steer[2] * params.W_SEP;
-      }
 
       // ── Metric personal space (all nearby birds, not just topological N) ──
-      // Topological separation above only checks the N nearest neighbors.
-      // This checks ALL birds in the spatial hash neighborhood within a
-      // metric radius — collision avoidance that scales with actual density,
-      // producing more uniform flock density with a sharper boundary.
       const psR = params.PERSONAL_SPACE;
       let speedBrake = 0;
       if (psR > 0) {
@@ -615,7 +649,6 @@ export function initScene(container, params) {
             const inv = 1 / d;
             psX += dx * inv; psY += dy * inv; psZ += dz * inv;
             psCnt++;
-            // Track deepest penetration for speed braking
             const penetration = (psR - d) / psR;
             if (penetration > speedBrake) speedBrake = penetration;
           }
@@ -623,52 +656,98 @@ export function initScene(container, params) {
         if (psCnt > 0) {
           psX /= psCnt; psY /= psCnt; psZ /= psCnt;
           steerScalar(psX, psY, psZ, vx[i], vy[i], vz[i], mSpd, mFrc);
-          ax += _steer[0] * params.W_SEP; ay += _steer[1] * params.W_SEP; az += _steer[2] * params.W_SEP;
+          sepAx += _steer[0] * params.W_SEP; sepAy += _steer[1] * params.W_SEP; sepAz += _steer[2] * params.W_SEP;
         }
       }
 
       // ── Alignment (front/back hemisphere weighting) ─────────────────
-      // dot(myVelocity, neighborPos - myPos) > 0 → neighbor is in front
-      // Front neighbors get weight = FRONT_BIAS, back neighbors get weight = 1
-      let aliX = 0, aliY = 0, aliZ = 0, aliW = 0;
-      const fb = params.FRONT_BIAS;
-      for (let j = 0; j < nLen; j++) {
-        const ni = _neighbors[j];
-        const dot = vx[i] * (px[ni] - px[i]) + vy[i] * (py[ni] - py[i]) + vz[i] * (pz[ni] - pz[i]);
-        const w = dot > 0 ? fb : 1;
-        aliX += vx[ni] * w; aliY += vy[ni] * w; aliZ += vz[ni] * w;
-        aliW += w;
+      let aliAx = 0, aliAy = 0, aliAz = 0;
+      {
+        let aliX = 0, aliY = 0, aliZ = 0, aliW = 0;
+        const fb = params.FRONT_BIAS;
+        for (let j = 0; j < nLen; j++) {
+          const ni = _neighbors[j];
+          const dot = vx[i] * (px[ni] - px[i]) + vy[i] * (py[ni] - py[i]) + vz[i] * (pz[ni] - pz[i]);
+          const w = dot > 0 ? fb : 1;
+          aliX += vx[ni] * w; aliY += vy[ni] * w; aliZ += vz[ni] * w;
+          aliW += w;
+        }
+        if (aliW > 0) { aliX /= aliW; aliY /= aliW; aliZ /= aliW; }
+        steerScalar(aliX, aliY, aliZ, vx[i], vy[i], vz[i], mSpd, mFrc);
+        const effectiveAli = params.W_ALI * (1 + edgeSignal * params.EDGE_ALI);
+        aliAx = _steer[0] * effectiveAli; aliAy = _steer[1] * effectiveAli; aliAz = _steer[2] * effectiveAli;
       }
-      if (aliW > 0) { aliX /= aliW; aliY /= aliW; aliZ /= aliW; }
-      steerScalar(aliX, aliY, aliZ, vx[i], vy[i], vz[i], mSpd, mFrc);
-      const effectiveAli = params.W_ALI * (1 + edgeSignal * params.EDGE_ALI);
-      ax += _steer[0] * effectiveAli; ay += _steer[1] * effectiveAli; az += _steer[2] * effectiveAli;
 
       // ── Cohesion (same front/back weighting) ──────────────────────
-      let cohX = 0, cohY = 0, cohZ = 0, cohW = 0;
-      for (let j = 0; j < nLen; j++) {
-        const ni = _neighbors[j];
-        const dot = vx[i] * (px[ni] - px[i]) + vy[i] * (py[ni] - py[i]) + vz[i] * (pz[ni] - pz[i]);
-        const w = dot > 0 ? fb : 1;
-        cohX += px[ni] * w; cohY += py[ni] * w; cohZ += pz[ni] * w;
-        cohW += w;
+      let cohAx = 0, cohAy = 0, cohAz = 0;
+      {
+        let cohX = 0, cohY = 0, cohZ = 0, cohW = 0;
+        const fb = params.FRONT_BIAS;
+        for (let j = 0; j < nLen; j++) {
+          const ni = _neighbors[j];
+          const dot = vx[i] * (px[ni] - px[i]) + vy[i] * (py[ni] - py[i]) + vz[i] * (pz[ni] - pz[i]);
+          const w = dot > 0 ? fb : 1;
+          cohX += px[ni] * w; cohY += py[ni] * w; cohZ += pz[ni] * w;
+          cohW += w;
+        }
+        if (cohW > 0) { cohX /= cohW; cohY /= cohW; cohZ /= cohW; }
+        cohX -= px[i]; cohY -= py[i]; cohZ -= pz[i];
+        steerScalar(cohX, cohY, cohZ, vx[i], vy[i], vz[i], mSpd, mFrc);
+        cohAx = _steer[0] * params.W_COH; cohAy = _steer[1] * params.W_COH; cohAz = _steer[2] * params.W_COH;
       }
-      if (cohW > 0) { cohX /= cohW; cohY /= cohW; cohZ /= cohW; }
-      cohX -= px[i]; cohY -= py[i]; cohZ -= pz[i];
-      steerScalar(cohX, cohY, cohZ, vx[i], vy[i], vz[i], mSpd, mFrc);
-      ax += _steer[0] * params.W_COH; ay += _steer[1] * params.W_COH; az += _steer[2] * params.W_COH;
+
+      // ── Combine flocking forces (escape-aware) ─────────────────────
+      let ax, ay, az;
+      let effectiveMaxSpd = mSpd, effectiveMinSpd = minSpd;
+
+      if (ef > 0) {
+        // Compute escape steering (direction away from predator)
+        const edx = px[i] - pred.x, edy = py[i] - pred.y, edz = pz[i] - pred.z;
+        const escMaxSpd = mSpd * params.ESCAPE_SPEED_PCT / 100;
+        const escMaxFrc = mFrc * params.ESCAPE_ACCEL_MULT;
+        steerScalar(edx, edy, edz, vx[i], vy[i], vz[i], escMaxSpd, escMaxFrc);
+        const escAx = _steer[0], escAy = _steer[1], escAz = _steer[2];
+
+        if (ef >= 1.0) {
+          // Full escape: escape replaces cohesion + alignment
+          if (params.CANCEL_SEP) {
+            ax = escAx; ay = escAy; az = escAz;
+          } else {
+            ax = sepAx + escAx; ay = sepAy + escAy; az = sepAz + escAz;
+          }
+        } else {
+          // Blend phase: lerp between normal flocking and escape
+          const normalAx = sepAx + aliAx + cohAx;
+          const normalAy = sepAy + aliAy + cohAy;
+          const normalAz = sepAz + aliAz + cohAz;
+          let escFullAx, escFullAy, escFullAz;
+          if (params.CANCEL_SEP) {
+            escFullAx = escAx; escFullAy = escAy; escFullAz = escAz;
+          } else {
+            escFullAx = sepAx + escAx; escFullAy = sepAy + escAy; escFullAz = sepAz + escAz;
+          }
+          ax = normalAx + (escFullAx - normalAx) * ef;
+          ay = normalAy + (escFullAy - normalAy) * ef;
+          az = normalAz + (escFullAz - normalAz) * ef;
+        }
+
+        // Boost effective max speed during escape
+        effectiveMaxSpd = mSpd + (mSpd * params.ESCAPE_SPEED_PCT / 100 - mSpd) * ef;
+        effectiveMinSpd = minSpd; // keep same min
+      } else {
+        // Normal flocking (no escape)
+        ax = sepAx + aliAx + cohAx;
+        ay = sepAy + aliAy + cohAy;
+        az = sepAz + aliAz + cohAz;
+      }
 
       // ── Seek flock centroid (adaptive: isolated birds pull harder) ──
       {
         const dx = centX - px[i], dy = centY - py[i], dz = centZ - pz[i];
         const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (dist > 2.5) {
-          // avgDist < 2 → dense flock → pull ≈ 0.05 (minimal)
-          // avgDist > 8 → isolated   → pull scales with HOMING
           const isolation = Math.min(Math.max((avgDist - 2) / 6, 0), 1);
           const pullW = 0.05 + isolation * params.HOMING;
-          // Direct acceleration toward centroid — no MAX_FORCE clamp,
-          // so homing can actually overpower the bird's momentum
           const inv = pullW / dist;
           ax += dx * inv; ay += dy * inv; az += dz * inv;
         }
@@ -683,34 +762,25 @@ export function initScene(container, params) {
       else if (pz[i] < -bz) az += BND_K * (((-bz) - pz[i]) / BND_MARGIN) * (((-bz) - pz[i]) / BND_MARGIN);
 
       // ── Ground floor (keep birds above the checkerboard) ─────────
-      // Wide zone so birds bank away smoothly instead of bouncing.
-      // Velocity-aware: diving birds feel extra upward push proportional
-      // to their downward speed, producing gentle banking turns.
       const GND_MARGIN = BND_MARGIN * 2; // 40 units — start turning early
       if (py[i] < GROUND_Y + GND_MARGIN) {
         const depth = (GROUND_Y + GND_MARGIN - py[i]) / GND_MARGIN;
         const groundK = BND_K * (mSpd / 15) * 3;
         ay += groundK * depth * depth;
-        // Counter downward velocity — the faster the dive, the harder the push
         if (vy[i] < 0) {
           ay -= vy[i] * depth * 0.5;
         }
       }
 
-      // ── Wind drift (disabled — see comment above) ──────────────────
-      // if (params.WIND) { ax += windX; ay += windY; az += windZ; }
-
       // ── Integrate ──────────────────────────────────────────────────
       vx[i] += ax * dt; vy[i] += ay * dt; vz[i] += az * dt;
 
-      // clamp speed
+      // clamp speed (escape-aware limits)
       let spd = Math.sqrt(vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i]);
-      if (spd > mSpd)                   { const s = mSpd / spd; vx[i] *= s; vy[i] *= s; vz[i] *= s; }
-      else if (spd < minSpd && spd > 1e-6) { const s = minSpd / spd; vx[i] *= s; vy[i] *= s; vz[i] *= s; }
+      if (spd > effectiveMaxSpd)                   { const s = effectiveMaxSpd / spd; vx[i] *= s; vy[i] *= s; vz[i] *= s; }
+      else if (spd < effectiveMinSpd && spd > 1e-6) { const s = effectiveMinSpd / spd; vx[i] *= s; vy[i] *= s; vz[i] *= s; }
 
       // ── Speed braking from personal space violations ──────────────
-      // Applied after speed clamp so braking can push below min speed,
-      // enabling wave propagation through the flock.
       if (speedBrake > 0 && params.W_SPEED_SEP > 0) {
         const scale = Math.max(0.01, 1 - params.W_SPEED_SEP * speedBrake);
         vx[i] *= scale; vy[i] *= scale; vz[i] *= scale;
@@ -718,7 +788,7 @@ export function initScene(container, params) {
 
       px[i] += vx[i] * dt; py[i] += vy[i] * dt; pz[i] += vz[i] * dt;
 
-      // Hard floor — safety net, should rarely trigger now
+      // Hard floor — safety net
       if (py[i] < GROUND_Y) {
         py[i] = GROUND_Y;
         if (vy[i] < 0) vy[i] = 0;
@@ -727,7 +797,7 @@ export function initScene(container, params) {
   }
 
   // ── Camera mode ──────────────────────────────────────────────────
-  let cameraMode = 'orbit';   // 'orbit' | 'boidseye' | 'split'
+  let cameraMode = 'orbit';   // 'orbit' | 'boidseye' | 'split' | 'hawkeye' | 'hawksplit'
   let trackedBoid = 0;
 
   function pickNewBoid() {
@@ -740,20 +810,30 @@ export function initScene(container, params) {
     if (mode === 'boidseye') {
       pickNewBoid();
     } else if (mode === 'split') {
-      // Pick a new boid only if we don't already have a valid one
       if (prev !== 'boidseye' || trackedBoid >= count) pickNewBoid();
-      // Update both camera aspects for split viewports
+    }
+    if (mode === 'split' || mode === 'hawksplit') {
       const vp = getSplitViewports();
       camera.aspect = vp.leftW / vp.h;
       camera.updateProjectionMatrix();
       chaseCam.aspect = vp.rightW / vp.h;
       chaseCam.updateProjectionMatrix();
-    }
-    if (mode !== 'split') {
-      // Restore full-screen aspect for the main camera
+    } else {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
     }
+  }
+
+  // ── Hawk's-eye camera positioning ─────────────────────────────────
+  function positionHawkCam(cam) {
+    const pvx = pred.vx, pvy = pred.vy, pvz = pred.vz;
+    const spd = Math.sqrt(pvx * pvx + pvy * pvy + pvz * pvz);
+    const inv = spd > 1e-6 ? 1 / spd : 0;
+    const nx = pvx * inv, ny = pvy * inv, nz = pvz * inv;
+    cam.position.x = pred.x - nx * 3;
+    cam.position.y = pred.y - ny * 3 + 0.5;
+    cam.position.z = pred.z - nz * 3;
+    cam.lookAt(pred.x + nx * 8, pred.y + ny * 8, pred.z + nz * 8);
   }
 
   // ── Camera positioning helpers ──────────────────────────────────────
@@ -824,6 +904,13 @@ export function initScene(container, params) {
       }
     }
 
+    // Override: bright red for boids currently inside the escape radius
+    if (pred.active && _escSphereWanted) {
+      for (let i = 0; i < count; i++) {
+        if (escFade[i] >= 1.0) instMesh.setColorAt(i, _escapeColor);
+      }
+    }
+
     // ── Tracked boid helpers ─────────────────────────────────────────
     if (trackedBoid >= count) pickNewBoid();
 
@@ -832,9 +919,10 @@ export function initScene(container, params) {
       instMesh.getColorAt(trackedBoid, _savedColor);
     }
 
-    if (cameraMode === 'split') {
+    if (cameraMode === 'split' || cameraMode === 'hawksplit') {
       // ── SPLIT MODE — two render passes ────────────────────────────
       const vp = getSplitViewports();
+      const isHawkSplit = cameraMode === 'hawksplit';
 
       renderer.autoClear = false;
       renderer.setScissorTest(true);
@@ -854,9 +942,9 @@ export function initScene(container, params) {
       renderer.clear();
       renderer.render(scene, camera);
 
-      // PASS 2 — Right half (Boid's Eye)
-      // Restore tracked boid's density/velocity color (or yellow if colorMode='none')
-      if (trackedBoid < count) {
+      // PASS 2 — Right half (Boid's Eye or Hawk's Eye)
+      if (!isHawkSplit && trackedBoid < count) {
+        // Boid's eye right half
         if (colorMode !== 'none') {
           instMesh.setColorAt(trackedBoid, _savedColor);
           wireMesh.position.set(px[trackedBoid], py[trackedBoid], pz[trackedBoid]);
@@ -865,12 +953,15 @@ export function initScene(container, params) {
           instMesh.setColorAt(trackedBoid, _highlightColor);
           wireMesh.visible = false;
         }
-        // Un-scale tracked boid for boid's-eye half
         setTrackedBoidScale(false);
         if (instMesh.instanceColor) instMesh.instanceColor.needsUpdate = true;
       }
 
-      positionChaseCam(chaseCam);
+      if (isHawkSplit && pred.active) {
+        positionHawkCam(chaseCam);
+      } else {
+        positionChaseCam(chaseCam);
+      }
 
       renderer.setViewport(vp.leftW, 0, vp.rightW, vp.h);
       renderer.setScissor(vp.leftW, 0, vp.rightW, vp.h);
@@ -879,7 +970,7 @@ export function initScene(container, params) {
 
       // Cleanup — restore for next frame
       if (trackedBoid < count) {
-        setTrackedBoidScale(true); // re-scale 3x for next frame's orbit half
+        setTrackedBoidScale(true);
       }
       wireMesh.visible = false;
       renderer.setScissorTest(false);
@@ -903,6 +994,8 @@ export function initScene(container, params) {
 
       if (cameraMode === 'boidseye') {
         positionChaseCam(camera);
+      } else if (cameraMode === 'hawkeye' && pred.active) {
+        positionHawkCam(camera);
       } else {
         positionOrbitCam(camera);
       }
@@ -914,5 +1007,10 @@ export function initScene(container, params) {
   animate();
 
   // public API
-  return { reinit, setCameraMode, pickNewBoid, setColorMode, setPanelOpen, pred };
+  function setEscSphereVisible(v) {
+    _escSphereWanted = v;
+    escSphere.visible = v && pred.active;
+  }
+
+  return { reinit, setCameraMode, pickNewBoid, setColorMode, setPanelOpen, pred, setEscSphereVisible, activatePredator, deactivatePredator };
 }

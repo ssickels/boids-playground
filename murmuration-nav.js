@@ -7,6 +7,7 @@
   <div id="nav-tabs">
     <a href="/murmuration.html" class="nav-tab" data-path="murmuration.html">Playground</a>
     <a href="/murmuration-about.html" class="nav-tab" data-path="murmuration-about">How It Works</a>
+    <a href="/murmuration-hawk.html" class="nav-tab" data-path="murmuration-hawk">Hawk Attack</a>
     <a href="/murmuration-waves.html" class="nav-tab" data-path="murmuration-waves">Density Waves</a>
     <a href="/murmuration-intro.html" class="nav-tab" data-path="murmuration-intro">About</a>
   </div>
@@ -38,6 +39,7 @@
       <div class="nav-panel-heading">Boids / Murmurations</div>
       <a href="https://stevessite.com/murmuration.html">Playground</a>
       <a href="https://stevessite.com/murmuration-about.html">How It Works</a>
+      <a href="https://stevessite.com/murmuration-hawk.html">Hawk Attack</a>
       <a href="https://stevessite.com/murmuration-waves.html">Density Waves</a>
       <a href="https://stevessite.com/murmuration-intro.html">About</a>
       <a href="https://github.com/ssickels/boids-playgrounds" target="_blank" class="nav-panel-github">GitHub ↗</a>
