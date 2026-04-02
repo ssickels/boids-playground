@@ -72,7 +72,7 @@
   margin-left: 8px;
 }
 .nav-tab {
-  color: rgba(136, 136, 204, 0.55);
+  color: rgba(136, 136, 204, 0.65);
   text-decoration: none;
   font-size: 12px;
   font-family: system-ui, -apple-system, sans-serif;
@@ -82,10 +82,10 @@
   border-bottom: 2px solid transparent;
   transition: color 0.15s, border-color 0.15s;
 }
-.nav-tab:hover { color: #aaaaee; }
+.nav-tab:hover { color: #bbbbff; }
 .nav-tab.nav-tab-active {
-  color: #8888cc;
-  border-bottom: 2px solid #8888cc;
+  color: #9999dd;
+  border-bottom: 2px solid #9999dd;
 }
 #nav-hamburger {
   background: none;
@@ -102,10 +102,10 @@
   display: block;
   width: 18px;
   height: 1.5px;
-  background: #8888cc;
+  background: #9999dd;
   transition: background 0.15s;
 }
-#nav-hamburger:hover span { background: #aaaaee; }
+#nav-hamburger:hover span { background: #bbbbff; }
 #nav-panel {
   display: none;
   flex-direction: column;
@@ -123,7 +123,7 @@
 }
 #nav-panel.is-open { display: flex; }
 .nav-panel-home {
-  color: #aaaaee;
+  color: #bbbbff;
   text-decoration: none;
   padding: 7px 18px;
   display: block;
@@ -140,34 +140,34 @@
 }
 .nav-panel-section:last-child { border-bottom: none; }
 .nav-panel-heading {
-  color: rgba(136, 136, 204, 0.55);
+  color: rgba(136, 136, 204, 0.65);
   font-size: 10.5px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 5px 18px 3px;
 }
 .nav-panel-section a {
-  color: #8888cc;
+  color: #9999dd;
   text-decoration: none;
   padding: 5px 18px 5px 28px;
   transition: background 0.12s, color 0.12s;
 }
 .nav-panel-section a:hover {
   background: rgba(136, 136, 204, 0.10);
-  color: #aaaaee;
+  color: #bbbbff;
 }
 .nav-panel-top-link {
   padding-left: 18px !important;
 }
 .nav-panel-github {
-  color: rgba(136, 136, 204, 0.4) !important;
+  color: rgba(136, 136, 204, 0.5) !important;
   font-size: 11.5px;
 }
 .nav-panel-github:hover {
-  color: rgba(136, 136, 204, 0.75) !important;
+  color: rgba(136, 136, 204, 0.85) !important;
 }
 .nav-panel-contact {
-  color: #8888cc;
+  color: #9999dd;
   text-decoration: none;
   padding: 7px 18px;
   display: block;

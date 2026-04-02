@@ -27,7 +27,7 @@
     .loader-title {
       font-family: system-ui, -apple-system, sans-serif;
       font-size: 1.5rem; font-weight: 300;
-      color: #8888cc; letter-spacing: 0.18em;
+      color: #9999dd; letter-spacing: 0.18em;
       text-transform: uppercase;
       text-align: center;
       line-height: 1.5;
@@ -36,7 +36,7 @@
     .loader-spinner {
       width: 36px; height: 36px;
       border: 2px solid rgba(136, 136, 204, 0.18);
-      border-top-color: #8888cc;
+      border-top-color: #9999dd;
       border-radius: 50%;
       animation: spin 0.9s linear infinite;
     }
@@ -45,7 +45,7 @@
       margin-top: 20px;
       font-family: system-ui, -apple-system, sans-serif;
       font-size: 0.85rem;
-      color: rgba(136, 136, 204, 0.55);
+      color: rgba(136, 136, 204, 0.65);
       letter-spacing: 0.04em;
     }
 
@@ -77,12 +77,12 @@
       padding: 28px 32px;
       max-width: 480px;
       width: 90%;
-      color: #d0d0ee;
+      color: #ddddfb;
       line-height: 1.7;
       font-size: 0.92rem;
     }
     .onboard-card h2 {
-      color: #8888cc;
+      color: #9999dd;
       font-size: 1.15rem;
       font-weight: 400;
       letter-spacing: 0.06em;
@@ -90,10 +90,10 @@
     }
     .onboard-card p {
       margin-bottom: 12px;
-      color: #b0b0d0;
+      color: #c0c0e0;
     }
     .onboard-card .highlight {
-      color: #aaaaee;
+      color: #bbbbff;
     }
     .onboard-card ul {
       margin: 0 0 12px 4px;
@@ -102,11 +102,11 @@
     }
     .onboard-card li {
       padding: 3px 0;
-      color: #b0b0d0;
+      color: #c0c0e0;
       line-height: 1.6;
     }
     .onboard-card li strong {
-      color: #aaaaee;
+      color: #bbbbff;
     }
     .onboard-footer {
       display: flex;
@@ -119,7 +119,7 @@
       background: rgba(136, 136, 204, 0.1);
       border: 1px solid rgba(136, 136, 204, 0.3);
       border-radius: 5px;
-      color: #8888cc;
+      color: #9999dd;
       font-size: 0.9rem;
       padding: 8px 18px;
       cursor: pointer;
@@ -128,160 +128,310 @@
     }
     .onboard-dismiss:hover {
       background: rgba(136, 136, 204, 0.2);
-      color: #aaaaee;
+      color: #bbbbff;
     }
     .onboard-remember {
       display: flex;
       align-items: center;
       gap: 6px;
       font-size: 0.8rem;
-      color: rgba(136, 136, 204, 0.5);
+      color: rgba(136, 136, 204, 0.6);
       cursor: pointer;
       user-select: none;
     }
     .onboard-remember input {
-      accent-color: #8888cc;
+      accent-color: #9999dd;
       cursor: pointer;
     }
 
-    /* ── GUIDE ARROWS ──────────────────────────────────────────────── */
-    .guide-arrow {
+    /* ── BOTTOM CONTROL BAR ──────────────────────────────────────── */
+    #ctrl-bar {
       position: fixed;
-      z-index: 250;
-      pointer-events: none;
+      bottom: 0; left: 0; right: 0;
+      height: 34px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      background: rgba(14, 14, 50, 0.88);
+      border-top: 1px solid rgba(136, 136, 204, 0.18);
+      z-index: 200;
       font-family: system-ui, -apple-system, sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      color: #f5d84a;
-      opacity: 0;
-      transition: opacity 0.5s ease;
+      padding: 0 6px;
+      gap: 2px;
+    }
+    #ctrl-tabs {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-left: auto;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    #ctrl-tabs::-webkit-scrollbar { display: none; }
+    .ctrl-tab {
+      position: relative;
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      padding: 4px 7px;
+      color: rgba(136, 136, 204, 0.65);
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
       white-space: nowrap;
+      transition: color 0.12s, background 0.12s, border-color 0.12s;
     }
-    .guide-arrow.visible { opacity: 1; }
-    .guide-arrow.fade-out { opacity: 0; }
-    .guide-arrow .arrow-char {
-      font-size: 22px;
-      animation: pulse-arrow 1s ease-in-out infinite;
+    .ctrl-tab:hover {
+      color: #bbbbff;
+      background: rgba(136, 136, 204, 0.08);
     }
-    @keyframes pulse-arrow {
-      0%, 100% { opacity: 1; transform: translateX(0); }
-      50% { opacity: 0.5; transform: translateX(4px); }
+    .ctrl-tab.pinned {
+      color: #bbbbff;
+      background: rgba(136, 136, 204, 0.12);
+      border-color: rgba(136, 136, 204, 0.30);
+    }
+    .ctrl-tab.pinned::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: #bbbbff;
+    }
+    .ctrl-tab.hint-highlight {
+      border-color: rgba(245, 216, 74, 0.6);
+      color: #f5d84a;
+    }
+    #ctrl-hints-btn, #ctrl-desc-btn {
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      padding: 4px 7px;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.12s, background 0.12s;
+    }
+    #ctrl-hints-btn {
+      color: rgba(245, 216, 74, 0.55);
+    }
+    #ctrl-hints-btn:hover { color: #f5d84a; }
+    #ctrl-hints-btn.playing { color: #f5d84a; }
+    #ctrl-desc-btn {
+      color: rgba(136, 136, 204, 0.50);
+      font-size: 13px;
+      padding: 4px 6px;
+    }
+    #ctrl-desc-btn:hover { color: #9999dd; }
+    #ctrl-desc-btn.active {
+      color: #bbbbff;
+      border-color: rgba(136, 136, 204, 0.30);
     }
 
-    /* ── SLIDER PANEL ──────────────────────────────────────────────── */
-    #param-panel {
+    /* ── POPUP PANEL ────────────────────────────────────────────── */
+    #ctrl-panel {
+      display: none;
       position: fixed;
-      top: 46px;
+      bottom: 35px;
       right: 12px;
-      width: 240px;
-      max-height: calc(100vh - 56px);
-      display: flex;
-      flex-direction: column;
-      background: rgba(14, 14, 50, 0.82);
+      width: 220px;
+      max-height: 345px;
+      background: rgba(14, 14, 50, 0.88);
       backdrop-filter: blur(6px);
       border: 1px solid rgba(136, 136, 204, 0.18);
       border-radius: 6px;
-      z-index: 200;
+      z-index: 199;
       font-family: system-ui, -apple-system, sans-serif;
       font-size: 12px;
-      color: #b8b8dd;
+      color: #c8c8ee;
       overflow: hidden;
+      flex-direction: column;
     }
-    #param-panel-header {
+    #ctrl-panel.open {
+      display: flex;
+    }
+    #ctrl-panel.preview {
+      opacity: 0.75;
+    }
+    #ctrl-panel.pinned {
+      opacity: 1;
+    }
+    #ctrl-badge-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 8px 10px;
-      cursor: pointer;
-      border-bottom: 1px solid rgba(136, 136, 204, 0.14);
-      user-select: none;
-      flex-shrink: 0;
+      padding: 4px 10px 2px;
+      gap: 8px;
     }
-    #param-panel-header:hover { background: rgba(136, 136, 204, 0.05); }
-    #param-panel-title {
+    #ctrl-section-title {
+      color: rgba(136, 136, 204, 0.85);
       font-size: 11px;
-      letter-spacing: 0.08em;
+      font-weight: 600;
       text-transform: uppercase;
-      color: rgba(136, 136, 204, 0.75);
+      letter-spacing: 0.06em;
+      flex: 1;
     }
-    .panel-header-btns {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+    #ctrl-badge {
+      font-size: 9px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: rgba(136, 136, 204, 0.45);
+      cursor: pointer;
+      transition: color 0.12s;
     }
-    #param-hints-btn, #hawk-hints-btn {
-      background: none; border: none; cursor: pointer;
+    #ctrl-badge:hover { color: rgba(136, 136, 204, 0.65); }
+    #ctrl-panel.preview #ctrl-badge::after { content: 'click to pin'; }
+    #ctrl-panel.pinned #ctrl-badge::after { content: 'pinned'; }
+    #ctrl-section-hints {
+      font-size: 9px;
+      letter-spacing: 0.05em;
       color: rgba(245, 216, 74, 0.45);
-      font-size: 10px; line-height: 1;
-      padding: 0 2px;
-      letter-spacing: 0.03em;
-      font-family: inherit;
-      transition: color 0.15s;
+      cursor: pointer;
+      transition: color 0.12s;
+      text-transform: uppercase;
+      display: none;
     }
-    #param-hints-btn:hover, #hawk-hints-btn:hover { color: #f5d84a; }
-    #hawk-hints-btn { margin-left: auto; }
-    #param-desc-btn {
-      background: none; border: none; cursor: pointer;
-      color: rgba(136, 136, 204, 0.40);
-      font-size: 13px; line-height: 1;
-      padding: 0 2px;
-      transition: color 0.15s;
-    }
-    #param-desc-btn:hover { color: #8888cc; }
-    #param-desc-btn.active { color: #8888cc; }
-    #param-collapse-btn {
-      background: none; border: none; cursor: pointer;
-      color: rgba(136, 136, 204, 0.55);
-      font-size: 14px; line-height: 1;
-      padding: 0 2px;
-      transition: color 0.15s;
-    }
-    #param-collapse-btn:hover { color: #8888cc; }
-    #param-panel-body {
-      padding: 6px 0 4px;
+    #ctrl-section-hints:hover { color: rgba(245, 216, 74, 0.75); }
+    #ctrl-section-hints.visible { display: inline; }
+    .ctrl-section {
+      display: none;
+      padding: 4px 10px 8px;
+      overflow-y: auto;
       flex: 1;
       min-height: 0;
-      overflow-y: auto;
     }
-    #param-panel-body::-webkit-scrollbar { width: 3px; }
-    #param-panel-body::-webkit-scrollbar-track { background: transparent; }
-    #param-panel-body::-webkit-scrollbar-thumb {
+    .ctrl-section::-webkit-scrollbar { width: 3px; }
+    .ctrl-section::-webkit-scrollbar-track { background: transparent; }
+    .ctrl-section::-webkit-scrollbar-thumb {
       background: rgba(136, 136, 204, 0.30);
       border-radius: 2px;
     }
-    #param-panel.collapsed #param-panel-body { display: none; }
-    #param-panel.collapsed { border-radius: 6px; }
-
-    /* section toggle */
-    .param-section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 5px 10px 4px;
-      cursor: pointer;
-      user-select: none;
-    }
-    .param-section-header:hover { background: rgba(136, 136, 204, 0.05); }
-    .param-section-label {
-      font-size: 10px;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      color: rgba(136, 136, 204, 0.55);
-    }
-    .param-section-arrow {
-      font-size: 10px;
-      color: rgba(136, 136, 204, 0.40);
-      transition: transform 0.15s;
-    }
-    .param-section.collapsed .param-section-arrow { transform: rotate(-90deg); }
-    .param-section-body { padding: 0 10px 6px; }
-    .param-section.collapsed .param-section-body { display: none; }
+    .ctrl-section.active { display: block; }
 
     /* hide color-mode-specific sliders until that mode is active */
     [data-color-mode] { display: none; }
+
+    /* description text — shown via panel-level toggle */
+    .desc-txt {
+      font-size: 10px;
+      color: rgba(136, 136, 204, 0.58);
+      line-height: 1.45;
+      margin-top: 1px;
+      display: none;
+    }
+    .desc-txt.btn-desc {
+      padding: 2px 0 4px;
+    }
+    /* grid-spanning desc inside .param-row */
+    .param-row > .desc-txt { grid-column: 1 / -1; }
+    #ctrl-panel.desc-on .desc-txt { display: block; }
+
+    /* preset descriptions */
+    .preset-desc-txt {
+      font-size: 10px;
+      color: rgba(136, 136, 204, 0.58);
+      line-height: 1.45;
+      padding: 2px 8px 4px;
+      display: none;
+    }
+    #ctrl-panel.desc-on .preset-desc-txt { display: block; }
+
+    /* ── HINT CALLOUT ───────────────────────────────────────────── */
+    #hint-callout {
+      display: none;
+      position: fixed;
+      bottom: 35px;
+      right: 240px;
+      z-index: 198;
+      align-items: center;
+      gap: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    #hint-callout.visible {
+      display: flex;
+    }
+    #hint-body {
+      background: rgba(40, 36, 10, 0.92);
+      border: 1px solid rgba(245, 216, 74, 0.3);
+      border-radius: 6px;
+      padding: 12px 14px;
+      max-width: 200px;
+      color: #e8e0b0;
+    }
+    #hint-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #f5d84a;
+      margin-bottom: 4px;
+    }
+    #hint-text {
+      font-size: 11px;
+      line-height: 1.5;
+      color: #d0c890;
+      margin-bottom: 8px;
+    }
+    #hint-progress {
+      height: 2px;
+      background: rgba(245, 216, 74, 0.15);
+      border-radius: 1px;
+      margin-bottom: 6px;
+      overflow: hidden;
+    }
+    #hint-fill {
+      height: 100%;
+      width: 0%;
+      background: #f5d84a;
+      border-radius: 1px;
+      transition: width 0.1s linear;
+    }
+    #hint-controls {
+      display: flex;
+      gap: 8px;
+      font-size: 10px;
+    }
+    #hint-controls span {
+      cursor: pointer;
+      color: rgba(245, 216, 74, 0.6);
+      transition: color 0.12s;
+    }
+    #hint-controls span:hover { color: #f5d84a; }
+    .hint-target {
+      outline: 1.5px solid rgba(245, 216, 74, 0.5);
+      outline-offset: 2px;
+      border-radius: 3px;
+      animation: hint-pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes hint-pulse {
+      0%, 100% { outline-color: rgba(245, 216, 74, 0.5); }
+      50% { outline-color: rgba(245, 216, 74, 0.2); }
+    }
+    @media (max-width: 480px) {
+      #hint-callout {
+        flex-direction: column;
+        right: 12px;
+        bottom: 388px;
+      }
+      #hint-arrow {
+        transform: rotate(90deg);
+      }
+    }
+    #hint-arrow {
+      color: rgba(245, 216, 74, 0.6);
+      font-size: 16px;
+      line-height: 1;
+    }
+    #hint-callout.hint-desc-mode {
+      right: 4px;
+      bottom: 42px;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    #hint-callout.hint-desc-mode #hint-arrow {
+      transform: rotate(90deg);
+      margin-right: 8px;
+    }
 
     /* individual row */
     .param-row {
@@ -294,7 +444,7 @@
     .param-row:last-child { margin-bottom: 0; }
     .param-label {
       font-size: 11px;
-      color: #8888cc;
+      color: #9999dd;
       cursor: help;
       white-space: nowrap;
       overflow: hidden;
@@ -302,7 +452,7 @@
     }
     .param-value {
       font-size: 11px;
-      color: rgba(136, 136, 204, 0.65);
+      color: rgba(136, 136, 204, 0.75);
       text-align: right;
       min-width: 32px;
     }
@@ -321,29 +471,24 @@
       -webkit-appearance: none;
       width: 12px; height: 12px;
       border-radius: 50%;
-      background: #8888cc;
+      background: #9999dd;
       cursor: pointer;
       transition: background 0.12s;
     }
-    .param-slider::-webkit-slider-thumb:hover { background: #aaaaee; }
+    .param-slider::-webkit-slider-thumb:hover { background: #bbbbff; }
     .param-slider::-moz-range-thumb {
       width: 12px; height: 12px;
       border-radius: 50%;
-      background: #8888cc;
+      background: #9999dd;
       border: none;
       cursor: pointer;
     }
 
-    /* divider */
-    .param-divider {
-      height: 1px;
-      background: rgba(136, 136, 204, 0.10);
-      margin: 2px 0;
-    }
+    /* (old divider removed) */
 
     /* ── PRESETS ────────────────────────────────────────────────────── */
     .preset-list {
-      padding: 4px 10px 2px;
+      padding: 0 0 2px;
     }
     .preset-item {
       margin-bottom: 3px;
@@ -358,7 +503,7 @@
       background: rgba(136, 136, 204, 0.06);
       border: 1px solid rgba(136, 136, 204, 0.18);
       border-radius: 4px;
-      color: rgba(136, 136, 204, 0.65);
+      color: rgba(136, 136, 204, 0.75);
       font-family: system-ui, -apple-system, sans-serif;
       font-size: 11px;
       letter-spacing: 0.03em;
@@ -368,33 +513,27 @@
     }
     .preset-btn:hover {
       background: rgba(136, 136, 204, 0.12);
-      color: #aaaaee;
+      color: #bbbbff;
       border-color: rgba(136, 136, 204, 0.30);
     }
     .preset-btn.active {
       background: rgba(136, 136, 204, 0.15);
-      color: #aaaaee;
-      border-color: rgba(136, 136, 204, 0.40);
+      color: #bbbbff;
+      border-color: rgba(136, 136, 204, 0.50);
     }
-    .preset-desc {
-      font-size: 10px;
-      color: rgba(136, 136, 204, 0.48);
-      line-height: 1.45;
-      padding: 2px 8px 4px;
-      display: none;
-    }
-    #param-panel.show-desc .preset-desc { display: block; }
+    /* (preset descriptions use .preset-desc-txt — see ctrl-panel section) */
 
-    /* reset button */
-    #param-reset, #param-copy {
+    /* action buttons */
+    #param-reset, #param-copy, #param-save, #param-load {
       display: block;
-      width: calc(100% - 20px);
-      margin: 6px 10px 4px;
+      width: 100%;
+      margin: 4px 0;
       padding: 5px;
       background: rgba(136, 136, 204, 0.08);
       border: 1px solid rgba(136, 136, 204, 0.22);
       border-radius: 4px;
-      color: rgba(136, 136, 204, 0.75);
+      color: rgba(136, 136, 204, 0.85);
+      font-family: system-ui, -apple-system, sans-serif;
       font-size: 11px;
       letter-spacing: 0.05em;
       cursor: pointer;
@@ -403,28 +542,14 @@
     #param-reset:hover, #param-copy:hover,
     #param-save:hover, #param-load:hover {
       background: rgba(136, 136, 204, 0.15);
-      color: #aaaaee;
-    }
-    #param-save, #param-load {
-      display: block;
-      width: calc(100% - 20px);
-      margin: 6px 10px 4px;
-      padding: 5px;
-      background: rgba(136, 136, 204, 0.08);
-      border: 1px solid rgba(136, 136, 204, 0.22);
-      border-radius: 4px;
-      color: rgba(136, 136, 204, 0.75);
-      font-size: 11px;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      transition: background 0.12s, color 0.12s;
+      color: #bbbbff;
     }
     .user-presets-label {
       font-size: 9px;
       letter-spacing: 0.07em;
       text-transform: uppercase;
-      color: rgba(136, 136, 204, 0.35);
-      padding: 6px 10px 2px;
+      color: rgba(136, 136, 204, 0.45);
+      padding: 6px 0 2px;
     }
     .user-preset-actions {
       display: flex;
@@ -436,28 +561,15 @@
     .user-preset-action {
       font-size: 13px;
       line-height: 1;
-      color: rgba(136, 136, 204, 0.35);
+      color: rgba(136, 136, 204, 0.45);
       cursor: pointer;
       transition: color 0.12s;
       padding: 0 2px;
     }
-    .user-preset-action:hover { color: #aaaaee; }
+    .user-preset-action:hover { color: #bbbbff; }
     .user-preset-action.remove:hover { color: #ee6666; }
 
-    /* inline descriptions */
-    .param-desc {
-      grid-column: 1 / -1;
-      font-size: 10px;
-      color: rgba(136, 136, 204, 0.48);
-      line-height: 1.45;
-      margin-top: 1px;
-      display: none;
-    }
-    #param-panel.show-desc .param-desc { display: block; }
-    .btn-desc {
-      padding: 2px 10px 4px;
-      margin: 0 10px;
-    }
+    /* (param-desc moved to .desc-txt above) */
 
     /* ── CAMERA TOGGLE ──────────────────────────────────────────── */
     .camera-toggle {
@@ -471,7 +583,7 @@
       background: rgba(136, 136, 204, 0.06);
       border: 1px solid rgba(136, 136, 204, 0.18);
       border-radius: 4px;
-      color: rgba(136, 136, 204, 0.65);
+      color: rgba(136, 136, 204, 0.75);
       font-family: system-ui, -apple-system, sans-serif;
       font-size: 11px;
       cursor: pointer;
@@ -479,11 +591,11 @@
     }
     .camera-toggle-btn:hover {
       background: rgba(136, 136, 204, 0.12);
-      color: #aaaaee;
+      color: #bbbbff;
     }
     .camera-toggle-btn.active {
       background: rgba(136, 136, 204, 0.18);
-      color: #aaaaee;
+      color: #bbbbff;
       border-color: rgba(136, 136, 204, 0.45);
     }
     .camera-toggle-btn:disabled {
@@ -491,11 +603,11 @@
       cursor: default;
       pointer-events: none;
     }
-    #cam-boidseye { color: rgba(245, 216, 74, 0.5); }
-    #cam-boidseye:hover { color: rgba(245, 216, 74, 0.75); }
+    #cam-boidseye { color: rgba(245, 216, 74, 0.6); }
+    #cam-boidseye:hover { color: rgba(245, 216, 74, 0.85); }
     #cam-boidseye.active { color: #f5d84a; }
-    #cam-split { color: rgba(74, 210, 190, 0.5); }
-    #cam-split:hover { color: rgba(74, 210, 190, 0.75); }
+    #cam-split { color: rgba(74, 210, 190, 0.6); }
+    #cam-split:hover { color: rgba(74, 210, 190, 0.85); }
     #cam-split.active { color: #4ad2be; }
     #split-divider {
       display: none;
@@ -514,7 +626,7 @@
       background: rgba(136, 136, 204, 0.06);
       border: 1px solid rgba(136, 136, 204, 0.18);
       border-radius: 4px;
-      color: rgba(136, 136, 204, 0.65);
+      color: rgba(136, 136, 204, 0.75);
       font-family: system-ui, -apple-system, sans-serif;
       font-size: 11px;
       cursor: pointer;
@@ -522,7 +634,7 @@
     }
     #cam-new-boid:hover {
       background: rgba(136, 136, 204, 0.12);
-      color: #aaaaee;
+      color: #bbbbff;
     }
     /* ── DENSITY LEGEND (panel footer, outside scroll) ─────────── */
     #density-legend {
@@ -534,10 +646,10 @@
       border-top: 1px solid rgba(136, 136, 204, 0.14);
       font-family: system-ui, -apple-system, sans-serif;
       font-size: 10px;
-      color: #b8b8dd;
+      color: #c8c8ee;
       flex-shrink: 0;
     }
-    #param-panel.collapsed #density-legend { display: none !important; }
+    /* density legend shown/hidden via JS */
     #density-legend .legend-label {
       color: rgba(136, 136, 204, 0.6);
       letter-spacing: 0.03em;
@@ -575,14 +687,14 @@
         parameters. A few good starting points:
       </p>
       <ul>
-        <li><strong>?</strong> &mdash; toggle descriptions on every slider</li>
+        <li><strong>Bottom bar</strong> &mdash; hover tabs to browse, click to pin open</li>
         <li><strong>Presets</strong> &mdash; curated configurations to explore</li>
-        <li><strong>Orbit / Boid's eye</strong> &mdash; switch camera perspective</li>
+        <li><strong>?</strong> &mdash; toggle descriptions on every slider</li>
         <li><strong>Separation, Alignment, Cohesion</strong> &mdash; the three classic forces</li>
       </ul>
       <p>
         For the full story, see
-        <a href="murmuration-about.html" style="color:#aaaaee">how it works</a>.
+        <a href="murmuration-about.html" style="color:#bbbbff">how it works</a>.
       </p>
       <div class="onboard-footer">
         <button class="onboard-dismiss" id="onboard-dismiss">Got it &mdash; let me watch</button>
@@ -596,343 +708,310 @@
   <div id="scene-container"></div>
   <div id="split-divider"></div>
 
-  <!-- ── SLIDER PANEL ────────────────────────────────────────────── -->
-  <div id="param-panel">
-    <div id="param-panel-header">
-      <span id="param-panel-title">Murmuration</span>
-      <div class="panel-header-btns">
-        <button id="param-hints-btn" title="Show hints">hints</button>
-        <button id="param-desc-btn" title="Toggle descriptions">?</button>
-        <button id="param-collapse-btn" title="Collapse panel">▾</button>
-      </div>
+  <!-- ── BOTTOM CONTROL BAR ─────────────────────────────────────── -->
+  <div id="ctrl-bar">
+    <div id="ctrl-tabs">
+      <button class="ctrl-tab" data-section="pre">Presets</button>
+      <button class="ctrl-tab" data-section="sim">Simulation</button>
+      <button class="ctrl-tab" data-section="cam">Camera</button>
+      <button class="ctrl-tab" data-section="flk">Flocking</button>
+      <button class="ctrl-tab" data-section="dyn">Dynamics</button>
+      <button class="ctrl-tab" data-section="vis">Visualize</button>
+      <button class="ctrl-tab" data-section="hwk">Hawk</button>
+      <button class="ctrl-tab" data-section="den">Density</button>
     </div>
-    <div id="param-panel-body">
+    <button id="ctrl-hints-btn">hints</button>
+    <button id="ctrl-desc-btn" title="Toggle descriptions">?</button>
+  </div>
 
-      <!-- ── Presets ───────────────────────────────────────────── -->
+  <!-- ── POPUP PANEL ──────────────────────────────────────────── -->
+  <div id="ctrl-panel">
+    <div id="ctrl-badge-row">
+      <span id="ctrl-section-title"></span>
+      <div id="ctrl-badge"></div>
+      <span id="ctrl-section-hints">hints</span>
+    </div>
+
+    <!-- Presets -->
+    <div class="ctrl-section" data-section="pre">
       <div class="preset-list">
         <div class="preset-item">
           <button class="preset-btn" data-preset="0">Scatter and rejoin</button>
-          <div class="preset-desc">Strong separation blows the flock apart; aggressive homing pulls it back together. Watch cycles of fragmentation and reform.</div>
+          <div class="preset-desc-txt">Strong separation blows the flock apart; aggressive homing pulls it back together. Watch cycles of fragmentation and reform.</div>
         </div>
         <div class="preset-item">
           <button class="preset-btn" data-preset="1">Internal waves</button>
-          <div class="preset-desc">High front bias and edge alignment with wide personal space. Visible wave-like patterns propagate through the flock.</div>
+          <div class="preset-desc-txt">High front bias and edge alignment with wide personal space. Visible wave-like patterns propagate through the flock.</div>
         </div>
         <div class="preset-item">
           <button class="preset-btn" data-preset="2">Dense flock, velocity view</button>
-          <div class="preset-desc">Tight formation at high speed with velocity coloring. A good starting point for density wave experiments &mdash; try slowly increasing Speed braking.</div>
+          <div class="preset-desc-txt">Tight formation at high speed with velocity coloring. A good starting point for density wave experiments &mdash; try slowly increasing Speed braking.</div>
         </div>
         <div class="preset-item">
           <button class="preset-btn" data-preset="3">Hawk attack</button>
-          <div class="preset-desc">A persistent hawk hunts the flock. Birds within the escape radius scatter with boosted speed. Speed braking enabled so you can see the panic wave propagate.</div>
+          <div class="preset-desc-txt">A persistent hawk hunts the flock. Birds within the escape radius scatter with boosted speed. Speed braking enabled so you can see the panic wave propagate.</div>
         </div>
       </div>
       <div id="user-presets-container"></div>
-
-      <div class="param-divider"></div>
-
-      <!-- ── Simulation ──────────────────────────────────────────── -->
-      <div class="param-section">
-        <div class="param-section-header">
-          <span class="param-section-label">Simulation</span>
-          <span class="param-section-arrow">▾</span>
-        </div>
-        <div class="param-section-body">
-          <div class="param-row">
-            <span class="param-label" title="Number of birds">Bird count</span>
-            <span class="param-value" id="val-count">3000</span>
-            <input class="param-slider" type="range" id="sl-count"
-              min="100" max="6000" step="100" value="3000" />
-            <span class="param-desc">Total birds in the flock. Changes rebuild the simulation.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Time-scale multiplier">Sim speed</span>
-            <span class="param-value" id="val-speed">1.00</span>
-            <input class="param-slider" type="range" id="sl-speed"
-              min="0.25" max="4.0" step="0.05" value="1.0" />
-            <span class="param-desc">Scales simulation time. Higher = faster movement.</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="param-divider"></div>
-
-      <!-- ── Camera ──────────────────────────────────────────────── -->
-      <div class="param-section">
-        <div class="param-section-header">
-          <span class="param-section-label">Camera</span>
-          <span class="param-section-arrow">▾</span>
-        </div>
-        <div class="param-section-body">
-          <div class="camera-toggle">
-            <button class="camera-toggle-btn active" id="cam-orbit">Orbit</button>
-            <button class="camera-toggle-btn" id="cam-boidseye" title="Try with Velocity coloring to see braking and acceleration from a bird's perspective">Boid's eye</button>
-            <button class="camera-toggle-btn" id="cam-split">Split</button>
-          </div>
-          <button id="cam-new-boid">New boid</button>
-          <span class="param-desc">Orbit: follow the flock. Boid's eye: chase cam behind a random bird. Split: both side-by-side.</span>
-        </div>
-      </div>
-
-      <div class="param-divider"></div>
-
-      <!-- ── Flocking ───────────────────────────────────────────── -->
-      <div class="param-section">
-        <div class="param-section-header">
-          <span class="param-section-label">Flocking</span>
-          <span class="param-section-arrow">▾</span>
-        </div>
-        <div class="param-section-body">
-          <div class="param-row">
-            <span class="param-label" title="Nearest neighbors for separation">Sep neighbors</span>
-            <span class="param-value" id="val-nsep">7</span>
-            <input class="param-slider" type="range" id="sl-nsep"
-              min="3" max="25" step="1" value="7" />
-            <span class="param-desc">Nearest neighbors considered for separation. Fewer = only avoid the closest birds.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Nearest neighbors for alignment &amp; cohesion">Ali/Coh neighbors</span>
-            <span class="param-value" id="val-nalicoh">14</span>
-            <input class="param-slider" type="range" id="sl-nalicoh"
-              min="3" max="25" step="1" value="14" />
-            <span class="param-desc">Nearest neighbors for alignment and cohesion. More = longer-range coherence.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Repulsion from close neighbors">Separation</span>
-            <span class="param-value" id="val-sep">3.0</span>
-            <input class="param-slider" type="range" id="sl-sep"
-              min="0" max="15" step="0.1" value="3.0" />
-            <span class="param-desc">Strength of push-away from neighbors within minimum distance.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Metric distance bubble — all birds within this radius get pushed away">Personal space</span>
-            <span class="param-value" id="val-ps">2.0</span>
-            <input class="param-slider" type="range" id="sl-ps"
-              min="0" max="10" step="0.1" value="2.0" />
-            <span class="param-desc">Metric distance bubble. All birds within this radius get pushed away, regardless of neighbor count. Creates more uniform flock density. 0 = disabled.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Velocity matching with neighbors">Alignment</span>
-            <span class="param-value" id="val-ali">4.0</span>
-            <input class="param-slider" type="range" id="sl-ali"
-              min="0" max="8" step="0.1" value="4.0" />
-            <span class="param-desc">Steer toward average heading of neighbors. Dominant force for coherent waves.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Pull toward center of neighbors">Cohesion</span>
-            <span class="param-value" id="val-coh">3.0</span>
-            <input class="param-slider" type="range" id="sl-coh"
-              min="0" max="8" step="0.1" value="3.0" />
-            <span class="param-desc">Steer toward average position of neighbors. Keeps flock together.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Weight forward neighbors more for alignment &amp; cohesion">Front bias</span>
-            <span class="param-value" id="val-fbias">1.0</span>
-            <input class="param-slider" type="range" id="sl-fbias"
-              min="0.2" max="5.0" step="0.1" value="1.0" />
-            <span class="param-desc">Weight neighbors in front vs. behind. 1.0 = equal. Higher = follow what's ahead, ignore what's behind. Creates leading-edge instability.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Extra alignment for boundary birds — sharper flock edges">Edge alignment</span>
-            <span class="param-value" id="val-edgeali">0.0</span>
-            <input class="param-slider" type="range" id="sl-edgeali"
-              min="0" max="5" step="0.1" value="0" />
-            <span class="param-desc">Extra alignment for boundary birds. Higher = sharper flock edges.</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="param-divider"></div>
-
-      <!-- ── Dynamics ───────────────────────────────────────────── -->
-      <div class="param-section">
-        <div class="param-section-header">
-          <span class="param-section-label">Dynamics</span>
-          <span class="param-section-arrow">▾</span>
-        </div>
-        <div class="param-section-body">
-          <div class="param-row">
-            <span class="param-label" title="Maximum flight speed">Max speed</span>
-            <span class="param-value" id="val-maxspd">15.0</span>
-            <input class="param-slider" type="range" id="sl-maxspd"
-              min="3" max="30" step="0.5" value="15.0" />
-            <span class="param-desc">Maximum flight speed. Higher speed = wider sweeping arcs.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Minimum speed as a fraction of max speed — stall speed">Min speed %</span>
-            <span class="param-value" id="val-minspd">53%</span>
-            <input class="param-slider" type="range" id="sl-minspd"
-              min="0" max="1.0" step="0.01" value="0.53" />
-            <span class="param-desc">Stall speed as a fraction of max speed. Birds are boosted to at least this speed — they can't hover. 0 = birds can stop. 1.0 = all birds fly at exactly max speed.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Maximum steering force per frame">Max force</span>
-            <span class="param-value" id="val-maxfrc">0.50</span>
-            <input class="param-slider" type="range" id="sl-maxfrc"
-              min="0.05" max="2.0" step="0.05" value="0.50" />
-            <span class="param-desc">Steering force cap. Low force = gradual turns with inertia. High force = snappy, responsive turns.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="How strongly isolated birds home toward the flock">Homing</span>
-            <span class="param-value" id="val-homing">0.75</span>
-            <input class="param-slider" type="range" id="sl-homing"
-              min="0" max="10.0" step="0.1" value="0.75" />
-            <span class="param-desc">Isolated-bird centroid pull strength. 0 = no homing, stray clusters stay lost. Higher = stronger pull back to the flock.</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="param-divider"></div>
-
-      <!-- ── Colors ──────────────────────────────────────────────── -->
-      <div class="param-section collapsed">
-        <div class="param-section-header" id="colors-section-header">
-          <span class="param-section-label">Colors</span>
-          <span class="param-section-arrow">▾</span>
-        </div>
-        <div class="param-section-body">
-          <div class="camera-toggle" style="margin-top:4px">
-            <button class="camera-toggle-btn active" id="color-none">None</button>
-            <button class="camera-toggle-btn" id="color-density">Density</button>
-            <button class="camera-toggle-btn" id="color-velocity">Velocity</button>
-          </div>
-          <span class="param-desc">None: uniform color. Density: red=crowded, blue=sparse. Velocity: red=braking, green=accelerating, blue=steady.</span>
-          <div class="param-row" data-color-mode="velocity" style="margin-top:6px">
-            <span class="param-label" title="Speed-change sensitivity for velocity coloring">dV threshold</span>
-            <span class="param-value" id="val-dvt">0.75</span>
-            <input class="param-slider" type="range" id="sl-dvt"
-              min="0.01" max="4.0" step="0.01" value="0.75" />
-            <span class="param-desc">Speed change per frame that maps to full red/green in velocity color mode. Lower = more sensitive.</span>
-          </div>
-          <div class="param-row" data-color-mode="density" style="margin-top:6px">
-            <span class="param-label" title="Radius for counting nearby birds">Search radius</span>
-            <span class="param-value" id="val-dr">5.0</span>
-            <input class="param-slider" type="range" id="sl-dr"
-              min="1" max="10" step="0.5" value="5.0" />
-            <span class="param-desc">Radius within which neighbors are counted for density coloring.</span>
-          </div>
-          <div class="param-row" data-color-mode="density">
-            <span class="param-label" title="Neighbor count mapped to blue (sparse)">Sparse count</span>
-            <span class="param-value" id="val-dlo">3</span>
-            <input class="param-slider" type="range" id="sl-dlo"
-              min="0" max="20" step="1" value="3" />
-            <span class="param-desc">Neighbor count that maps to full blue. Birds with this many or fewer nearby neighbors are sparse.</span>
-          </div>
-          <div class="param-row" data-color-mode="density">
-            <span class="param-label" title="Neighbor count mapped to red (dense)">Dense count</span>
-            <span class="param-value" id="val-dhi">25</span>
-            <input class="param-slider" type="range" id="sl-dhi"
-              min="5" max="80" step="1" value="25" />
-            <span class="param-desc">Neighbor count that maps to full red. Birds with this many or more nearby neighbors are dense.</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="param-divider"></div>
-
-      <!-- ── Hawk / Predator ──────────────────────────────────── -->
-      <div class="param-section collapsed">
-        <div class="param-section-header" id="predator-section-header">
-          <span class="param-section-label">Hawk / Predator</span>
-          <button id="hawk-hints-btn" title="Show hawk hints">Hawk Hints</button>
-          <span class="param-section-arrow">▾</span>
-        </div>
-        <div class="param-section-body">
-          <div class="camera-toggle" style="margin-bottom:6px">
-            <button class="camera-toggle-btn" id="pred-toggle" style="flex:none;width:100%">Hawk: Off</button>
-          </div>
-          <span class="param-desc">A persistent hawk chases the densest part of the flock. Birds within the escape radius scatter with boosted speed, then smoothly blend back to normal flocking.</span>
-          <div class="param-row" style="margin-top:6px">
-            <span class="param-label" title="Hawk speed as percentage of boid max speed">Hawk speed %</span>
-            <span class="param-value" id="val-predspd">130%</span>
-            <input class="param-slider" type="range" id="sl-predspd"
-              min="100" max="200" step="1" value="130" />
-            <span class="param-desc">Hawk speed relative to boid max speed. 130% = hawk is 30% faster than birds.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Hawk steering force — how tight it turns">Agility</span>
-            <span class="param-value" id="val-predfrc">5.0</span>
-            <input class="param-slider" type="range" id="sl-predfrc"
-              min="1" max="15" step="0.5" value="5.0" />
-            <span class="param-desc">Hawk turning force. Low = wide sweeping passes. High = tight pursuit.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Distance from hawk that triggers escape">Escape radius</span>
-            <span class="param-value" id="val-escrad">8</span>
-            <input class="param-slider" type="range" id="sl-escrad"
-              min="0.5" max="8" step="0.5" value="8" />
-            <span class="param-desc">World-unit radius around the hawk that triggers escape behavior. Birds inside this zone panic and flee.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Escape speed as percentage of boid max speed">Escape speed %</span>
-            <span class="param-value" id="val-escspdpct">140%</span>
-            <input class="param-slider" type="range" id="sl-escspdpct"
-              min="100" max="200" step="5" value="140" />
-            <span class="param-desc">Target escape speed as % of max speed. Higher = faster panic sprints.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Force multiplier during escape">Escape accel</span>
-            <span class="param-value" id="val-escaccel">2.0</span>
-            <input class="param-slider" type="range" id="sl-escaccel"
-              min="1.0" max="5.0" step="0.5" value="2.0" />
-            <span class="param-desc">Multiplier on max force during escape. Higher = snappier turns when fleeing.</span>
-          </div>
-          <div class="param-row">
-            <span class="param-label" title="Seconds to blend back from escape to normal flocking">Blend-back</span>
-            <span class="param-value" id="val-escblend">0.5</span>
-            <input class="param-slider" type="range" id="sl-escblend"
-              min="0.1" max="2.0" step="0.1" value="0.5" />
-            <span class="param-desc">Seconds of sim-time to blend from escape back to normal flocking after leaving the escape radius.</span>
-          </div>
-          <div class="camera-toggle" style="margin-top:4px">
-            <button class="camera-toggle-btn" id="esc-sphere-toggle" style="flex:none;width:100%">Show escape radius: Off</button>
-          </div>
-          <span class="param-desc">Show a faint red wireframe sphere around the hawk indicating the escape trigger zone.</span>
-          <div class="camera-toggle pred-cam-toggle" style="margin-top:8px">
-            <button class="camera-toggle-btn" id="pred-cam-orbit" disabled>Orbit</button>
-            <button class="camera-toggle-btn" id="pred-cam-hawkeye" disabled>Hawk's eye</button>
-            <button class="camera-toggle-btn" id="pred-cam-split" disabled>Split</button>
-          </div>
-          <span class="param-desc">Hawk camera — enable hawk first. Hawk's eye: chase cam behind the hawk. Turning the hawk off returns to Orbit.</span>
-        </div>
-      </div>
-
-      <div class="param-divider"></div>
-
-      <!-- ── Density Waves ──────────────────────────────────────── -->
-      <div class="param-section collapsed">
-        <div class="param-section-header" id="density-section-header">
-          <span class="param-section-label">Density Waves</span>
-          <span class="param-section-arrow">▾</span>
-        </div>
-        <div class="param-section-body">
-          <div class="param-row">
-            <span class="param-label" title="Speed reduction from personal space violations">Speed braking</span>
-            <span class="param-value" id="val-wspdsep">0.00</span>
-            <input class="param-slider" type="range" id="sl-wspdsep"
-              min="0" max="2.0" step="0.05" value="0" />
-            <span class="param-desc">How much birds slow down when neighbors enter their personal space. 0 = off. Higher = stronger braking that cascades through dense flocks, creating density waves.</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="param-divider"></div>
-
       <button id="param-reset">Reset to defaults</button>
       <button id="param-save" title="Save the current slider values as a named preset">Save as preset</button>
-      <div class="param-desc btn-desc">Saves your current settings as a preset you can switch back to. Stored in your browser.</div>
+      <div class="desc-txt btn-desc">Saves your current settings as a preset you can switch back to. Stored in your browser.</div>
       <button id="param-load" title="Import a previously saved .json preset file from your computer">Import preset from file</button>
-      <div class="param-desc btn-desc">Opens a .json or .txt preset file and adds it to your saved presets.</div>
+      <div class="desc-txt btn-desc">Opens a .json or .txt preset file and adds it to your saved presets.</div>
       <button id="param-copy" title="Copy all current slider values to clipboard as JSON">Copy current config</button>
-      <div class="param-desc btn-desc">Copies the current slider values to your clipboard as JSON — handy for pasting into a message or note.</div>
+      <div class="desc-txt btn-desc">Copies the current slider values to your clipboard as JSON — handy for pasting into a message or note.</div>
       <input type="file" id="preset-file-input" accept=".json,.txt" style="display:none" />
     </div>
-    <!-- ── COLOR LEGEND (panel footer — outside scroll) ──────────── -->
-    <div id="density-legend">
-      <span class="legend-label" id="legend-lo">Sparse</span>
-      <div class="legend-bar" id="legend-bar"></div>
-      <span class="legend-label" id="legend-hi">Dense</span>
+
+    <!-- Simulation -->
+    <div class="ctrl-section" data-section="sim">
+      <div class="param-row">
+        <span class="param-label" title="Number of birds">Bird count</span>
+        <span class="param-value" id="val-count">3000</span>
+        <input class="param-slider" type="range" id="sl-count"
+          min="100" max="6000" step="100" value="3000" />
+        <span class="desc-txt">Total birds in the flock. Changes rebuild the simulation.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Time-scale multiplier">Sim speed</span>
+        <span class="param-value" id="val-speed">1.00</span>
+        <input class="param-slider" type="range" id="sl-speed"
+          min="0.25" max="4.0" step="0.05" value="1.0" />
+        <span class="desc-txt">Scales simulation time. Higher = faster movement.</span>
+      </div>
     </div>
+
+    <!-- Camera -->
+    <div class="ctrl-section" data-section="cam">
+      <div class="camera-toggle">
+        <button class="camera-toggle-btn active" id="cam-orbit">Orbit</button>
+        <button class="camera-toggle-btn" id="cam-boidseye" title="Try with Velocity coloring to see braking and acceleration from a bird's perspective">Boid's eye</button>
+        <button class="camera-toggle-btn" id="cam-split">Split</button>
+      </div>
+      <button id="cam-new-boid">New boid</button>
+      <span class="desc-txt">Orbit: follow the flock. Boid's eye: chase cam behind a random bird. Split: both side-by-side.</span>
+    </div>
+
+    <!-- Flocking -->
+    <div class="ctrl-section" data-section="flk">
+      <div class="param-row">
+        <span class="param-label" title="Nearest neighbors for separation">Sep neighbors</span>
+        <span class="param-value" id="val-nsep">7</span>
+        <input class="param-slider" type="range" id="sl-nsep"
+          min="3" max="25" step="1" value="7" />
+        <span class="desc-txt">Nearest neighbors considered for separation. Fewer = only avoid the closest birds.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Nearest neighbors for alignment &amp; cohesion">Ali/Coh neighbors</span>
+        <span class="param-value" id="val-nalicoh">14</span>
+        <input class="param-slider" type="range" id="sl-nalicoh"
+          min="3" max="25" step="1" value="14" />
+        <span class="desc-txt">Nearest neighbors for alignment and cohesion. More = longer-range coherence.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Repulsion from close neighbors">Separation</span>
+        <span class="param-value" id="val-sep">3.0</span>
+        <input class="param-slider" type="range" id="sl-sep"
+          min="0" max="15" step="0.1" value="3.0" />
+        <span class="desc-txt">Strength of push-away from neighbors within minimum distance.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Metric distance bubble — all birds within this radius get pushed away">Personal space</span>
+        <span class="param-value" id="val-ps">2.0</span>
+        <input class="param-slider" type="range" id="sl-ps"
+          min="0" max="10" step="0.1" value="2.0" />
+        <span class="desc-txt">Metric distance bubble. All birds within this radius get pushed away, regardless of neighbor count. Creates more uniform flock density. 0 = disabled.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Velocity matching with neighbors">Alignment</span>
+        <span class="param-value" id="val-ali">4.0</span>
+        <input class="param-slider" type="range" id="sl-ali"
+          min="0" max="8" step="0.1" value="4.0" />
+        <span class="desc-txt">Steer toward average heading of neighbors. Dominant force for coherent waves.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Pull toward center of neighbors">Cohesion</span>
+        <span class="param-value" id="val-coh">3.0</span>
+        <input class="param-slider" type="range" id="sl-coh"
+          min="0" max="8" step="0.1" value="3.0" />
+        <span class="desc-txt">Steer toward average position of neighbors. Keeps flock together.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Weight forward neighbors more for alignment &amp; cohesion">Front bias</span>
+        <span class="param-value" id="val-fbias">1.0</span>
+        <input class="param-slider" type="range" id="sl-fbias"
+          min="0.2" max="5.0" step="0.1" value="1.0" />
+        <span class="desc-txt">Weight neighbors in front vs. behind. 1.0 = equal. Higher = follow what's ahead, ignore what's behind. Creates leading-edge instability.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Extra alignment for boundary birds — sharper flock edges">Edge alignment</span>
+        <span class="param-value" id="val-edgeali">0.0</span>
+        <input class="param-slider" type="range" id="sl-edgeali"
+          min="0" max="5" step="0.1" value="0" />
+        <span class="desc-txt">Extra alignment for boundary birds. Higher = sharper flock edges.</span>
+      </div>
+    </div>
+
+    <!-- Dynamics -->
+    <div class="ctrl-section" data-section="dyn">
+      <div class="param-row">
+        <span class="param-label" title="Maximum flight speed">Max speed</span>
+        <span class="param-value" id="val-maxspd">15.0</span>
+        <input class="param-slider" type="range" id="sl-maxspd"
+          min="3" max="30" step="0.5" value="15.0" />
+        <span class="desc-txt">Maximum flight speed. Higher speed = wider sweeping arcs.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Minimum speed as a fraction of max speed — stall speed">Min speed %</span>
+        <span class="param-value" id="val-minspd">53%</span>
+        <input class="param-slider" type="range" id="sl-minspd"
+          min="0" max="1.0" step="0.01" value="0.53" />
+        <span class="desc-txt">Stall speed as a fraction of max speed. Birds are boosted to at least this speed — they can't hover. 0 = birds can stop. 1.0 = all birds fly at exactly max speed.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Maximum steering force per frame">Max force</span>
+        <span class="param-value" id="val-maxfrc">0.50</span>
+        <input class="param-slider" type="range" id="sl-maxfrc"
+          min="0.05" max="2.0" step="0.05" value="0.50" />
+        <span class="desc-txt">Steering force cap. Low force = gradual turns with inertia. High force = snappy, responsive turns.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="How strongly isolated birds home toward the flock">Homing</span>
+        <span class="param-value" id="val-homing">0.75</span>
+        <input class="param-slider" type="range" id="sl-homing"
+          min="0" max="10.0" step="0.1" value="0.75" />
+        <span class="desc-txt">Isolated-bird centroid pull strength. 0 = no homing, stray clusters stay lost. Higher = stronger pull back to the flock.</span>
+      </div>
+    </div>
+
+    <!-- Visualize -->
+    <div class="ctrl-section" data-section="vis">
+      <div class="camera-toggle" style="margin-top:4px">
+        <button class="camera-toggle-btn active" id="color-none">None</button>
+        <button class="camera-toggle-btn" id="color-density">Density</button>
+        <button class="camera-toggle-btn" id="color-velocity">Velocity</button>
+      </div>
+      <span class="desc-txt">None: uniform color. Density: red=crowded, blue=sparse. Velocity: red=braking, green=accelerating, blue=steady.</span>
+      <div class="param-row" data-color-mode="velocity" style="margin-top:6px">
+        <span class="param-label" title="Speed-change sensitivity for velocity coloring">dV threshold</span>
+        <span class="param-value" id="val-dvt">0.75</span>
+        <input class="param-slider" type="range" id="sl-dvt"
+          min="0.01" max="4.0" step="0.01" value="0.75" />
+        <span class="desc-txt">Speed change per frame that maps to full red/green in velocity color mode. Lower = more sensitive.</span>
+      </div>
+      <div class="param-row" data-color-mode="density" style="margin-top:6px">
+        <span class="param-label" title="Radius for counting nearby birds">Search radius</span>
+        <span class="param-value" id="val-dr">5.0</span>
+        <input class="param-slider" type="range" id="sl-dr"
+          min="1" max="10" step="0.5" value="5.0" />
+        <span class="desc-txt">Radius within which neighbors are counted for density coloring.</span>
+      </div>
+      <div class="param-row" data-color-mode="density">
+        <span class="param-label" title="Neighbor count mapped to blue (sparse)">Sparse count</span>
+        <span class="param-value" id="val-dlo">3</span>
+        <input class="param-slider" type="range" id="sl-dlo"
+          min="0" max="20" step="1" value="3" />
+        <span class="desc-txt">Neighbor count that maps to full blue. Birds with this many or fewer nearby neighbors are sparse.</span>
+      </div>
+      <div class="param-row" data-color-mode="density">
+        <span class="param-label" title="Neighbor count mapped to red (dense)">Dense count</span>
+        <span class="param-value" id="val-dhi">25</span>
+        <input class="param-slider" type="range" id="sl-dhi"
+          min="5" max="80" step="1" value="25" />
+        <span class="desc-txt">Neighbor count that maps to full red. Birds with this many or more nearby neighbors are dense.</span>
+      </div>
+      <div id="density-legend">
+        <span class="legend-label" id="legend-lo">Sparse</span>
+        <div class="legend-bar" id="legend-bar"></div>
+        <span class="legend-label" id="legend-hi">Dense</span>
+      </div>
+    </div>
+
+    <!-- Hawk -->
+    <div class="ctrl-section" data-section="hwk">
+      <div class="camera-toggle" style="margin-bottom:6px">
+        <button class="camera-toggle-btn" id="pred-toggle" style="flex:none;width:100%">Hawk: Off</button>
+      </div>
+      <span class="desc-txt">A persistent hawk chases the densest part of the flock. Birds within the escape radius scatter with boosted speed, then smoothly blend back to normal flocking.</span>
+      <div class="param-row" style="margin-top:6px">
+        <span class="param-label" title="Hawk speed as percentage of boid max speed">Hawk speed %</span>
+        <span class="param-value" id="val-predspd">130%</span>
+        <input class="param-slider" type="range" id="sl-predspd"
+          min="100" max="200" step="1" value="130" />
+        <span class="desc-txt">Hawk speed relative to boid max speed. 130% = hawk is 30% faster than birds.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Hawk steering force — how tight it turns">Agility</span>
+        <span class="param-value" id="val-predfrc">5.0</span>
+        <input class="param-slider" type="range" id="sl-predfrc"
+          min="1" max="15" step="0.5" value="5.0" />
+        <span class="desc-txt">Hawk turning force. Low = wide sweeping passes. High = tight pursuit.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Distance from hawk that triggers escape">Escape radius</span>
+        <span class="param-value" id="val-escrad">8</span>
+        <input class="param-slider" type="range" id="sl-escrad"
+          min="0.5" max="8" step="0.5" value="8" />
+        <span class="desc-txt">World-unit radius around the hawk that triggers escape behavior. Birds inside this zone panic and flee.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Escape speed as percentage of boid max speed">Escape speed %</span>
+        <span class="param-value" id="val-escspdpct">140%</span>
+        <input class="param-slider" type="range" id="sl-escspdpct"
+          min="100" max="200" step="5" value="140" />
+        <span class="desc-txt">Target escape speed as % of max speed. Higher = faster panic sprints.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Force multiplier during escape">Escape accel</span>
+        <span class="param-value" id="val-escaccel">2.0</span>
+        <input class="param-slider" type="range" id="sl-escaccel"
+          min="1.0" max="5.0" step="0.5" value="2.0" />
+        <span class="desc-txt">Multiplier on max force during escape. Higher = snappier turns when fleeing.</span>
+      </div>
+      <div class="param-row">
+        <span class="param-label" title="Seconds to blend back from escape to normal flocking">Blend-back</span>
+        <span class="param-value" id="val-escblend">0.5</span>
+        <input class="param-slider" type="range" id="sl-escblend"
+          min="0.1" max="2.0" step="0.1" value="0.5" />
+        <span class="desc-txt">Seconds of sim-time to blend from escape back to normal flocking after leaving the escape radius.</span>
+      </div>
+      <div class="camera-toggle" style="margin-top:4px">
+        <button class="camera-toggle-btn" id="esc-sphere-toggle" style="flex:none;width:100%">Show escape radius: Off</button>
+      </div>
+      <span class="desc-txt">Show a faint red wireframe sphere around the hawk indicating the escape trigger zone.</span>
+      <div class="camera-toggle pred-cam-toggle" style="margin-top:8px">
+        <button class="camera-toggle-btn" id="pred-cam-orbit" disabled>Orbit</button>
+        <button class="camera-toggle-btn" id="pred-cam-hawkeye" disabled>Hawk's eye</button>
+        <button class="camera-toggle-btn" id="pred-cam-split" disabled>Split</button>
+      </div>
+      <span class="desc-txt">Hawk camera — enable hawk first. Hawk's eye: chase cam behind the hawk. Turning the hawk off returns to Orbit.</span>
+    </div>
+
+    <!-- Density -->
+    <div class="ctrl-section" data-section="den">
+      <div class="param-row">
+        <span class="param-label" title="Speed reduction from personal space violations">Speed braking</span>
+        <span class="param-value" id="val-wspdsep">0.00</span>
+        <input class="param-slider" type="range" id="sl-wspdsep"
+          min="0" max="2.0" step="0.05" value="0" />
+        <span class="desc-txt">How much birds slow down when neighbors enter their personal space. 0 = off. Higher = stronger braking that cascades through dense flocks, creating density waves.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HINT CALLOUT ─────────────────────────────────────────── -->
+  <div id="hint-callout">
+    <div id="hint-body">
+      <div id="hint-title"></div>
+      <div id="hint-text"></div>
+      <div id="hint-progress"><div id="hint-fill"></div></div>
+      <div id="hint-controls">
+        <span id="hint-prev">&lsaquo; prev</span>
+        <span id="hint-next">next &rsaquo;</span>
+        <span id="hint-close">&times;</span>
+      </div>
+    </div>
+    <div id="hint-arrow">&#9654;</div>
   </div>
 
   <script type="importmap">
@@ -1045,155 +1124,133 @@
           localStorage.setItem(onboardKey, 'true');
         }
         overlay.classList.add('fade-out');
-        setTimeout(() => { overlay.remove(); showGuideArrows(); }, 500);
+        setTimeout(() => { overlay.remove(); startHints(); }, 500);
       });
     } else {
-      // Already dismissed permanently — remove overlay, show arrows after loader
+      // Already dismissed permanently — remove overlay, start hints after loader
       document.getElementById('onboarding-overlay').remove();
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          setTimeout(showGuideArrows, 1800);
+          setTimeout(startHints, 1800);
         });
       });
     }
 
-    // ── Shared arrow helper ────────────────────────────────────────
-    function makeArrow(target, text, nudgeUp = 6, extraClass = '') {
-      const rect = target.getBoundingClientRect();
-      const el = document.createElement('div');
-      el.className = 'guide-arrow' + (extraClass ? ' ' + extraClass : '');
-      el.innerHTML = `<span>${text}</span> <span class="arrow-char">&#9654;</span>`;
-      el.style.top  = rect.top + rect.height / 2 - 10 - nudgeUp + 'px';
-      el.style.right = (window.innerWidth - rect.left + 8) + 'px';
-      document.body.appendChild(el);
-      requestAnimationFrame(() => el.classList.add('visible'));
-      return el;
-    }
+    // ── Hints system ──────────────────────────────────────────────
+    const HINTS = [
+      { section: 'pre', title: 'Start here', text: 'Try a preset to see a tuned configuration before tweaking individual sliders.', highlight: ['[data-preset="0"]', '[data-preset="3"]'] },
+      { section: 'cam', title: 'Alternative views', text: 'Fly with a bird, or choose a split view.', highlight: ['#cam-boidseye', '#cam-split'] },
+      { section: 'flk', title: 'The key forces', text: 'Separation: strength of push-away from neighbors. Alignment: strength of alignment with your neighbors. Cohesion: strength of steering towards your neighbors.', highlight: ['#sl-sep', '#sl-ali', '#sl-coh'] },
+      { section: 'dyn', title: 'Speed shapes the arc', text: 'Max speed and max force together control the turn radius. Higher speed + lower force = wider sweeping arcs.', highlight: ['#sl-maxspd', '#sl-maxfrc'] },
+      { section: 'dyn', title: 'Rejoin the flock', text: 'Homing: higher settings for a stronger pull back to the flock.', highlight: ['#sl-homing'] },
+      { section: 'vis', title: '', text: 'Try Velocity to see changes in the birds\u2019 speeds.', highlight: ['#color-velocity'] },
+      { section: 'hwk', title: 'Add a predator', text: 'Enable the hawk, then increase the escape radius to trigger a panic wave through the flock.', highlight: ['#pred-toggle', '#sl-escrad'] },
+      { section: 'hwk', title: '', text: 'Try "Show escape radius" to see how close the hawk needs to be for the birds to be aware of it.', highlight: ['#esc-sphere-toggle'] },
+      { section: null, title: 'Descriptions', text: 'Click the ? button to toggle detailed descriptions for every control.', highlight: ['#ctrl-desc-btn'] },
+    ];
+    const HINT_DURATION = 9000;
+    let hintIdx = -1;
+    let hintTimer = null;
+    let hintFillInterval = null;
+    let hintsActive = false;
 
-    // ── Preset hint arrows ──────────────────────────────────────────
-    let presetHintTimeouts = [];
+    const hintCallout  = document.getElementById('hint-callout');
+    const hintTitle    = document.getElementById('hint-title');
+    const hintText     = document.getElementById('hint-text');
+    const hintFill     = document.getElementById('hint-fill');
+    const hintPrevBtn  = document.getElementById('hint-prev');
+    const hintNextBtn  = document.getElementById('hint-next');
+    const hintCloseBtn = document.getElementById('hint-close');
+    const hintsBtn     = document.getElementById('ctrl-hints-btn');
 
-    function showPresetHints(hints) {
-      clearPresetHints();
-      if (!hints || !hints.length) return;
-      const HINT_VISIBLE = 2500;
-      const HINT_STEP = 3000;
+    function showHint(idx) {
+      if (idx < 0 || idx >= HINTS.length) { stopHints(); return; }
+      hintIdx = idx;
+      const h = HINTS[idx];
 
-      function removeCurrentArrows() {
-        document.querySelectorAll('.preset-hint-arrow').forEach(a => {
-          a.classList.add('fade-out');
-          setTimeout(() => a.remove(), 500);
-        });
+      // Clear previous highlights
+      document.querySelectorAll('.ctrl-tab.hint-highlight').forEach(t => t.classList.remove('hint-highlight'));
+      document.querySelectorAll('.hint-target').forEach(el => el.classList.remove('hint-target'));
+
+      if (h.section) {
+        // Normal section hint
+        hintCallout.classList.remove('hint-desc-mode');
+
+        // Highlight the tab
+        const tab = document.querySelector(`.ctrl-tab[data-section="${h.section}"]`);
+        if (tab) tab.classList.add('hint-highlight');
+
+        // If nothing is pinned, open that section
+        if (!pinnedSection) {
+          showSection(h.section, 'preview');
+        }
+      } else {
+        // Non-section hint (e.g. "?" button) — close panel, reposition callout
+        if (!pinnedSection) closePanel();
+        hintCallout.classList.add('hint-desc-mode');
       }
 
-      hints.forEach((h, idx) => {
-        const delay = idx * HINT_STEP;
-        presetHintTimeouts.push(setTimeout(() => {
-          removeCurrentArrows();
-          const target = document.getElementById(h.target);
-          if (target) makeArrow(target, h.text, 6, 'preset-hint-arrow');
-          if (idx === hints.length - 1) {
-            presetHintTimeouts.push(setTimeout(clearPresetHints, HINT_VISIBLE));
+      // Highlight specific elements
+      if (h.highlight) {
+        for (const sel of h.highlight) {
+          const el = document.querySelector(sel);
+          if (el) {
+            // For sliders, highlight the parent .param-row; for buttons, highlight directly
+            const target = el.closest('.param-row') || el;
+            target.classList.add('hint-target');
           }
-        }, delay));
-      });
-    }
-
-    function clearPresetHints() {
-      presetHintTimeouts.forEach(t => clearTimeout(t));
-      presetHintTimeouts = [];
-      document.querySelectorAll('.preset-hint-arrow').forEach(a => {
-        a.classList.add('fade-out');
-        setTimeout(() => a.remove(), 500);
-      });
-    }
-
-    // ── Guide arrows ──────────────────────────────────────────────
-    let guideTimeouts = [];
-
-    function showGuideArrows() {
-      guideTimeouts.forEach(t => clearTimeout(t));
-      guideTimeouts = [];
-      document.querySelectorAll('.guide-arrow').forEach(a => a.remove());
-
-      const helpBtn       = document.getElementById('param-desc-btn');
-      const presetBtn     = document.querySelector('.preset-btn');
-      const boidseyeBtn   = document.getElementById('cam-boidseye');
-      const sepSlider     = document.getElementById('sl-sep');
-      const aliSlider     = document.getElementById('sl-ali');
-      const cohSlider     = document.getElementById('sl-coh');
-      const colorsHeader  = document.getElementById('colors-section-header');
-
-      function fadeAndRemove(arrows) {
-        arrows.forEach(a => a.classList.add('fade-out'));
-        guideTimeouts.push(setTimeout(() => arrows.forEach(a => a.remove()), 500));
+        }
       }
 
-      function showThenFade(arrows, visibleMs) {
-        guideTimeouts.push(setTimeout(() => fadeAndRemove(arrows), visibleMs));
-      }
+      // Update callout content
+      hintTitle.textContent = h.title;
+      hintTitle.style.display = h.title ? '' : 'none';
+      hintText.textContent = h.text;
+      hintCallout.classList.add('visible');
 
-      function at(delay, fn) {
-        guideTimeouts.push(setTimeout(fn, delay));
-      }
+      // Progress bar
+      hintFill.style.width = '0%';
+      clearInterval(hintFillInterval);
+      const startTime = Date.now();
+      hintFillInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const pct = Math.min(100, (elapsed / HINT_DURATION) * 100);
+        hintFill.style.width = pct + '%';
+      }, 50);
 
-      const STEP = 3000;
-      const VISIBLE = 2500; // visible portion of each step (fade fills remaining 500ms)
-      let t = 0;
-
-      // Step 1: Descriptions
-      at(t, () => { if (helpBtn) showThenFade([makeArrow(helpBtn, 'Descriptions')], VISIBLE); });
-      t += STEP;
-
-      // Step 2: Try a preset, then highlight Hawk Attack
-      const hawkBtn = document.querySelector('[data-preset="3"]');
-      at(t, () => {
-        const a1 = presetBtn ? [makeArrow(presetBtn, 'Try a preset')] : [];
-        if (a1.length) showThenFade(a1, VISIBLE);
-        // After first arrow fades, show the hawk arrow
-        guideTimeouts.push(setTimeout(() => {
-          if (hawkBtn) showThenFade([makeArrow(hawkBtn, '\u2026 Including a Hawk Attack')], VISIBLE);
-        }, STEP));
-      });
-      t += STEP * 2;
-
-      // Step 4: Fly with a bird
-      at(t, () => { if (boidseyeBtn) showThenFade([makeArrow(boidseyeBtn, 'Fly with a bird \u2014 or choose a split view')], VISIBLE); });
-      t += STEP;
-
-      // Step 5: Separation / Alignment / Cohesion (group)
-      at(t, () => {
-        const group = [];
-        if (sepSlider) group.push(makeArrow(sepSlider, 'Separation', 14));
-        if (aliSlider) group.push(makeArrow(aliSlider, 'Alignment', 14));
-        if (cohSlider) group.push(makeArrow(cohSlider, 'Cohesion', 14));
-        if (group.length) showThenFade(group, VISIBLE);
-      });
-      t += STEP;
-
-      // Step 6: Explore density waves
-      at(t, () => { if (colorsHeader) showThenFade([makeArrow(colorsHeader, 'Velocity and density color modes')], VISIBLE); });
-      t += STEP;
-
-      // Step 7: All together
-      at(t, () => {
-        const all = [];
-        if (helpBtn)       all.push(makeArrow(helpBtn, 'Descriptions'));
-        if (presetBtn)     all.push(makeArrow(presetBtn, 'Try a preset'));
-        if (hawkBtn)       all.push(makeArrow(hawkBtn, '\u2026 Including a Hawk Attack'));
-        if (boidseyeBtn)   all.push(makeArrow(boidseyeBtn, 'Fly with a bird \u2014 or choose a split view'));
-        if (sepSlider)     all.push(makeArrow(sepSlider, 'Separation', 14));
-        if (aliSlider)     all.push(makeArrow(aliSlider, 'Alignment', 14));
-        if (cohSlider)     all.push(makeArrow(cohSlider, 'Cohesion', 14));
-        if (colorsHeader) all.push(makeArrow(colorsHeader, 'Velocity and density color modes'));
-        showThenFade(all, 4000);
-      });
-      t += 4500; // 4s visible + 0.5s fade gap
-
-      // Step 8: Point to hints button
-      const hintsBtn = document.getElementById('param-hints-btn');
-      at(t, () => { if (hintsBtn) showThenFade([makeArrow(hintsBtn, 'Re-show these hints')], 2000); });
+      // Auto-advance
+      clearTimeout(hintTimer);
+      hintTimer = setTimeout(() => showHint(idx + 1), HINT_DURATION);
     }
+
+    function startHints() {
+      hintsActive = true;
+      hintsBtn.textContent = 'hints \u25b8';
+      hintsBtn.classList.add('playing');
+      showHint(0);
+    }
+
+    function stopHints() {
+      hintsActive = false;
+      hintIdx = -1;
+      clearTimeout(hintTimer);
+      clearInterval(hintFillInterval);
+      hintCallout.classList.remove('visible', 'hint-desc-mode');
+      hintsBtn.textContent = 'hints';
+      hintsBtn.classList.remove('playing');
+      document.querySelectorAll('.ctrl-tab.hint-highlight').forEach(t => t.classList.remove('hint-highlight'));
+      document.querySelectorAll('.hint-target').forEach(el => el.classList.remove('hint-target'));
+      // Close panel if nothing pinned
+      if (!pinnedSection) closePanel();
+    }
+
+    hintPrevBtn.addEventListener('click', () => { showHint(Math.max(0, hintIdx - 1)); });
+    hintNextBtn.addEventListener('click', () => { showHint(hintIdx + 1); });
+    hintCloseBtn.addEventListener('click', () => { stopHints(); });
+    hintsBtn.addEventListener('click', () => {
+      if (hintsActive) stopHints();
+      else startHints();
+    });
 
     // ── Slider wiring ─────────────────────────────────────────────
     const sliders = {
@@ -1254,22 +1311,13 @@
           applyCamMode('orbit');
         }
       }
-      // Expand predator section if enabled
-      const predSection = document.getElementById('predator-section-header')?.parentElement;
-      if (predSection && cfg.PRED_ENABLED) predSection.classList.remove('collapsed');
-
-      // Expand colors section if preset uses non-default color mode
-      const colorsSection = document.getElementById('colors-section-header')?.parentElement;
-      if (colorsSection && cfg.COLOR_MODE && cfg.COLOR_MODE !== 'none') {
-        colorsSection.classList.remove('collapsed');
-      }
-
-      // Expand density section if preset has non-default speed braking
-      const densitySection = document.getElementById('density-section-header')?.parentElement;
-      if (densitySection) {
-        if (cfg.W_SPEED_SEP !== undefined && cfg.W_SPEED_SEP !== DEFAULTS.W_SPEED_SEP) {
-          densitySection.classList.remove('collapsed');
-        }
+      // Briefly pin relevant tab so user sees the result
+      if (cfg.PRED_ENABLED) {
+        pinSection('hwk');
+        setTimeout(() => { if (pinnedSection === 'hwk') unpinSection(); }, 2000);
+      } else if (cfg.COLOR_MODE && cfg.COLOR_MODE !== 'none') {
+        pinSection('vis');
+        setTimeout(() => { if (pinnedSection === 'vis') unpinSection(); }, 2000);
       }
     }
 
@@ -1301,7 +1349,6 @@
     // ── Presets ────────────────────────────────────────────────────
     function clearActivePreset() {
       document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-      clearPresetHints();
     }
 
     document.querySelectorAll('.preset-btn').forEach(btn => {
@@ -1312,7 +1359,6 @@
         applyConfig(preset.config);
         clearActivePreset();
         btn.classList.add('active');
-        showPresetHints(preset.hints);
       });
     });
 
@@ -1532,49 +1578,173 @@
       reader.readAsText(file);
     });
 
-    // ── Panel collapse ────────────────────────────────────────────
-    const panel = document.getElementById('param-panel');
-    const collapseBtn = document.getElementById('param-collapse-btn');
-    document.getElementById('param-panel-header').addEventListener('click', (e) => {
-      if (e.target.id === 'param-desc-btn' || e.target.id === 'param-hints-btn') return;
-      panel.classList.toggle('collapsed');
-      const collapsed = panel.classList.contains('collapsed');
-      collapseBtn.textContent = collapsed ? '▸' : '▾';
-      api.setPanelOpen(!collapsed);
-      updateDividerPosition();
+    // ── Ctrl-bar / Panel interaction ────────────────────────────────
+    const ctrlPanel = document.getElementById('ctrl-panel');
+    const ctrlBar   = document.getElementById('ctrl-bar');
+    let pinnedSection = null;
+    let hoveredSection = null;
+    let descOn = false;
+    let closeTimer = null;
+
+    const sectionHintsBtn = document.getElementById('ctrl-section-hints');
+
+    function showSection(key, mode) {
+      // Show the panel with the given section active
+      document.querySelectorAll('.ctrl-section').forEach(s => s.classList.remove('active'));
+      const sec = document.querySelector(`.ctrl-section[data-section="${key}"]`);
+      if (sec) sec.classList.add('active');
+      ctrlPanel.classList.add('open');
+      ctrlPanel.classList.remove('preview', 'pinned');
+      ctrlPanel.classList.add(mode);
+      // Set section title from tab label
+      const tab = document.querySelector(`.ctrl-tab[data-section="${key}"]`);
+      document.getElementById('ctrl-section-title').textContent = tab ? tab.textContent : '';
+      // Show section hints button if this section has hints
+      const hasHint = HINTS.some(h => h.section === key);
+      sectionHintsBtn.classList.toggle('visible', hasHint);
+      if (sectionHintsBtn.dataset.section !== key) sectionHintIdx = 0;
+      sectionHintsBtn.dataset.section = key;
+    }
+
+    function closePanel() {
+      ctrlPanel.classList.remove('open', 'preview', 'pinned');
+      hoveredSection = null;
+      sectionHintsBtn.classList.remove('visible');
+    }
+
+    function pinSection(key) {
+      pinnedSection = key;
+      showSection(key, 'pinned');
+      // Update tab indicators
+      document.querySelectorAll('.ctrl-tab').forEach(t => t.classList.remove('pinned'));
+      const tab = document.querySelector(`.ctrl-tab[data-section="${key}"]`);
+      if (tab) tab.classList.add('pinned');
+    }
+
+    function unpinSection() {
+      pinnedSection = null;
+      document.querySelectorAll('.ctrl-tab').forEach(t => t.classList.remove('pinned'));
+      closePanel();
+    }
+
+    function scheduleClose() {
+      clearTimeout(closeTimer);
+      closeTimer = setTimeout(() => {
+        if (pinnedSection) {
+          showSection(pinnedSection, 'pinned');
+        } else if (hintsActive && hintIdx >= 0) {
+          showSection(HINTS[hintIdx].section, 'preview');
+        } else {
+          closePanel();
+        }
+        hoveredSection = null;
+      }, 80);
+    }
+
+    function cancelClose() {
+      clearTimeout(closeTimer);
+    }
+
+    // Tab hover
+    document.querySelectorAll('.ctrl-tab').forEach(tab => {
+      tab.addEventListener('mouseenter', () => {
+        cancelClose();
+        const key = tab.dataset.section;
+        hoveredSection = key;
+        // Don't preview other sections while one is pinned
+        if (pinnedSection) return;
+        showSection(key, 'preview');
+      });
+
+      tab.addEventListener('click', () => {
+        const key = tab.dataset.section;
+        if (pinnedSection === key) {
+          unpinSection();
+        } else {
+          pinSection(key);
+        }
+      });
     });
 
-    // ── Hints replay ─────────────────────────────────────────────
-    document.getElementById('param-hints-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      showGuideArrows();
+    // Bar & panel mouse leave/enter for gap bridging
+    ctrlBar.addEventListener('mouseleave', scheduleClose);
+    ctrlBar.addEventListener('mouseenter', cancelClose);
+    ctrlPanel.addEventListener('mouseleave', scheduleClose);
+    ctrlPanel.addEventListener('mouseenter', cancelClose);
+
+    // ── Badge click (pin / unpin) ─────────────────────────────────
+    document.getElementById('ctrl-badge').addEventListener('click', () => {
+      if (ctrlPanel.classList.contains('preview') && hoveredSection) {
+        pinSection(hoveredSection);
+      } else if (pinnedSection) {
+        unpinSection();
+      }
     });
 
-    const hawkHints = [
-      { target: 'sl-predfrc', text: 'Try lowering Agility for wide sweeping passes' },
-      { target: 'sl-escrad', text: 'Adjust escape radius to see larger or smaller panic zones' },
-      { target: 'esc-sphere-toggle', text: '\u2026 And click to show the escape radius to see it visualized' },
-    ];
-    document.getElementById('hawk-hints-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      const predSection = document.getElementById('predator-section-header').parentElement;
-      if (predSection.classList.contains('collapsed')) predSection.classList.remove('collapsed');
-      showPresetHints(hawkHints);
+    // ── Section hints click ─────────────────────────────────────────
+    let sectionHintIdx = 0;
+    sectionHintsBtn.addEventListener('click', () => {
+      const key = sectionHintsBtn.dataset.section;
+      if (!key) return;
+      const sectionHints = HINTS.filter(h => h.section === key);
+      if (!sectionHints.length) return;
+      // Pin this section
+      pinSection(key);
+      // Stop any running full hints sequence
+      stopHints();
+      // Cycle through hints for this section
+      if (sectionHintIdx >= sectionHints.length) sectionHintIdx = 0;
+      const hint = sectionHints[sectionHintIdx];
+      sectionHintIdx++;
+
+      // Apply highlights
+      document.querySelectorAll('.hint-target').forEach(el => el.classList.remove('hint-target'));
+      if (hint.highlight) {
+        for (const sel of hint.highlight) {
+          const el = document.querySelector(sel);
+          if (el) {
+            const target = el.closest('.param-row') || el;
+            target.classList.add('hint-target');
+          }
+        }
+      }
+      // Show callout with progress bar
+      hintTitle.textContent = hint.title;
+      hintTitle.style.display = hint.title ? '' : 'none';
+      hintText.textContent = hint.text;
+      hintFill.style.width = '0%';
+      hintCallout.classList.add('visible');
+      clearInterval(hintFillInterval);
+      const startTime = Date.now();
+      hintFillInterval = setInterval(() => {
+        const pct = Math.min(100, ((Date.now() - startTime) / HINT_DURATION) * 100);
+        hintFill.style.width = pct + '%';
+      }, 50);
+      // Auto-advance to next section hint, or clear
+      clearTimeout(hintTimer);
+      hintTimer = setTimeout(() => {
+        if (sectionHintIdx < sectionHints.length) {
+          // Show next hint in this section
+          sectionHintsBtn.click();
+        } else {
+          clearInterval(hintFillInterval);
+          document.querySelectorAll('.hint-target').forEach(el => el.classList.remove('hint-target'));
+          hintCallout.classList.remove('visible');
+          sectionHintIdx = 0;
+        }
+      }, HINT_DURATION);
     });
 
     // ── Description toggle ────────────────────────────────────────
-    const descBtn = document.getElementById('param-desc-btn');
-    descBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      panel.classList.toggle('show-desc');
-      descBtn.classList.toggle('active');
-    });
-
-    // ── Section collapse ──────────────────────────────────────────
-    document.querySelectorAll('.param-section-header').forEach(hdr => {
-      hdr.addEventListener('click', () => {
-        hdr.parentElement.classList.toggle('collapsed');
-      });
+    const descBtn = document.getElementById('ctrl-desc-btn');
+    descBtn.addEventListener('click', () => {
+      descOn = !descOn;
+      ctrlPanel.classList.toggle('desc-on', descOn);
+      descBtn.classList.toggle('active', descOn);
+      // If turning on and no panel is visible, pin Presets so the effect is obvious
+      if (descOn && !ctrlPanel.classList.contains('open')) {
+        pinSection('pre');
+      }
     });
 
     // ── Camera mode toggle ─────────────────────────────────────────
@@ -1591,8 +1761,7 @@
     const predCamBtns = [predCamOrbitBtn, predCamHawkeyeBtn, predCamSplitBtn];
 
     function updateDividerPosition() {
-      const panelW = panel.classList.contains('collapsed') ? 0 : 252;
-      const leftW = Math.floor((window.innerWidth - panelW) / 2);
+      const leftW = Math.floor(window.innerWidth / 2);
       splitDivider.style.left = leftW + 'px';
     }
 
@@ -1605,14 +1774,12 @@
     function setCamUI(mode) {
       currentCamMode = mode;
       const isSplit = mode === 'split' || mode === 'hawksplit';
-      // Main camera section — orbit is shared; boid's-eye split is 'split'
       camOrbitBtn.classList.toggle('active', mode === 'orbit');
       camBoidseyeBtn.classList.toggle('active', mode === 'boidseye');
       camSplitBtn.classList.toggle('active', mode === 'split');
       camNewBoidBtn.style.display = (mode === 'boidseye' || mode === 'split') ? 'block' : 'none';
       splitDivider.style.display = isSplit ? 'block' : 'none';
       if (isSplit) updateDividerPosition();
-      // Predator section — orbit is shared; hawk split is 'hawksplit'
       predCamOrbitBtn.classList.toggle('active', mode === 'orbit');
       predCamHawkeyeBtn.classList.toggle('active', mode === 'hawkeye');
       predCamSplitBtn.classList.toggle('active', mode === 'hawksplit');

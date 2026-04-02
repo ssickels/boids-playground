@@ -161,17 +161,11 @@ export function initScene(container, params) {
   // Second camera for split-mode boid's-eye half
   const chaseCam = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
 
-  // ── Panel-open state (for split viewport math) ────────────────────
-  let panelOpen = true;
-
-  function setPanelOpen(isOpen) { panelOpen = isOpen; }
-
   function getSplitViewports() {
     const w = window.innerWidth, h = window.innerHeight;
-    const panelW = panelOpen ? 252 : 0; // 240px panel + 12px margin
-    const leftW = Math.floor((w - panelW) / 2);
-    const rightW = w - panelW - leftW;
-    return { leftW, rightW, h, panelW };
+    const leftW = Math.floor(w / 2);
+    const rightW = w - leftW;
+    return { leftW, rightW, h };
   }
 
   window.addEventListener('resize', () => {
@@ -1012,5 +1006,5 @@ export function initScene(container, params) {
     escSphere.visible = v && pred.active;
   }
 
-  return { reinit, setCameraMode, pickNewBoid, setColorMode, setPanelOpen, pred, setEscSphereVisible, activatePredator, deactivatePredator };
+  return { reinit, setCameraMode, pickNewBoid, setColorMode, pred, setEscSphereVisible, activatePredator, deactivatePredator };
 }

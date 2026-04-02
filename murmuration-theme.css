@@ -17,7 +17,7 @@
   --color-nav:         rgba(10, 10, 46, 0.82);
 
   /* Primary — lavender, used for headings and links */
-  --color-primary:     #a8a8ee;
+  --color-primary:     #b6b6fa;
   --color-primary-hi:  #d4d4ff;
 
   /* Accent — yellow (retained from site-wide palette, pops against indigo) */
@@ -26,7 +26,7 @@
 
   /* Text — lighter for readability on deep indigo */
   --color-text:        #e4e4f4;
-  --color-text-dim:    #9c9cd0;
+  --color-text-dim:    #ababdd;
   --color-text-inv:    #0a0a2e;
 
   /* Borders & dividers — lavender at low opacity, matching sim panel chrome */
@@ -34,6 +34,6 @@
   --color-border-hi:   rgba(136, 136, 204, 0.30);
 
   /* Positive / negative */
-  --color-positive:    #8888cc;
+  --color-positive:    #9999dd;
   --color-negative:    #cc6688;
 }
