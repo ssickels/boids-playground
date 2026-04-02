@@ -1224,6 +1224,7 @@
     }
 
     function startHints() {
+      if (pinnedSection) unpinSection();
       hintsActive = true;
       hintsBtn.textContent = 'hints \u25b8';
       hintsBtn.classList.add('playing');
@@ -1240,6 +1241,7 @@
       hintsBtn.classList.remove('playing');
       document.querySelectorAll('.ctrl-tab.hint-highlight').forEach(t => t.classList.remove('hint-highlight'));
       document.querySelectorAll('.hint-target').forEach(el => el.classList.remove('hint-target'));
+      sectionHintIdx = 0;
       // Close panel if nothing pinned
       if (!pinnedSection) closePanel();
     }
@@ -1657,7 +1659,7 @@
       });
 
       tab.addEventListener('click', () => {
-        if (hintsActive) stopHints();
+        stopHints();
         const key = tab.dataset.section;
         if (pinnedSection === key) {
           unpinSection();
