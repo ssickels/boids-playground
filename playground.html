@@ -49,86 +49,280 @@
       letter-spacing: 0.04em;
     }
 
-    /* ── SLIDER PANEL ─────────────────────────────────────────────────────── */
-    #param-panel {
+    /* ── BOTTOM CONTROL BAR ─────────────────────────────────────────────── */
+    #ctrl-bar {
       position: fixed;
-      top: 42px;     /* below nav bar */
+      bottom: 0; left: 0; right: 0;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      background: rgba(0, 28, 40, 0.88);
+      border-top: 1px solid rgba(100, 210, 230, 0.18);
+      z-index: 200;
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 0 6px;
+      gap: 2px;
+    }
+    #ctrl-tabs {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-left: auto;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    #ctrl-tabs::-webkit-scrollbar { display: none; }
+    .ctrl-tab {
+      position: relative;
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      padding: 4px 7px;
+      color: rgba(100, 210, 230, 0.65);
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.12s, background 0.12s, border-color 0.12s;
+    }
+    .ctrl-tab:hover {
+      color: #c8f0f8;
+      background: rgba(100, 210, 230, 0.08);
+    }
+    .ctrl-tab.pinned {
+      color: #c8f0f8;
+      background: rgba(100, 210, 230, 0.12);
+      border-color: rgba(100, 210, 230, 0.30);
+    }
+    .ctrl-tab.pinned::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: #c8f0f8;
+    }
+    .ctrl-tab.hint-highlight {
+      border-color: rgba(245, 216, 74, 0.6);
+      color: #f5d84a;
+    }
+    #ctrl-hints-btn, #ctrl-desc-btn {
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      padding: 4px 7px;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.12s, background 0.12s;
+    }
+    #ctrl-hints-btn {
+      color: rgba(245, 216, 74, 0.55);
+    }
+    #ctrl-hints-btn:hover { color: #f5d84a; }
+    #ctrl-hints-btn.playing { color: #f5d84a; }
+    #ctrl-desc-btn {
+      color: rgba(100, 210, 230, 0.50);
+      font-size: 13px;
+      padding: 4px 6px;
+    }
+    #ctrl-desc-btn:hover { color: #7dd4e8; }
+    #ctrl-desc-btn.active {
+      color: #c8f0f8;
+      border-color: rgba(100, 210, 230, 0.30);
+    }
+
+    /* ── POPUP PANEL ────────────────────────────────────────────────────── */
+    #ctrl-panel {
+      display: none;
+      position: fixed;
+      bottom: 35px;
       right: 12px;
-      width: 240px;
-      background: rgba(0, 30, 42, 0.82);
+      width: 220px;
+      max-height: 345px;
+      background: rgba(0, 28, 40, 0.88);
       backdrop-filter: blur(6px);
       border: 1px solid rgba(100, 210, 230, 0.18);
       border-radius: 6px;
-      z-index: 200;
+      z-index: 199;
       font-family: system-ui, -apple-system, sans-serif;
       font-size: 12px;
       color: #a8dce8;
       overflow: hidden;
+      flex-direction: column;
     }
-    #param-panel-header {
+    #ctrl-panel.open {
+      display: flex;
+    }
+    #ctrl-panel.preview {
+      opacity: 0.75;
+    }
+    #ctrl-panel.pinned {
+      opacity: 1;
+    }
+    #ctrl-badge-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 8px 10px;
-      cursor: pointer;
-      border-bottom: 1px solid rgba(100, 210, 230, 0.14);
-      user-select: none;
+      padding: 4px 10px 2px;
+      gap: 8px;
     }
-    #param-panel-header:hover { background: rgba(100, 210, 230, 0.05); }
-    #param-panel-title {
+    #ctrl-section-title {
+      color: rgba(100, 210, 230, 0.85);
       font-size: 11px;
-      letter-spacing: 0.08em;
+      font-weight: 600;
       text-transform: uppercase;
-      color: rgba(125, 212, 232, 0.75);
+      letter-spacing: 0.06em;
+      flex: 1;
     }
-    #param-collapse-btn {
-      background: none; border: none; cursor: pointer;
-      color: rgba(125, 212, 232, 0.55);
-      font-size: 14px; line-height: 1;
-      padding: 0 2px;
-      transition: color 0.15s;
+    #ctrl-badge {
+      font-size: 9px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: rgba(100, 210, 230, 0.45);
+      cursor: pointer;
+      transition: color 0.12s;
     }
-    #param-collapse-btn:hover { color: #7dd4e8; }
-    #param-panel-body {
-      padding: 6px 0 4px;
-      max-height: calc(100vh - 80px);
+    #ctrl-badge:hover { color: rgba(100, 210, 230, 0.65); }
+    #ctrl-panel.preview #ctrl-badge::after { content: 'click to pin'; }
+    #ctrl-panel.pinned #ctrl-badge::after { content: 'pinned'; }
+    #ctrl-section-hints {
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      color: rgba(245, 216, 74, 0.45);
+      cursor: pointer;
+      transition: color 0.12s;
+      text-transform: uppercase;
+      display: none;
+    }
+    #ctrl-section-hints:hover { color: rgba(245, 216, 74, 0.75); }
+    #ctrl-section-hints.visible { display: inline; }
+    .ctrl-section {
+      display: none;
+      padding: 4px 10px 8px;
       overflow-y: auto;
+      flex: 1;
+      min-height: 0;
     }
-    #param-panel-body::-webkit-scrollbar { width: 3px; }
-    #param-panel-body::-webkit-scrollbar-track { background: transparent; }
-    #param-panel-body::-webkit-scrollbar-thumb {
+    .ctrl-section::-webkit-scrollbar { width: 3px; }
+    .ctrl-section::-webkit-scrollbar-track { background: transparent; }
+    .ctrl-section::-webkit-scrollbar-thumb {
       background: rgba(100, 210, 230, 0.30);
       border-radius: 2px;
     }
-    #param-panel.collapsed #param-panel-body { display: none; }
-    #param-panel.collapsed { border-radius: 6px; }
+    .ctrl-section.active { display: block; }
 
-    /* section toggle */
-    .param-section-header {
-      display: flex;
+    /* description text — shown via panel-level toggle */
+    .desc-txt {
+      font-size: 10px;
+      color: rgba(125, 212, 232, 0.48);
+      line-height: 1.45;
+      margin-top: 1px;
+      display: none;
+    }
+    .param-row > .desc-txt { grid-column: 1 / -1; }
+    #ctrl-panel.desc-on .desc-txt { display: block; }
+    #ctrl-panel.desc-on .leg-desc { display: block; }
+
+    /* ── HINT CALLOUT ───────────────────────────────────────────────────── */
+    #hint-callout {
+      display: none;
+      position: fixed;
+      bottom: 35px;
+      right: 240px;
+      z-index: 198;
       align-items: center;
-      justify-content: space-between;
-      padding: 5px 10px 4px;
+      gap: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    #hint-callout.visible {
+      display: flex;
+    }
+    #hint-body {
+      background: rgba(40, 36, 10, 0.92);
+      border: 1px solid rgba(245, 216, 74, 0.3);
+      border-radius: 6px;
+      padding: 12px 14px;
+      max-width: 200px;
+      color: #e8e0b0;
+    }
+    #hint-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #f5d84a;
+      margin-bottom: 4px;
+    }
+    #hint-text {
+      font-size: 11px;
+      line-height: 1.5;
+      color: #d0c890;
+      margin-bottom: 8px;
+    }
+    #hint-progress {
+      height: 2px;
+      background: rgba(245, 216, 74, 0.15);
+      border-radius: 1px;
+      margin-bottom: 6px;
+      overflow: hidden;
+    }
+    #hint-fill {
+      height: 100%;
+      width: 0%;
+      background: #f5d84a;
+      border-radius: 1px;
+      transition: width 0.1s linear;
+    }
+    #hint-controls {
+      display: flex;
+      gap: 8px;
+      font-size: 10px;
+    }
+    #hint-controls span {
       cursor: pointer;
-      user-select: none;
+      color: rgba(245, 216, 74, 0.6);
+      transition: color 0.12s;
     }
-    .param-section-header:hover { background: rgba(100, 210, 230, 0.05); }
-    .param-section-label {
-      font-size: 10px;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      color: rgba(100, 210, 230, 0.55);
+    #hint-controls span:hover { color: #f5d84a; }
+    .hint-target {
+      outline: 1.5px solid rgba(245, 216, 74, 0.5);
+      outline-offset: 2px;
+      border-radius: 3px;
+      animation: hint-pulse 1.5s ease-in-out infinite;
     }
-    .param-section-arrow {
-      font-size: 10px;
-      color: rgba(100, 210, 230, 0.40);
-      transition: transform 0.15s;
+    @keyframes hint-pulse {
+      0%, 100% { outline-color: rgba(245, 216, 74, 0.5); }
+      50% { outline-color: rgba(245, 216, 74, 0.2); }
     }
-    .param-section.collapsed .param-section-arrow { transform: rotate(-90deg); }
-    .param-section-body { padding: 0 10px 6px; }
-    .param-section.collapsed .param-section-body { display: none; }
+    #hint-arrow {
+      color: rgba(245, 216, 74, 0.6);
+      font-size: 16px;
+      line-height: 1;
+    }
+    #hint-callout.hint-desc-mode {
+      right: 4px;
+      bottom: 42px;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    #hint-callout.hint-desc-mode #hint-arrow {
+      transform: rotate(90deg);
+      margin-right: 8px;
+    }
+    @media (max-width: 480px) {
+      #hint-callout {
+        flex-direction: column;
+        right: 12px;
+        bottom: 388px;
+      }
+      #hint-arrow {
+        transform: rotate(90deg);
+      }
+    }
 
-    /* individual row */
+    /* ── PARAM ROWS & SLIDERS ───────────────────────────────────────────── */
     .param-row {
       display: grid;
       grid-template-columns: 1fr auto;
@@ -179,36 +373,14 @@
       cursor: pointer;
     }
 
-    /* divider between sections */
     .param-divider {
       height: 1px;
       background: rgba(100, 210, 230, 0.10);
       margin: 2px 0;
     }
 
-    /* reset button */
-    #param-reset {
-      display: block;
-      width: calc(100% - 20px);
-      margin: 6px 10px 4px;
-      padding: 5px;
-      background: rgba(100, 210, 230, 0.08);
-      border: 1px solid rgba(100, 210, 230, 0.22);
-      border-radius: 4px;
-      color: rgba(125, 212, 232, 0.75);
-      font-size: 11px;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      transition: background 0.12s, color 0.12s;
-    }
-    #param-reset:hover {
-      background: rgba(100, 210, 230, 0.15);
-      color: #c8f0f8;
-    }
-
-    /* visualization checkboxes */
+    /* ── VIEW SECTION CONTROLS ──────────────────────────────────────────── */
     #viz-checks {
-      padding: 4px 10px 8px;
       display: flex;
       flex-direction: column;
       gap: 4px;
@@ -258,39 +430,32 @@
       line-height: 1.4;
       padding-left: 22px;
     }
-    #param-panel.show-desc .leg-desc { display: block; }
 
-    /* inline descriptions */
-    .param-desc {
-      grid-column: 1 / -1;
-      font-size: 10px;
-      color: rgba(125, 212, 232, 0.48);
-      line-height: 1.45;
-      margin-top: 1px;
-      display: none;
+    /* reset button */
+    #param-reset {
+      display: block;
+      width: 100%;
+      margin: 6px 0 2px;
+      padding: 5px;
+      background: rgba(100, 210, 230, 0.08);
+      border: 1px solid rgba(100, 210, 230, 0.22);
+      border-radius: 4px;
+      color: rgba(125, 212, 232, 0.75);
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
     }
-    #param-panel.show-desc .param-desc { display: block; }
+    #param-reset:hover {
+      background: rgba(100, 210, 230, 0.15);
+      color: #c8f0f8;
+    }
 
-    /* description toggle button */
-    #param-hints-btn {
-      background: none; border: none; cursor: pointer;
-      color: rgba(245, 216, 74, 0.45);
-      font-size: 10px; line-height: 1;
-      padding: 0 2px;
-      letter-spacing: 0.03em;
-      font-family: inherit;
-      transition: color 0.15s;
-    }
-    #param-hints-btn:hover { color: #f5d84a; }
-    #param-desc-btn {
-      background: none; border: none; cursor: pointer;
-      color: rgba(125, 212, 232, 0.40);
-      font-size: 13px; line-height: 1;
-      padding: 0 2px;
-      transition: color 0.15s;
-    }
-    #param-desc-btn:hover { color: #7dd4e8; }
-    #param-desc-btn.active { color: #7dd4e8; }
+    /* viz-linked label colors */
+    #ctrl-panel.viz-on .param-label[data-viz-color="sep"] { color: #ff4444; transition: color 0.2s; }
+    #ctrl-panel.viz-on .param-label[data-viz-color="ali"] { color: #ffe600; transition: color 0.2s; }
+    #ctrl-panel.viz-on .param-label[data-viz-color="coh"] { color: #00d930; transition: color 0.2s; }
 
     /* ── ONBOARDING OVERLAY ──────────────────────────────────────────────── */
     #onboarding-overlay {
@@ -420,38 +585,6 @@
       accent-color: #7dd4e8;
       cursor: pointer;
     }
-
-    /* ── GUIDE ARROWS ────────────────────────────────────────────────────── */
-    .guide-arrow {
-      position: fixed;
-      z-index: 250;
-      pointer-events: none;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-family: system-ui, -apple-system, sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      color: #f5d84a;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-      white-space: nowrap;
-    }
-    .guide-arrow.visible { opacity: 1; }
-    .guide-arrow.fade-out { opacity: 0; }
-    .guide-arrow .arrow-char {
-      font-size: 22px;
-      animation: pulse-arrow 1s ease-in-out infinite;
-    }
-    @keyframes pulse-arrow {
-      0%, 100% { opacity: 1; transform: translateX(0); }
-      50% { opacity: 0.5; transform: translateX(4px); }
-    }
-
-    /* viz-linked label colors */
-    #param-panel.viz-on .param-label[data-viz-color="sep"] { color: #ff4444; transition: color 0.2s; }
-    #param-panel.viz-on .param-label[data-viz-color="ali"] { color: #ffe600; transition: color 0.2s; }
-    #param-panel.viz-on .param-label[data-viz-color="coh"] { color: #00d930; transition: color 0.2s; }
   </style>
   <script type="importmap">
   {
@@ -474,12 +607,12 @@
   <div class="onboard-card">
     <h2>Watch how a school of fish organizes itself</h2>
     <p>
-      Click <span class="highlight">"Radius spheres &amp; distances"</span> (in the panel at right)
+      Click <span class="highlight">"Radius spheres &amp; distances"</span> (in the control bar below)
       to see under the hood. Then play with the sliders to see how the schooling
       changes — with visual cues showing what's going on.
     </p>
     <p>
-      Click the <span class="highlight">?</span> button (upper right of the panel) for short descriptions of every slider.
+      Click the <span class="highlight">?</span> button (in the control bar) for short descriptions of every slider.
     </p>
     <button class="onboard-more-toggle" id="onboard-more-btn">
       Want to explore more? <span class="arrow">&#9654;</span>
@@ -523,124 +656,114 @@
   </div>
 </div>
 
-<!-- ── SLIDER PANEL ────────────────────────────────────────────────────────── -->
-<div id="param-panel">
-  <div id="param-panel-header">
-    <span id="param-panel-title">Boids Parameters</span>
-    <div style="display:flex;gap:4px;align-items:center">
-      <button id="param-hints-btn" title="Show hints">hints</button>
-      <button id="param-desc-btn" title="Toggle descriptions">?</button>
-      <button id="param-collapse-btn" title="Collapse panel">&#8722;</button>
+<!-- ── BOTTOM CONTROL BAR ─────────────────────────────────────────────────── -->
+<div id="ctrl-bar">
+  <div id="ctrl-tabs">
+    <button class="ctrl-tab" data-section="sim">Sim</button>
+    <button class="ctrl-tab" data-section="sch">School</button>
+    <button class="ctrl-tab" data-section="trn">Turning</button>
+    <button class="ctrl-tab" data-section="viw">View</button>
+  </div>
+  <button id="ctrl-hints-btn">hints</button>
+  <button id="ctrl-desc-btn" title="Toggle descriptions">?</button>
+</div>
+
+<!-- ── POPUP PANEL ────────────────────────────────────────────────────────── -->
+<div id="ctrl-panel">
+  <div id="ctrl-badge-row">
+    <span id="ctrl-section-title"></span>
+    <div id="ctrl-badge"></div>
+    <span id="ctrl-section-hints">hints</span>
+  </div>
+
+  <!-- Sim -->
+  <div class="ctrl-section" data-section="sim">
+    <div class="param-row">
+      <span class="param-label" title="Simulation speed (SIM_SPEED): time-scale multiplier — all forces and movements scale together">Sim speed</span>
+      <span class="param-value" id="val-SIM_SPEED">1.0</span>
+      <input class="param-slider" type="range" id="sl-SIM_SPEED" min="1" max="4" step="0.1" value="1.0">
+      <span class="desc-txt">Speeds up the whole simulation uniformly. Parameter effects (schooling, separation, etc.) stay proportional — they just happen faster.</span>
     </div>
   </div>
-  <div id="param-panel-body">
 
-    <!-- Simulation speed — global -->
-    <div style="padding: 6px 10px 2px">
-      <div class="param-row">
-        <span class="param-label" title="Simulation speed (SIM_SPEED): time-scale multiplier — all forces and movements scale together">Sim speed</span>
-        <span class="param-value" id="val-SIM_SPEED">1.0</span>
-        <input class="param-slider" type="range" id="sl-SIM_SPEED" min="1" max="4" step="0.1" value="1.0">
-        <span class="param-desc">Speeds up the whole simulation uniformly. Parameter effects (schooling, separation, etc.) stay proportional — they just happen faster.</span>
-      </div>
-    </div>
-    <div class="param-divider"></div>
-
-    <!-- School Behavior section -->
-    <div class="param-section" id="section-school">
-      <div class="param-section-header">
-        <span class="param-section-label">School Behavior</span>
-        <span class="param-section-arrow">&#9660;</span>
-      </div>
-      <div class="param-section-body">
-
-        <div class="param-row">
-          <span class="param-label" data-viz-color="sep" title="Separation radius (SEP_R): fish closer than this distance push each other away">Separation radius</span>
-          <span class="param-value" id="val-SEP_R">7.5</span>
-          <input class="param-slider" type="range" id="sl-SEP_R" min="1" max="20" step="0.1" value="7.5">
-          <span class="param-desc">Fish closer than this push each other away. Raise it and fish give each other a wider berth.</span>
-        </div>
-
-        <div class="param-row">
-          <span class="param-label" data-viz-color="ali" title="Alignment radius (ALI_R): fish within this distance try to match each other's velocity">Alignment radius</span>
-          <span class="param-value" id="val-ALI_R">6.5</span>
-          <input class="param-slider" type="range" id="sl-ALI_R" min="1" max="20" step="0.1" value="6.5">
-          <span class="param-desc">Fish within this distance try to match each other's heading. Larger = each fish listens to more of the school.</span>
-        </div>
-
-        <div class="param-row">
-          <span class="param-label" data-viz-color="coh" title="Cohesion radius (COH_R): fish within this distance steer toward the group center">Cohesion radius</span>
-          <span class="param-value" id="val-COH_R">10.0</span>
-          <input class="param-slider" type="range" id="sl-COH_R" min="1" max="25" step="0.1" value="10.0">
-          <span class="param-desc">Fish within this distance steer toward the group center. A large value pulls distant stragglers back.</span>
-        </div>
-
-        <div class="param-row">
-          <span class="param-label" data-viz-color="sep" title="Separation strength (W_SEP): weight of the separation force — higher = fish spread out more">Separation strength</span>
-          <span class="param-value" id="val-W_SEP">5.0</span>
-          <input class="param-slider" type="range" id="sl-W_SEP" min="0" max="15" step="0.1" value="5.0">
-          <span class="param-desc">How hard fish push away from close neighbors. Higher = more spread out.</span>
-        </div>
-
-        <div class="param-row">
-          <span class="param-label" data-viz-color="ali" title="Alignment strength (W_ALI): weight of the alignment force — higher = fish swim more in parallel">Alignment strength</span>
-          <span class="param-value" id="val-W_ALI">1.5</span>
-          <input class="param-slider" type="range" id="sl-W_ALI" min="0" max="8" step="0.1" value="1.5">
-          <span class="param-desc">How strongly fish match their neighbors' direction. High = tight, synchronized school.</span>
-        </div>
-
-        <div class="param-row">
-          <span class="param-label" data-viz-color="coh" title="Cohesion strength (W_COH): weight of the cohesion force — higher = fish cluster tighter">Cohesion strength</span>
-          <span class="param-value" id="val-W_COH">1.2</span>
-          <input class="param-slider" type="range" id="sl-W_COH" min="0" max="8" step="0.1" value="1.2">
-          <span class="param-desc">How hard fish pull toward the group center. Raise to cluster more tightly.</span>
-        </div>
-
-      </div>
+  <!-- School Behavior -->
+  <div class="ctrl-section" data-section="sch">
+    <div class="param-row">
+      <span class="param-label" data-viz-color="sep" title="Separation radius (SEP_R): fish closer than this distance push each other away">Separation radius</span>
+      <span class="param-value" id="val-SEP_R">7.5</span>
+      <input class="param-slider" type="range" id="sl-SEP_R" min="1" max="20" step="0.1" value="7.5">
+      <span class="desc-txt">Fish closer than this push each other away. Raise it and fish give each other a wider berth.</span>
     </div>
 
-    <div class="param-divider"></div>
-
-    <!-- Turn & Damping section -->
-    <div class="param-section" id="section-turn">
-      <div class="param-section-header">
-        <span class="param-section-label">Turn &amp; Damping</span>
-        <span class="param-section-arrow">&#9660;</span>
-      </div>
-      <div class="param-section-body">
-
-        <div class="param-row">
-          <span class="param-label" title="Tang turn rate (TURN_TANG): how quickly blue tangs rotate toward their target heading (rad/s)">Tang turn rate</span>
-          <span class="param-value" id="val-TURN_TANG">4.0</span>
-          <input class="param-slider" type="range" id="sl-TURN_TANG" min="0.5" max="12" step="0.1" value="4.0">
-          <span class="param-desc">How quickly blue tangs rotate toward their target heading. Higher = snappier turns.</span>
-        </div>
-
-        <div class="param-row">
-          <span class="param-label" title="Triggerfish turn rate (TURN_TF): how quickly the triggerfish rotates along its bezier path (rad/s)">Triggerfish turn rate</span>
-          <span class="param-value" id="val-TURN_TF">5.0</span>
-          <input class="param-slider" type="range" id="sl-TURN_TF" min="0.5" max="15" step="0.1" value="5.0">
-          <span class="param-desc">How quickly the triggerfish rotates along its path. Higher = hugs the curve more tightly.</span>
-        </div>
-
-        <div class="param-row">
-          <span class="param-label" title="Vertical damping (DAMP_Y): reduces vertical acceleration — lower = fish bob up and down more">Vertical damping</span>
-          <span class="param-value" id="val-DAMP_Y">0.20</span>
-          <input class="param-slider" type="range" id="sl-DAMP_Y" min="0" max="1" step="0.01" value="0.20">
-          <span class="param-desc">Reduces vertical acceleration. Lower = fish bob up and down more freely.</span>
-        </div>
-
-        <div class="param-row">
-          <span class="param-label" title="Distance damping (DAMP_Z): reduces depth (z-axis) acceleration — lower = fish scatter toward/away from camera more">Distance damping</span>
-          <span class="param-value" id="val-DAMP_Z">0.50</span>
-          <input class="param-slider" type="range" id="sl-DAMP_Z" min="0" max="1" step="0.01" value="0.50">
-          <span class="param-desc">Reduces depth acceleration. Lower = fish scatter more toward/away from the camera.</span>
-        </div>
-
-      </div>
+    <div class="param-row">
+      <span class="param-label" data-viz-color="ali" title="Alignment radius (ALI_R): fish within this distance try to match each other's velocity">Alignment radius</span>
+      <span class="param-value" id="val-ALI_R">6.5</span>
+      <input class="param-slider" type="range" id="sl-ALI_R" min="1" max="20" step="0.1" value="6.5">
+      <span class="desc-txt">Fish within this distance try to match each other's heading. Larger = each fish listens to more of the school.</span>
     </div>
 
-    <button id="param-reset">Reset to defaults</button>
+    <div class="param-row">
+      <span class="param-label" data-viz-color="coh" title="Cohesion radius (COH_R): fish within this distance steer toward the group center">Cohesion radius</span>
+      <span class="param-value" id="val-COH_R">10.0</span>
+      <input class="param-slider" type="range" id="sl-COH_R" min="1" max="25" step="0.1" value="10.0">
+      <span class="desc-txt">Fish within this distance steer toward the group center. A large value pulls distant stragglers back.</span>
+    </div>
+
+    <div class="param-row">
+      <span class="param-label" data-viz-color="sep" title="Separation strength (W_SEP): weight of the separation force — higher = fish spread out more">Separation strength</span>
+      <span class="param-value" id="val-W_SEP">5.0</span>
+      <input class="param-slider" type="range" id="sl-W_SEP" min="0" max="15" step="0.1" value="5.0">
+      <span class="desc-txt">How hard fish push away from close neighbors. Higher = more spread out.</span>
+    </div>
+
+    <div class="param-row">
+      <span class="param-label" data-viz-color="ali" title="Alignment strength (W_ALI): weight of the alignment force — higher = fish swim more in parallel">Alignment strength</span>
+      <span class="param-value" id="val-W_ALI">1.5</span>
+      <input class="param-slider" type="range" id="sl-W_ALI" min="0" max="8" step="0.1" value="1.5">
+      <span class="desc-txt">How strongly fish match their neighbors' direction. High = tight, synchronized school.</span>
+    </div>
+
+    <div class="param-row">
+      <span class="param-label" data-viz-color="coh" title="Cohesion strength (W_COH): weight of the cohesion force — higher = fish cluster tighter">Cohesion strength</span>
+      <span class="param-value" id="val-W_COH">1.2</span>
+      <input class="param-slider" type="range" id="sl-W_COH" min="0" max="8" step="0.1" value="1.2">
+      <span class="desc-txt">How hard fish pull toward the group center. Raise to cluster more tightly.</span>
+    </div>
+  </div>
+
+  <!-- Turning -->
+  <div class="ctrl-section" data-section="trn">
+    <div class="param-row">
+      <span class="param-label" title="Tang turn rate (TURN_TANG): how quickly blue tangs rotate toward their target heading (rad/s)">Tang turn rate</span>
+      <span class="param-value" id="val-TURN_TANG">4.0</span>
+      <input class="param-slider" type="range" id="sl-TURN_TANG" min="0.5" max="12" step="0.1" value="4.0">
+      <span class="desc-txt">How quickly blue tangs rotate toward their target heading. Higher = snappier turns.</span>
+    </div>
+
+    <div class="param-row">
+      <span class="param-label" title="Triggerfish turn rate (TURN_TF): how quickly the triggerfish rotates along its bezier path (rad/s)">Triggerfish turn rate</span>
+      <span class="param-value" id="val-TURN_TF">5.0</span>
+      <input class="param-slider" type="range" id="sl-TURN_TF" min="0.5" max="15" step="0.1" value="5.0">
+      <span class="desc-txt">How quickly the triggerfish rotates along its path. Higher = hugs the curve more tightly.</span>
+    </div>
+
+    <div class="param-row">
+      <span class="param-label" title="Vertical damping (DAMP_Y): reduces vertical acceleration — lower = fish bob up and down more">Vertical damping</span>
+      <span class="param-value" id="val-DAMP_Y">0.20</span>
+      <input class="param-slider" type="range" id="sl-DAMP_Y" min="0" max="1" step="0.01" value="0.20">
+      <span class="desc-txt">Reduces vertical acceleration. Lower = fish bob up and down more freely.</span>
+    </div>
+
+    <div class="param-row">
+      <span class="param-label" title="Distance damping (DAMP_Z): reduces depth (z-axis) acceleration — lower = fish scatter toward/away from camera more">Distance damping</span>
+      <span class="param-value" id="val-DAMP_Z">0.50</span>
+      <input class="param-slider" type="range" id="sl-DAMP_Z" min="0" max="1" step="0.01" value="0.50">
+      <span class="desc-txt">Reduces depth acceleration. Lower = fish scatter more toward/away from the camera.</span>
+    </div>
+  </div>
+
+  <!-- View -->
+  <div class="ctrl-section" data-section="viw">
     <div id="viz-checks">
       <label><input type="checkbox" id="cb-SHOW_FISH" checked> <span>Show fish</span></label>
       <label><input type="checkbox" id="cb-SHOW_VIZ"> <span>Radius spheres &amp; distances</span></label>
@@ -686,7 +809,23 @@
       </div>
       <label><input type="checkbox" id="cb-SHOW_TITLE" checked> <span>Show floating title</span></label>
     </div>
+    <button id="param-reset">Reset to defaults</button>
   </div>
+</div>
+
+<!-- ── HINT CALLOUT ───────────────────────────────────────────────────────── -->
+<div id="hint-callout">
+  <div id="hint-body">
+    <div id="hint-title"></div>
+    <div id="hint-text"></div>
+    <div id="hint-progress"><div id="hint-fill"></div></div>
+    <div id="hint-controls">
+      <span id="hint-prev">&#8249; prev</span>
+      <span id="hint-next">next &#8250;</span>
+      <span id="hint-close">&#215;</span>
+    </div>
+  </div>
+  <div id="hint-arrow">&#9654;</div>
 </div>
 
 <script type="module">
@@ -714,6 +853,10 @@ for (const key of keys) {
   });
 }
 
+// ── CTRL-BAR / PANEL REFS ─────────────────────────────────────────────────────
+const ctrlPanel = document.getElementById('ctrl-panel');
+const ctrlBar   = document.getElementById('ctrl-bar');
+
 // ── VISUALIZATION CHECKBOXES ───────────────────────────────────────────────────
 const titleCb  = document.getElementById('cb-SHOW_TITLE');
 const fishCb   = document.getElementById('cb-SHOW_FISH');
@@ -725,7 +868,7 @@ vizCb  .addEventListener('change', () => {
   params.SHOW_SPHERES = vizCb.checked;
   params.SHOW_LINES   = vizCb.checked;
   vizLegend.classList.toggle('visible', vizCb.checked);
-  panel.classList.toggle('viz-on', vizCb.checked);
+  ctrlPanel.classList.toggle('viz-on', vizCb.checked);
 });
 
 // ── DEEP LINK: ?view=arrows ──────────────────────────────────────────────────
@@ -738,7 +881,7 @@ if (arrowsMode) {
   params.SHOW_SPHERES = true;
   params.SHOW_LINES   = true;
   vizLegend.classList.add('visible');
-  document.getElementById('param-panel').classList.add('viz-on');
+  ctrlPanel.classList.add('viz-on');
 }
 
 // ── SPHERE MODE RADIOS ───────────────────────────────────────────────────────
@@ -761,81 +904,271 @@ document.getElementById('param-reset').addEventListener('click', () => {
   params.SPHERE_MODE = DEFAULTS.SPHERE_MODE;
   document.querySelector('input[name="sphere-mode"][value="sep"]').checked = true;
   vizLegend.classList.toggle('visible', vizCb.checked);
-  panel.classList.toggle('viz-on', vizCb.checked);
+  ctrlPanel.classList.toggle('viz-on', vizCb.checked);
 });
 
-// ── PANEL COLLAPSE ────────────────────────────────────────────────────────────
-const panel = document.getElementById('param-panel');
-const collapseBtn = document.getElementById('param-collapse-btn');
+// ── CTRL-BAR / PANEL INTERACTION ──────────────────────────────────────────────
+let pinnedSection = null;
+let hoveredSection = null;
+let descOn = false;
+let closeTimer = null;
 
-document.getElementById('param-panel-header').addEventListener('click', () => {
-  const isCollapsed = panel.classList.toggle('collapsed');
-  collapseBtn.innerHTML = isCollapsed ? '&#43;' : '&#8722;';
-  collapseBtn.title = isCollapsed ? 'Expand panel' : 'Collapse panel';
-});
+const sectionHintsBtn = document.getElementById('ctrl-section-hints');
 
-// ── HINTS REPLAY ─────────────────────────────────────────────────────────────
-document.getElementById('param-hints-btn').addEventListener('click', e => {
-  e.stopPropagation();
-  showGuideArrows();
-});
+function showSection(key, mode) {
+  document.querySelectorAll('.ctrl-section').forEach(s => s.classList.remove('active'));
+  const sec = document.querySelector(`.ctrl-section[data-section="${key}"]`);
+  if (sec) sec.classList.add('active');
+  ctrlPanel.classList.add('open');
+  ctrlPanel.classList.remove('preview', 'pinned');
+  ctrlPanel.classList.add(mode);
+  const tab = document.querySelector(`.ctrl-tab[data-section="${key}"]`);
+  document.getElementById('ctrl-section-title').textContent = tab ? tab.textContent : '';
+  const hasHint = HINTS.some(h => h.section === key);
+  sectionHintsBtn.classList.toggle('visible', hasHint);
+  if (sectionHintsBtn.dataset.section !== key) sectionHintIdx = 0;
+  sectionHintsBtn.dataset.section = key;
+}
 
-// ── DESCRIPTION TOGGLE ────────────────────────────────────────────────────────
-document.getElementById('param-desc-btn').addEventListener('click', e => {
-  e.stopPropagation();
-  const showing = panel.classList.toggle('show-desc');
-  e.currentTarget.classList.toggle('active', showing);
-});
+function closePanel() {
+  ctrlPanel.classList.remove('open', 'preview', 'pinned');
+  hoveredSection = null;
+  sectionHintsBtn.classList.remove('visible');
+}
 
-// ── SECTION COLLAPSING ────────────────────────────────────────────────────────
-document.querySelectorAll('.param-section-header').forEach(header => {
-  header.addEventListener('click', e => {
-    e.stopPropagation();
-    header.closest('.param-section').classList.toggle('collapsed');
+function pinSection(key) {
+  pinnedSection = key;
+  showSection(key, 'pinned');
+  document.querySelectorAll('.ctrl-tab').forEach(t => t.classList.remove('pinned'));
+  const tab = document.querySelector(`.ctrl-tab[data-section="${key}"]`);
+  if (tab) tab.classList.add('pinned');
+}
+
+function unpinSection() {
+  pinnedSection = null;
+  document.querySelectorAll('.ctrl-tab').forEach(t => t.classList.remove('pinned'));
+  closePanel();
+}
+
+function scheduleClose() {
+  clearTimeout(closeTimer);
+  closeTimer = setTimeout(() => {
+    if (pinnedSection) {
+      showSection(pinnedSection, 'pinned');
+    } else if (hintsActive && hintIdx >= 0) {
+      showSection(HINTS[hintIdx].section, 'preview');
+    } else {
+      closePanel();
+    }
+    hoveredSection = null;
+  }, 80);
+}
+
+function cancelClose() {
+  clearTimeout(closeTimer);
+}
+
+// Tab hover & click
+document.querySelectorAll('.ctrl-tab').forEach(tab => {
+  tab.addEventListener('mouseenter', () => {
+    cancelClose();
+    const key = tab.dataset.section;
+    hoveredSection = key;
+    if (pinnedSection) return;
+    showSection(key, 'preview');
+  });
+
+  tab.addEventListener('click', () => {
+    if (hintsActive) stopHints();
+    const key = tab.dataset.section;
+    if (pinnedSection === key) {
+      unpinSection();
+    } else {
+      pinSection(key);
+    }
   });
 });
 
-// ── GUIDE ARROWS ─────────────────────────────────────────────────────────────
-let activeArrows = [];
-let arrowTimer = 0;
+// Bar & panel mouse leave/enter for gap bridging
+ctrlBar.addEventListener('mouseleave', scheduleClose);
+ctrlBar.addEventListener('mouseenter', cancelClose);
+ctrlPanel.addEventListener('mouseleave', scheduleClose);
+ctrlPanel.addEventListener('mouseenter', cancelClose);
 
-function showGuideArrows() {
-  clearTimeout(arrowTimer);
-  activeArrows.forEach(a => a.remove());
-  activeArrows = [];
+// Badge click (pin / unpin)
+document.getElementById('ctrl-badge').addEventListener('click', () => {
+  if (ctrlPanel.classList.contains('preview') && hoveredSection) {
+    pinSection(hoveredSection);
+  } else if (pinnedSection) {
+    unpinSection();
+  }
+});
 
-  const makeArrow = (target, text) => {
-    const rect = target.getBoundingClientRect();
-    const el = document.createElement('div');
-    el.className = 'guide-arrow';
-    el.innerHTML = `<span>${text}</span> <span class="arrow-char">&#9654;</span>`;
-    el.style.top  = rect.top + rect.height / 2 - 10 + 'px';
-    el.style.right = (window.innerWidth - rect.left + 8) + 'px';
-    document.body.appendChild(el);
-    requestAnimationFrame(() => el.classList.add('visible'));
-    return el;
-  };
+// ── HINTS SYSTEM ──────────────────────────────────────────────────────────────
+const HINTS_NORMAL = [
+  { section: 'viw', title: 'See under the hood', text: 'Check "Radius spheres & distances" to visualize each rule in 3D.', highlight: ['#cb-SHOW_VIZ'] },
+  { section: 'sch', title: 'The three forces', text: 'Separation pushes fish apart. Alignment makes them swim together. Cohesion pulls them to the group center.', highlight: ['#sl-W_SEP', '#sl-W_ALI', '#sl-W_COH'] },
+  { section: 'sch', title: 'Try this', text: 'Crank Separation strength to max and watch them scatter. Then drop Alignment to zero \u2014 the school falls apart.', highlight: ['#sl-W_SEP', '#sl-W_ALI'] },
+  { section: null, title: 'Descriptions', text: 'Click the ? button to toggle detailed descriptions for every control.', highlight: ['#ctrl-desc-btn'] },
+];
+const HINTS_ARROWS = [
+  { section: 'viw', title: 'Descriptions', text: 'Click ? for descriptions of every slider. Check "Show fish" to swap arrowheads for fish models.', highlight: ['#cb-SHOW_FISH'] },
+  { section: null, title: 'Descriptions', text: 'Click the ? button for detailed slider descriptions.', highlight: ['#ctrl-desc-btn'] },
+];
+const HINTS = arrowsMode ? HINTS_ARROWS : HINTS_NORMAL;
+const HINT_DURATION = 9000;
+let hintIdx = -1;
+let hintTimer = null;
+let hintFillInterval = null;
+let hintsActive = false;
 
-  if (arrowsMode) {
-    const helpBtn   = document.getElementById('param-desc-btn');
-    const fishLabel = document.querySelector('#cb-SHOW_FISH')?.closest('label');
-    if (helpBtn)   activeArrows.push(makeArrow(helpBtn, 'Descriptions'));
-    if (fishLabel) activeArrows.push(makeArrow(fishLabel, 'Show fish'));
+const hintCallout  = document.getElementById('hint-callout');
+const hintTitle    = document.getElementById('hint-title');
+const hintText     = document.getElementById('hint-text');
+const hintFill     = document.getElementById('hint-fill');
+const hintPrevBtn  = document.getElementById('hint-prev');
+const hintNextBtn  = document.getElementById('hint-next');
+const hintCloseBtn = document.getElementById('hint-close');
+const hintsBtn     = document.getElementById('ctrl-hints-btn');
+
+function showHint(idx) {
+  if (idx < 0 || idx >= HINTS.length) { stopHints(); return; }
+  hintIdx = idx;
+  const h = HINTS[idx];
+
+  // Clear previous highlights
+  document.querySelectorAll('.ctrl-tab.hint-highlight').forEach(t => t.classList.remove('hint-highlight'));
+  document.querySelectorAll('.hint-target').forEach(el => el.classList.remove('hint-target'));
+
+  if (h.section) {
+    hintCallout.classList.remove('hint-desc-mode');
+    const tab = document.querySelector(`.ctrl-tab[data-section="${h.section}"]`);
+    if (tab) tab.classList.add('hint-highlight');
+    if (!pinnedSection) {
+      showSection(h.section, 'preview');
+    }
   } else {
-    const vizLabel = document.querySelector('#cb-SHOW_VIZ')?.closest('label');
-    const helpBtn  = document.getElementById('param-desc-btn');
-    if (vizLabel) activeArrows.push(makeArrow(vizLabel, 'Try this'));
-    if (helpBtn)  activeArrows.push(makeArrow(helpBtn, 'Descriptions'));
+    if (!pinnedSection) closePanel();
+    hintCallout.classList.add('hint-desc-mode');
   }
 
-  arrowTimer = setTimeout(() => {
-    activeArrows.forEach(a => a.classList.add('fade-out'));
-    setTimeout(() => {
-      activeArrows.forEach(a => a.remove());
-      activeArrows = [];
-    }, 500);
-  }, 6000);
+  // Highlight specific elements
+  if (h.highlight) {
+    for (const sel of h.highlight) {
+      const el = document.querySelector(sel);
+      if (el) {
+        const target = el.closest('.param-row') || el;
+        target.classList.add('hint-target');
+      }
+    }
+  }
+
+  // Update callout content
+  hintTitle.textContent = h.title;
+  hintTitle.style.display = h.title ? '' : 'none';
+  hintText.textContent = h.text;
+  hintCallout.classList.add('visible');
+
+  // Progress bar
+  hintFill.style.width = '0%';
+  clearInterval(hintFillInterval);
+  const startTime = Date.now();
+  hintFillInterval = setInterval(() => {
+    const elapsed = Date.now() - startTime;
+    const pct = Math.min(100, (elapsed / HINT_DURATION) * 100);
+    hintFill.style.width = pct + '%';
+  }, 50);
+
+  // Auto-advance
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => showHint(idx + 1), HINT_DURATION);
 }
+
+function startHints() {
+  hintsActive = true;
+  hintsBtn.textContent = 'hints \u25b8';
+  hintsBtn.classList.add('playing');
+  showHint(0);
+}
+
+function stopHints() {
+  hintsActive = false;
+  hintIdx = -1;
+  clearTimeout(hintTimer);
+  clearInterval(hintFillInterval);
+  hintCallout.classList.remove('visible', 'hint-desc-mode');
+  hintsBtn.textContent = 'hints';
+  hintsBtn.classList.remove('playing');
+  document.querySelectorAll('.ctrl-tab.hint-highlight').forEach(t => t.classList.remove('hint-highlight'));
+  document.querySelectorAll('.hint-target').forEach(el => el.classList.remove('hint-target'));
+  if (!pinnedSection) closePanel();
+}
+
+hintPrevBtn.addEventListener('click', () => { showHint(Math.max(0, hintIdx - 1)); });
+hintNextBtn.addEventListener('click', () => { showHint(hintIdx + 1); });
+hintCloseBtn.addEventListener('click', () => { stopHints(); });
+hintsBtn.addEventListener('click', () => {
+  if (hintsActive) stopHints();
+  else startHints();
+});
+
+// ── SECTION HINTS ─────────────────────────────────────────────────────────────
+let sectionHintIdx = 0;
+sectionHintsBtn.addEventListener('click', () => {
+  const key = sectionHintsBtn.dataset.section;
+  if (!key) return;
+  const sectionHints = HINTS.filter(h => h.section === key);
+  if (!sectionHints.length) return;
+  pinSection(key);
+  stopHints();
+  if (sectionHintIdx >= sectionHints.length) sectionHintIdx = 0;
+  const hint = sectionHints[sectionHintIdx];
+  sectionHintIdx++;
+
+  document.querySelectorAll('.hint-target').forEach(el => el.classList.remove('hint-target'));
+  if (hint.highlight) {
+    for (const sel of hint.highlight) {
+      const el = document.querySelector(sel);
+      if (el) {
+        const target = el.closest('.param-row') || el;
+        target.classList.add('hint-target');
+      }
+    }
+  }
+  hintTitle.textContent = hint.title;
+  hintTitle.style.display = hint.title ? '' : 'none';
+  hintText.textContent = hint.text;
+  hintFill.style.width = '0%';
+  hintCallout.classList.add('visible');
+  clearInterval(hintFillInterval);
+  const startTime = Date.now();
+  hintFillInterval = setInterval(() => {
+    const pct = Math.min(100, ((Date.now() - startTime) / HINT_DURATION) * 100);
+    hintFill.style.width = pct + '%';
+  }, 50);
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => {
+    if (sectionHintIdx < sectionHints.length) {
+      sectionHintsBtn.click();
+    } else {
+      clearInterval(hintFillInterval);
+      document.querySelectorAll('.hint-target').forEach(el => el.classList.remove('hint-target'));
+      hintCallout.classList.remove('visible');
+      sectionHintIdx = 0;
+    }
+  }, HINT_DURATION);
+});
+
+// ── DESCRIPTION TOGGLE ────────────────────────────────────────────────────────
+const descBtn = document.getElementById('ctrl-desc-btn');
+descBtn.addEventListener('click', () => {
+  descOn = !descOn;
+  ctrlPanel.classList.toggle('desc-on', descOn);
+  descBtn.classList.toggle('active', descOn);
+  if (descOn && !ctrlPanel.classList.contains('open')) {
+    pinSection('sim');
+  }
+});
 
 // ── ONBOARDING OVERLAY ──────────────────────────────────────────────────────
 const overlayKey = arrowsMode ? 'boidsArrowsOverlayDismissed' : 'boidsOverlayDismissed';
@@ -847,23 +1180,23 @@ if (!localStorage.getItem(overlayKey)) {
   if (arrowsMode) {
     const card = overlay.querySelector('.onboard-card');
     card.innerHTML = `
-      <h2>You've seen the rules — now watch them in 3D</h2>
+      <h2>You've seen the rules \u2014 now watch them in 3D</h2>
       <p>
         The arrowheads match the 2D diagrams you just read.
         The circles from those diagrams are now
-        <span class="highlight">spheres</span> — same idea, just in three
+        <span class="highlight">spheres</span> \u2014 same idea, just in three
         dimensions. The colored lines are new: they connect every pair of boids
         that falls within the selected rule's radius.
       </p>
       <p>
-        Use the <span class="highlight">?</span> button (upper right of the
-        panel) for descriptions of every slider. Check
+        Use the <span class="highlight">?</span> button (in the control bar)
+        for descriptions of every slider. Check
         <span class="highlight">"Show fish"</span> to swap the arrowheads for
         fish models, or click <span class="highlight">"Reset to defaults"</span>
         to start fresh.
       </p>
       <div class="onboard-footer">
-        <button class="onboard-dismiss" id="onboard-dismiss">Got it — let me play</button>
+        <button class="onboard-dismiss" id="onboard-dismiss">Got it \u2014 let me play</button>
         <label class="onboard-remember">
           <input type="checkbox" id="onboard-remember-cb"> Don't show again
         </label>
@@ -887,15 +1220,13 @@ if (!localStorage.getItem(overlayKey)) {
     showOverlay();
   }
 
-  // Dismiss + show guide arrows
+  // Dismiss + start hints
   document.getElementById('onboard-dismiss').addEventListener('click', () => {
     if (document.getElementById('onboard-remember-cb').checked) {
       localStorage.setItem(overlayKey, 'true');
     }
     overlay.classList.add('fade-out');
-    setTimeout(() => overlay.remove(), 500);
-
-    setTimeout(showGuideArrows, 600);
+    setTimeout(() => { overlay.remove(); startHints(); }, 500);
   });
 
   // Expand "more" section (only exists in default mode)
@@ -907,6 +1238,14 @@ if (!localStorage.getItem(overlayKey)) {
       moreBtn.classList.toggle('expanded');
     });
   }
+} else {
+  // Already dismissed permanently — remove overlay, start hints after delay
+  document.getElementById('onboarding-overlay').remove();
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(startHints, 1800);
+    });
+  });
 }
 </script>
 <script src="/boids-nav.js"></script>

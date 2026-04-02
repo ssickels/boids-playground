@@ -1657,6 +1657,7 @@
       });
 
       tab.addEventListener('click', () => {
+        if (hintsActive) stopHints();
         const key = tab.dataset.section;
         if (pinnedSection === key) {
           unpinSection();
